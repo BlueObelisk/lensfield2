@@ -1,0 +1,37 @@
+
+;
+; Include these maven artifacts in the build classpath
+;
+(depends
+    org.lensfield.testing:lensfield2-testops1:0.1-SNAPSHOT)
+
+(source                             ; Define a file source
+    files           **/*.n)
+
+;
+; 1:1 build steps
+;
+(build
+    inc1        org.lensfield.testing.ops.Incer
+    :input      files
+    :output     **/*.1
+    :depends    org.lensfield.testing:lensfield2-testops2:0.1-SNAPSHOT)
+
+(build
+    inc2        org.lensfield.testing.ops.Incer
+    :input      files
+    :output     **/*.2
+    :depends    org.lensfield.testing:lensfield2-testops3:0.1-SNAPSHOT)
+
+;
+; Agregates across workspace
+;
+(build
+    sum1        org.lensfield.testing.ops.number.Summer
+    :input      inc1
+    :output     sum1.txt)
+
+(build
+    sum2        org.lensfield.testing.ops.number.Summer
+    :input      inc2
+    :output     sum2.txt)

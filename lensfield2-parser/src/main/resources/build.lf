@@ -1,0 +1,86 @@
+;
+; Sample Lensfield build file
+; Uses a lisp-like syntax
+;
+; Semi-colons prefix comments
+; Commands are enclosed in ( ... )
+;
+; Literals do not need to be quoted, unless they contain white-space or
+; special characters ';' or '(', in which case they can be quoted using
+; either single or double quotes. To include quote marks within a
+; quoted string they should be escaped using a backslash '\'.
+;
+
+
+;
+; Include these maven repositories when resolving dependencies
+;
+(repository
+    https://maven.ch.cam.ac.uk/m2repo)
+    
+
+;
+; Include these maven artifacts in the build classpath
+;
+(depends                            
+    org.lensfield.testing:lensfield2-testops:0.1-SNAPSHOT
+    foo:bar:baz)
+
+;
+; Commented out as not supported at the moment
+; (include
+;     build-cml.lf                    ; Include build configuration from this file
+;     build-cif.lf    :prefix cif)    ; Prefix names of build steps from this file 'cif/'
+;
+
+
+(source                             ; Define a file source
+    files           **/*.n)
+
+(source
+    other-files     "**/*.x")
+
+(build                                              ; Define a 1:1 conversion
+    doubles     org.lensfield.op.number.Doubler     ; Declare name and processor class
+    :input      files                               ; Single inputs and outputs do not
+    :output     **/*.x2)                            ; need to be named
+
+(build
+    squares     org.lensfield.op.number.Squarer
+    :input      files
+    :output     **/*.sq)
+
+; Agregates across workspace
+(build                              ; Define an n:1 aggregation
+    sum-x2      org.lensfield.op.number.Summer
+    :input      doubles
+    :output     sum-x2.txt)
+
+; Aggregates by directory
+(build                              ; Define x(n:1) aggregations
+    sum-dirs    org.lensfield.op.number.Summer
+    :input      files
+    :output     **/sum.txt)
+
+
+(build
+    sum-sq      org.lensfield.op.number.Summer
+    :input      squares
+    :output     sum-sq.txt)
+
+(build
+    times3      org.lensfield.op.number.Multiplier
+    :input      files
+    :output     **/*.xn
+    :parameter  factor  3)          ; Parameters must be named
+
+(build                              ; Define a 2:1 conversion
+    x2-sq       org.lensfield.op.number.Adder
+    :input      x1      **/*.x2     ; Multiple inputs/outputs must be named
+    :input      x2      **/*.sq
+    :output     **/*.x2-sq)
+
+(build
+    sum-all     org.lensfield.op.number.Summer
+    :input      x2-sq
+    :output     sum-all.txt)

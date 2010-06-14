@@ -1,0 +1,14 @@
+
+(repository
+    https://maven.ch.cam.ac.uk/m2repo)
+
+(depends
+    cml:jumbo-converters-molecule:0.3-SNAPSHOT)
+
+(source
+    mol-files       **/*.mol)
+
+(build
+    cml-files       org.xmlcml.cml.converters.molecule.mdl.MDL2CMLConverter/convert
+    :input          mol-files
+    :output         **/*.cml)

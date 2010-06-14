@@ -1,0 +1,36 @@
+
+;
+; Include these maven artifacts in the build classpath
+;
+(depends
+    org.lensfield.testing:lensfield2-testops1:0.1-SNAPSHOT)
+
+(source                             ; Define a file source
+    files           **/*.n)
+
+;
+; 1:1 build steps
+;
+(build                                              ; Define a 1:1 conversion
+    doubles     org.lensfield.testing.ops.number.Doubler     ; Declare name and processor class
+    :input      files                               ; Single inputs and outputs do not
+    :output     **/*.x2)                            ; need to be named
+
+(build
+    squares     org.lensfield.testing.ops.number.Squarer
+    :input      files
+    :output     **/*.sq)
+
+;
+; Agregates across workspace
+;
+(build                                              ; Define an n:1 aggregation
+    sum-x2      org.lensfield.testing.ops.number.Summer
+    :input      doubles
+    :output     sum-x2.txt)
+
+(build
+    sum-sq      org.lensfield.testing.ops.number.Summer
+    :input      squares
+    :output     sum-sq.txt)
+

@@ -1,0 +1,64 @@
+/*
+ * Copyright 2010 Sam Adams
+ */
+package org.lensfield.cli;
+
+import org.lensfield.BuildFileParser;
+import org.lensfield.Lensfield;
+import org.lensfield.model.Model;
+
+import java.io.File;
+
+/**
+ * @author sea36
+ */
+public class LensfieldCli {
+
+
+    public static void main(String[] args) throws Exception {
+
+        if (args.length == 0)
+            args = new String[] { "d:/temp/lensfield/numbers/" }; 
+
+        System.err.println("Lensfield2");
+        System.err.println("----------------------------------------");
+
+        // Locate build file
+        File buildFile = null;
+        if (args.length == 0) {
+            buildFile = new File("build.lf");
+        } else if (args.length == 1) {
+            buildFile = new File(args[0]);
+            if (buildFile.isDirectory()) {
+                buildFile = new File(buildFile, "build.lf");
+            }
+        } else {
+            System.err.println("Error parsing command line.");
+            System.err.println("Usage:");
+            System.err.println("  lf [build path]");
+            System.exit(1);
+        }
+
+        if (!buildFile.isFile()) {
+            System.err.println(" ** ERROR ** 'build.lf' not found");
+            System.exit(1);
+        }
+
+        // Parse build file
+        BuildFileParser parser = new BuildFileParser();
+        Model model = parser.parse(buildFile);
+
+        Lensfield lensfield = new Lensfield(model);
+        File root = buildFile.getParentFile();
+        if (root == null) {
+            root = new File(".");
+        }
+        lensfield.setRoot(root);
+        lensfield.build();
+
+        System.err.println("----------------------------------------");
+        System.err.println("BUILD COMPLETE");
+
+    }
+
+}
