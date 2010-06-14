@@ -21,8 +21,6 @@ import org.lensfield.process.ProcessRunner;
 import org.lensfield.state.*;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -61,6 +59,34 @@ public class Lensfield {
 
     public void setRoot(File root) {
         this.root = root;
+    }
+
+
+    public synchronized void build() throws Exception {
+
+        checkBuildStepsExist();
+        List<Process> buildOrder = resolveBuildOrder();
+
+        initBuildState();
+        resolveDependencies();
+
+        initWorkspace();
+
+        analyseBuildState();
+        loadPreviousBuildState();
+        comparePreviousBuildState();
+
+        try {
+            initBuildLog();
+            processBuildSteps(buildOrder);
+            buildLog.finishBuild();
+
+        } finally {
+            if (buildLog != null) {
+                buildLog.close();
+            }
+        }
+
     }
 
 
@@ -125,36 +151,6 @@ public class Lensfield {
         }
         return true;
     }
-
-
-
-    public synchronized void build() throws Exception {
-
-        checkBuildStepsExist();
-        List<Process> buildOrder = resolveBuildOrder();
-
-        initBuildState();
-        resolveDependencies();
-
-        initWorkspace();
-
-        analyseBuildState();
-        loadPreviousBuildState();
-        comparePreviousBuildState();
-
-        try {
-            initBuildLog();
-            processBuildSteps(buildOrder);
-            buildLog.finishBuild();
-
-        } finally {
-            if (buildLog != null) {
-                buildLog.close();
-            }
-        }
-
-    }
-
 
 
     private void loadPreviousBuildState() throws IOException, ParseException {
@@ -252,136 +248,8 @@ public class Lensfield {
     private void analyseBuildState() throws Exception {
         for (Build build : model.getBuilds()) {
             TaskState task = buildState.getTask(build.getName());
-            checkNoArgConstructor(task);
-            findRunMethod(task);
-            analyseFields(task);
-            setParameterValues(build, task);
+            ClassAnalyser.analyseClass(build, task);
         }
-    }
-
-    private void findRunMethod(TaskState task) {
-        findRunMethod(task,task.getClazz());
-    }
-
-    private boolean findRunMethod(TaskState task, Class<?> clazz) {
-        for (Method method : clazz.getDeclaredMethods()) {
-            if (task.getMethodName().equals(method.getName())) {
-                Class<?>[] parameterTypes = method.getParameterTypes();
-                if (parameterTypes.length == 0) {
-                    task.setMethod(method, true);
-                    return true;
-                }
-                if (parameterTypes.length == 2) {
-                    if ( InputStream.class.isAssignableFrom(parameterTypes[0])
-                      && OutputStream.class.isAssignableFrom(parameterTypes[1])) {
-                        task.setMethod(method, false);
-                        task.addInput(new InputDescription(parameterTypes[0]));
-                        task.addOutput(new OutputDescription(parameterTypes[1]));
-                        return true;
-                    }
-                }
-            }
-        }
-        Class<?> parent = clazz.getSuperclass();
-        if (parent != null) {
-            return findRunMethod(task, parent);
-        }
-        return false;
-    }
-
-    private void setParameterValues(Build build, TaskState task) throws LensfieldException {
-        if (task.getParameters().size() == 1) {
-            if (build.getParameters().size() == 1) {
-                Parameter p = build.getParameters().get(0);
-                if (p.getName() == null) {
-                    build.getParameters().clear();
-                    build.getParameters().add(new Parameter(task.getParameters().get(0).name, p.getValue()));
-                }
-            }
-        }
-
-        Map<String,String> paramMap = new HashMap<String, String>();
-        for (Parameter param : build.getParameters()) {
-            // TODO check for duplicates
-            paramMap.put(param.getName(), param.getValue());
-        }
-        for (ParameterDescription param : task.getParameters()) {
-            if (paramMap.containsKey(param.name)) {
-                param.value = paramMap.get(param.name);
-            } else {
-                if (param.required) {
-                    throw new LensfieldException("Required parameter missing: "+param.name);
-                }
-            }
-        }
-    }
-
-    /**
-     * Throws exception if class instance cannot be created
-     */
-    private void checkNoArgConstructor(TaskState task) throws IllegalAccessException, InstantiationException {
-        Class<?> clazz = task.getClazz();
-        clazz.newInstance();
-    }
-
-    private void analyseFields(TaskState task) throws LensfieldException {
-        analyseClass(task, task.getClazz());
-    }
-
-    private void analyseClass(TaskState task, Class<?> clazz) throws LensfieldException {
-        for (Field f : clazz.getDeclaredFields()) {
-            if (isInput(f)) {
-                addInput(task, f);
-            }
-            else if (isOutput(f)) {
-                addOutput(task, f);
-            }
-            else if (isParameter(f)) {
-                addParameter(task, f);
-            }
-        }
-        Class<?> parent = clazz.getSuperclass();
-        if (parent != null) {
-            analyseClass(task, parent);
-        }
-    }
-
-
-    private boolean isInput(Field f) {
-        return f.isAnnotationPresent(LensfieldInput.class);
-    }
-
-    private boolean isOutput(Field f) {
-        return f.isAnnotationPresent(LensfieldOutput.class);
-    }
-
-    private boolean isParameter(Field f) {
-        return f.isAnnotationPresent(LensfieldParameter.class);
-    }
-
-
-    private void addInput(TaskState task, Field f) throws LensfieldException {
-        if (!task.isNoArgs()) {
-            throw new LensfieldException("@LensfieldInput fields require no-args run method");
-        }
-        LensfieldInput annot = f.getAnnotation(LensfieldInput.class);
-        String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addInput(new InputDescription(f, n));
-    }
-
-    private void addOutput(TaskState task, Field f) throws LensfieldException {
-        if (!task.isNoArgs()) {
-            throw new LensfieldException("@LensfieldOutput fields require no-args run method");
-        }
-        LensfieldOutput annot = f.getAnnotation(LensfieldOutput.class);
-        String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addOutput(new OutputDescription(f, n));
-    }
-
-    private void addParameter(TaskState task, Field f) {
-        LensfieldParameter annot = f.getAnnotation(LensfieldParameter.class);
-        String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addParameter(new ParameterDescription(f, n, null, annot.required()));
     }
 
 
@@ -397,7 +265,6 @@ public class Lensfield {
         buildLog.startBuild();
         buildLog.recordTasks(buildState);
     }
-
 
 
     protected synchronized void build(Process step) throws Exception {
