@@ -268,8 +268,6 @@ public class Lensfield {
 
     protected synchronized void build(Process step) throws Exception {
 
-        LOG.info("Running process: "+step.getName());
-        
         if (step instanceof Source) {
             processSource((Source)step);
         }
@@ -277,13 +275,15 @@ public class Lensfield {
             processBuildStep((Build)step);
         }
         else {
-            throw new RuntimeException();
+            throw new RuntimeException("Unknown process: "+step.getName()+" ["+step.getClass().getName()+"]");
         }
 
     }
 
 
     private void processSource(Source source) throws Exception {
+
+        LOG.info("Processing source: "+source.getName());
 
         if (source.getParameters().isEmpty()) {
             throw new LensfieldException("Source filter not defined");
@@ -315,6 +315,9 @@ public class Lensfield {
 
 
     private void processBuildStep(Build build) throws Exception {
+
+        LOG.info("Processing build step: "+build.getName());
+
         checkInputsExist(build);
 
         TaskState task = buildState.getTask(build.getName());
