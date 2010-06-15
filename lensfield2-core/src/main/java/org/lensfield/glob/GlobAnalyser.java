@@ -3,7 +3,7 @@
  */
 package org.lensfield.glob;
 
-import org.lensfield.FileSet;
+import org.lensfield.InputFileSet;
 import org.lensfield.state.FileState;
 import org.lensfield.build.FileList;
 
@@ -44,7 +44,7 @@ public class GlobAnalyser {
 
 
 
-    public static List<FileSet> getInputFileSets(Map<String, FileList> inputs) {
+    public static List<InputFileSet> getInputFileSets(Map<String, FileList> inputs) {
         int inputCount = inputs.size();
 
         String[] groups = getCommonGroupNames(inputs);
@@ -74,12 +74,11 @@ public class GlobAnalyser {
             }
         }
 
-        List<FileSet> fileSets = createFileSets(inputNames, inputFiles);
-        return fileSets;
+        return createFileSets(inputNames, inputFiles);
     }
 
-    private static List<FileSet> createFileSets(String[] inputNames, Map<GlobMatch, FileState[]> inputFiles) {
-        List<FileSet> list = new ArrayList<FileSet>(inputFiles.size());
+    private static List<InputFileSet> createFileSets(String[] inputNames, Map<GlobMatch, FileState[]> inputFiles) {
+        List<InputFileSet> list = new ArrayList<InputFileSet>(inputFiles.size());
         for (Map.Entry<GlobMatch, FileState[]> e : inputFiles.entrySet()) {
             GlobMatch gm = e.getKey();
             FileState[] files = e.getValue();
@@ -94,7 +93,7 @@ public class GlobAnalyser {
                     inputMap.put(inputNames[i], Collections.singletonList(files[i]));
                 }
             }
-            list.add(new FileSet(params, inputMap));
+            list.add(new InputFileSet(params, inputMap));
         }
         return list;
     }

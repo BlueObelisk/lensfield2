@@ -9,14 +9,16 @@ import java.util.Map;
 /**
  * @author sea36
  */
-public class StreamInImpl extends StreamIn {
+public class InputFile extends StreamIn implements Input {
 
+    private String path;
     private File file;
     private Map<String,String> parameters;
     private BufferedInputStream in;
 
 
-    public StreamInImpl(File file, Map<String,String> params) throws IOException {
+    public InputFile(String path, File file, Map<String,String> params) throws IOException {
+        this.path = path;
         this.file = file;
         this.parameters = params;
         this.in = new BufferedInputStream(new FileInputStream(file));
@@ -30,6 +32,10 @@ public class StreamInImpl extends StreamIn {
     @Override
     public String getParameter(String name) {
         return parameters.get(name);
+    }
+
+    public String getPath() {
+        return path;
     }
 
 

@@ -9,9 +9,6 @@ import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.GlobAnalyser;
 import org.lensfield.glob.Template;
-import org.lensfield.io.MultiStreamOutImpl;
-import org.lensfield.io.StreamIn;
-import org.lensfield.io.StreamInImpl;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
 import org.lensfield.model.*;
@@ -177,7 +174,7 @@ public class Lensfield {
         for (TaskState current : buildState.getTasks()) {
             TaskState old = prevBuildState.getTask(current.getId());
             if (old != null) {
-                if (!isTaskChanged(current, old)) {
+                if (isTaskUnchanged(current, old)) {
                     LOG.debug("Task "+current.getId()+": up-to-date");
                     current.setUpdated(false);
                     current.setLastModified(old.getLastModified());
@@ -188,16 +185,16 @@ public class Lensfield {
         }
     }
 
-    private boolean isTaskChanged(TaskState current, TaskState old) {
+    private boolean isTaskUnchanged(TaskState current, TaskState old) {
         if (areDependenciesChanged(current,old)) {
             LOG.debug("Task "+current.getId()+ ": dependencies updated");
-            return true;
+            return false;
         }
         if (areParametersChanged(current, old)) {
             LOG.debug("Task "+current.getId()+ ": parameters updated");
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     private boolean areParametersChanged(TaskState current, TaskState old) {
@@ -253,13 +250,15 @@ public class Lensfield {
     }
 
 
-    private void initBuildLog() throws FileNotFoundException {
+    private void initBuildLog() throws FileNotFoundException, LensfieldException {
         LOG.info("Starting build log");
         File logFile = new File(workspace, "log.txt");
         if (logFile.exists()) {
             String ts = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(logFile.lastModified()));
             File backup = new File(workspace, "log-"+ts+".txt");
-            logFile.renameTo(backup);
+            if (!logFile.renameTo(backup)) {
+                throw new LensfieldException("Unable to move previous log"+backup);
+            }
         }
         buildLog = new BuildLogger(new FileOutputStream(logFile));
         buildLog.startBuild();
@@ -344,7 +343,7 @@ public class Lensfield {
     private void runKtoLStep(Build build, TaskState task) throws Exception {
 
         Map<String,FileList> inputFileLists = getKtoLInputs(build, task);
-        List<FileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
+        List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
 
         Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
 
@@ -356,7 +355,14 @@ public class Lensfield {
         }
 
         ProcessRunner procBuilder = new ProcessRunner(task);
-        for (FileSet input : inputSets) {
+        procBuilder.setTmpdir(tmpdir);
+        procBuilder.setRoot(root);
+        procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
+        procBuilder.setBuildLog(buildLog);
+        
+        for (InputFileSet input : inputSets) {
+
+            Operation op = new Operation(build.getName(), input.getMap(), null);
 
             // Check if up-to-date
             if (!task.isUpdated() && prevTask != null) {
@@ -377,40 +383,7 @@ public class Lensfield {
                 }
             }
 
-            Map<String, List<OutputFileState>> outputFiles = new HashMap<String, List<OutputFileState>>();
-            // Get input file set
-            Map<String, StreamIn> inputFiles = getInputStreamMap(task.getId(), input);
-
-            // Get output file set
-            for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
-                String name = e.getKey();
-                FileList files = e.getValue();
-                OutputFileState outputx = new OutputFileState(name);
-                outputx.setTempFile(new File(tmpdir, UUID.randomUUID().toString()));
-                outputx.setParams(new HashMap<String,String>(input.getParameters()));
-                outputx.setGlob(files.getGlob());
-                outputx.setState(files);
-                outputFiles.put(name, Collections.singletonList(outputx));
-            }
-
-            // Run processor
-            LensfieldProcess proc = procBuilder.configureKtoL(inputFiles, outputFiles);
-            proc.run();
-
-            // Close inputs
-            for (StreamIn stream : inputFiles.values()) {
-                stream.close();
-            }
-            // Close outputs
-            for (List<OutputFileState> outputs : outputFiles.values()) {
-                for (OutputFileState output : outputs) {
-                    output.getStream().close();
-                }
-            }
-
-            // Move temp files
-            renameTempFiles(task.getId(), outputFiles);
-            buildLog.process(build.getName(), input.getMap(), outputFiles);
+            procBuilder.runProcess(input, outputFileLists);
         }
 
         for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
@@ -440,7 +413,7 @@ public class Lensfield {
 //                    System.err.println("input file name mis-match. current:"+files.get(i).getPath()+"; prev:"+prevFiles.get(i).getPath());
                     return false;
                 }
-                if (!isUpToDate(files.get(i).getLastModified(), prevFiles.get(i).getLastModified())) {
+                if (isChanged(files.get(i).getLastModified(), prevFiles.get(i).getLastModified())) {
 //                    System.err.println("input file age mis-match. current:"+files.get(i).getLastModified()+"; prev:"+prevFiles.get(i).getLastModified());
                     return false;
                 }
@@ -454,7 +427,7 @@ public class Lensfield {
 //                    System.err.println("output file missing: "+fs.getPath());
                     return false;
                 }
-                if (!isUpToDate(fs.getLastModified(), f.lastModified())) {
+                if (isChanged(fs.getLastModified(), f.lastModified())) {
 //                    System.err.println("output file age mismatch. existing:"+f.lastModified()+"; prev:"+fs.getLastModified());
                     return false;
                 }
@@ -463,8 +436,8 @@ public class Lensfield {
         return true;
     }
 
-    private boolean isUpToDate(long lastModified0, long lastModified1) {
-        return Math.abs(lastModified0-lastModified1) < 1000;
+    private boolean isChanged(long lastModified0, long lastModified1) {
+        return Math.abs(lastModified0-lastModified1) >= 1000;
     }
 
     private Map<String, FileList> getOutputFileLists(Build build, TaskState task) throws LensfieldException {
@@ -483,51 +456,6 @@ public class Lensfield {
         return outputFileLists;
     }
 
-    private void renameTempFiles(String name, Map<String,List<OutputFileState>> outputFiles) throws LensfieldException {
-        for (List<OutputFileState> outputs : outputFiles.values()) {
-            for (OutputFileState output : outputs) {
-                File tempFile = output.getTempFile();
-                // TODO handle missing glob parameters
-                String path = output.getGlob().format(output.getParams());
-                // TODO check for duplicate output paths
-                FileState fr = new FileState(path, tempFile.lastModified(), output.getParams());
-                File file = new File(root, fr.getPath());
-                file.getParentFile().mkdirs();
-                if (file.isFile()) {
-                    if (!file.delete()) {
-                        throw new LensfieldException("Unable to delete file "+file);
-                    }
-                }
-                if (!tempFile.renameTo(file)) {
-                    throw new LensfieldException("Unable to rename file "+tempFile+" to "+file);
-                }
-                output.getState().addFile(fr);
-                output.setPath(path);
-                output.setLastModified(file.lastModified());
-                LOG.debug(name, "writing "+path);
-            }
-        }
-    }
-
-    private Map<String,StreamIn> getInputStreamMap(String name, FileSet input) throws IOException {
-        if (input.getMap().size() == 1) {
-            Map.Entry<String, List<FileState>> e = input.getMap().entrySet().iterator().next();
-            String path = e.getValue().get(0).getPath();
-            File file = new File(root, path);
-            LOG.debug(name, "reading "+path);
-            StreamIn stream = new StreamInImpl(file, e.getValue().get(0).getParams());
-            return Collections.singletonMap(e.getKey(), stream);
-        }
-        Map<String, StreamIn> inputFiles = new HashMap<String, StreamIn>();
-        for (Map.Entry<String, List<FileState>> e : input.getMap().entrySet()) {
-            String path = e.getValue().get(0).getPath();
-            File file = new File(root, path);
-            LOG.debug(name, "reading "+path);
-            StreamIn stream = new StreamInImpl(file, e.getValue().get(0).getParams());
-            inputFiles.put(e.getKey(), stream);
-        }
-        return inputFiles;
-    }
 
     private Map<String, FileList> getKtoLInputs(Build build, TaskState task) throws LensfieldException {
         Map<String,FileList> map = new HashMap<String, FileList>();
@@ -575,35 +503,14 @@ public class Lensfield {
             }
         }
 
-        ProcessRunner processBuilder = new ProcessRunner(task);
-        processBuilder.setLogger(new TaskLogger(task.getId(), LOG));
+        ProcessRunner procBuilder = new ProcessRunner(task);
+        procBuilder.setTmpdir(tmpdir);
+        procBuilder.setRoot(root);
+        procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
+        procBuilder.setBuildLog(buildLog);
 
-        Map<String,List<OutputFileState>> outputFiles = new HashMap<String, List<OutputFileState>>();
-        for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
-            String name = e.getKey();
-            FileList files = e.getValue();
-
-            OutputFileState outputx = new OutputFileState(name);
-            outputx.setTempFile(new File(tmpdir, UUID.randomUUID().toString()));
-            outputx.setParams(new HashMap<String,String>());
-            outputx.setGlob(files.getGlob());
-            outputx.setState(files);
-            outputFiles.put(name, Collections.singletonList(outputx));
-        }
-
-        LensfieldProcess proc = processBuilder.configureNtoK(inputs, outputFiles, root);
-        proc.run();
-
-        // Ensure outputs are closed
-        for (List<OutputFileState> outputs : outputFiles.values()) {
-            for (OutputFileState output : outputs) {
-                output.getStream().close();
-            }
-        }
-
-        // Move temp files
-        renameTempFiles(task.getId(), outputFiles);
-        buildLog.process(build.getName(), inputs, outputFiles);
+        InputFileSet inputSet = new InputFileSet(Collections.<String,String>emptyMap(), inputs);
+        procBuilder.runProcess(inputSet, outputFileLists);
 
         for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
             String name = e.getKey();
@@ -634,11 +541,11 @@ public class Lensfield {
     private void runKtoNStep(Build build, TaskState task) throws Exception {
 
         Map<String, FileList> inputFileLists = getKtoLInputs(build, task);
-        List<FileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
+        List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
 
         // TODO no inputs sets; empty output
 
-        List<OutputState> outputs = new ArrayList<OutputState>(build.getOutputs().size());
+        Map<String,FileList> outputs = new HashMap<String,FileList>();
         for (Output output : build.getOutputs()) {
             String name = output.getName();
             if (name == null) {
@@ -648,13 +555,11 @@ public class Lensfield {
                 }
                 name = outd.name;
             }
-            outputs.add(new OutputState(name, new FileList(new Template(output.getValue()))));
+            outputs.put(name, new FileList(new Template(output.getValue())));
         }
 
         TaskState prevTask = null;
-        if (task.isUpdated()) {
-            System.err.println("TASK UPDATED");
-        } else {
+        if (!task.isUpdated()) {
             if (prevBuildState != null) {
                 prevTask = prevBuildState.getTask(task.getId());
                 // Check if up-to-date
@@ -662,7 +567,12 @@ public class Lensfield {
         }
 
         ProcessRunner procBuilder = new ProcessRunner(task);
-        for (FileSet input : inputSets) {
+        procBuilder.setTmpdir(tmpdir);
+        procBuilder.setRoot(root);
+        procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
+        procBuilder.setBuildLog(buildLog);
+
+        for (InputFileSet input : inputSets) {
 
             if (!task.isUpdated() && prevTask != null) {
                 String fn = input.getMap().values().iterator().next().get(0).getPath();
@@ -670,9 +580,11 @@ public class Lensfield {
                 if (prevOp != null) {
                     if (isUpToDate(input.getMap(), prevOp)) {
                         buildLog.process(task.getId(), input.getMap(), prevOp.getOutputFiles());
-                        for (OutputState output : outputs) {
-                            for (FileState fs : prevOp.getOutputFiles().get(output.getName())) {
-                                output.getState().addFile(fs);
+                        for (Map.Entry<String,FileList> e : outputs.entrySet()) {
+                            String name = e.getKey();
+                            FileList output = e.getValue();
+                            for (FileState fs : prevOp.getOutputFiles().get(name)) {
+                                output.addFile(fs);
                             }
                         }
                         continue;
@@ -680,53 +592,16 @@ public class Lensfield {
                 }
             }
 
-            // Get input file set
-            Map<String, StreamIn> inputFiles = getInputStreamMap(task.getId(), input);
+            procBuilder.runProcess(input, outputs);
 
-            // Get output file set
-            Map<String, OutputMultiFileState> outputFiles = new HashMap<String, OutputMultiFileState>();
-            for (OutputState output : outputs) {
-                OutputMultiFileState outputx = new OutputMultiFileState(output.getName());
-                outputx.setParams(new HashMap<String,String>(input.getParameters()));
-                MultiStreamOutImpl out = new MultiStreamOutImpl(output.getName(), tmpdir, output.getState().getGlob(), input.getParameters());
-                outputx.setOutput(out);
-                outputx.setGlob(output.getState().getGlob());
-                outputx.setState(output.getState());
-                outputFiles.put(output.getName(), outputx);
-            }
-
-            // Run processor
-            LensfieldProcess proc = procBuilder.configureKtoN(inputFiles, outputFiles);
-            proc.run();
-
-            // Close inputs
-            for (StreamIn stream : inputFiles.values()) {
-                stream.close();
-            }
-            // Close outputs and move temp files
-            Map<String, List<OutputFileState>> map = getOutputFileMap(outputFiles);
-            renameTempFiles(task.getId(), map);
         }
 
-        for (OutputState state : outputs) {
-            System.err.println("Recording output: "+build.getName());
-            stateFileLists.put(build.getName() + (outputs.size()==1?"":"/"+state.getName()), state.getState());
+        for (Map.Entry<String,FileList> e : outputs.entrySet()) {
+            String name = e.getKey();
+            FileList files = e.getValue();
+            stateFileLists.put(build.getName() + (outputs.size()==1?"":"/"+name), files);
         }
 
-    }
-
-    private Map<String, List<OutputFileState>> getOutputFileMap(Map<String, OutputMultiFileState> outputFiles) throws IOException {
-        Map<String, List<OutputFileState>> map = new HashMap<String, List<OutputFileState>>();
-        for (Map.Entry<String,OutputMultiFileState> e : outputFiles.entrySet()) {
-            OutputMultiFileState output = e.getValue();
-            List<OutputFileState> outs = new ArrayList<OutputFileState>();
-            MultiStreamOutImpl out = (MultiStreamOutImpl)output.getOutput();
-            for (OutputFileState outp: out.getOutputs()) {
-                outs.add(new OutputFileState(outp.getPath(), outp.getLastModified(), outp.getParams(), outp.getTempFile(), output.getGlob(), outp.getStream(), output.getState()));
-            }
-            map.put(e.getKey(), outs);
-        }
-        return map;
     }
 
 
@@ -749,7 +624,7 @@ public class Lensfield {
 
         DependencyResolver resolver = new DependencyResolver(model.getRepositories());
         resolver.configureDependencies(model, buildState);
-    };
+    }
 
 
     private void processBuildSteps(List<Process> buildOrder) throws Exception {

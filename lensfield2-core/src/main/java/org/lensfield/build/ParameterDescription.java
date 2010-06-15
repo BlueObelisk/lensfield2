@@ -20,7 +20,7 @@ public class ParameterDescription {
         this.name = name;
         this.field = f;
         this.value = value;
-        this.required = required;;
+        this.required = required;
     }
 
 

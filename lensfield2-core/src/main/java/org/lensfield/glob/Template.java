@@ -57,7 +57,7 @@ public class Template {
                         int x = groupNames.size();
                         groupNames.put("**/", x);
                         ptrn.append("(.*/|)");
-                        fptrn.append("{"+x+"}");
+                        fptrn.append('{').append(x).append('}');
                         wildcard = true;
                     } else {
                         if (groupNames.containsKey("*")) {
@@ -66,7 +66,7 @@ public class Template {
                         int x = groupNames.size();
                         groupNames.put("*", x);
                         ptrn.append("([^/]*)");
-                        fptrn.append("{"+x+"}");
+                        fptrn.append('{').append(x).append('}');
                         wildcard = true;
                     }
                     break;
@@ -83,7 +83,7 @@ public class Template {
                     int x = groupNames.size();
                     groupNames.put(name, x);
                     ptrn.append("([^/]*)");
-                    fptrn.append("{"+x+"}");
+                    fptrn.append("{").append(x).append("}");
                     wildcard = true;
                     i++;
                     break;

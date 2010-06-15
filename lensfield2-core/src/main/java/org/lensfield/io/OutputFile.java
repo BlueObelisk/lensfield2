@@ -3,21 +3,34 @@
  */
 package org.lensfield.io;
 
+import org.lensfield.glob.Template;
+
 import java.io.*;
 import java.util.Map;
 
 /**
  * @author sea36
  */
-public class StreamOutImpl extends StreamOut {
+public class OutputFile extends StreamOut implements Output {
 
     private File file;
     private Map<String,String> parameters;
+    private Template glob;
+    private String path;
+
+
     private BufferedOutputStream out;
 
-    public StreamOutImpl(File file, Map<String, String> params) throws IOException {
+    public OutputFile(File file, Map<String, String> params) throws IOException {
         this.file = file;
         this.parameters = params;
+        this.out = new BufferedOutputStream(new FileOutputStream(file));
+    }
+
+    public OutputFile(File file, Map<String, String> params, Template glob) throws IOException {
+        this.file = file;
+        this.parameters = params;
+        this.glob = glob;
         this.out = new BufferedOutputStream(new FileOutputStream(file));
     }
 
@@ -38,6 +51,30 @@ public class StreamOutImpl extends StreamOut {
         parameters.put("$"+name, value);
     }
 
+
+    public File getFile() {
+        return file;
+    }
+
+    public Template getGlob() {
+        return glob;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public Map<String, String> getParams() {
+        return parameters;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
 
     // --- Delegate Methods ---
 
@@ -73,5 +110,6 @@ public class StreamOutImpl extends StreamOut {
             out = null;
         }
     }
-    
+
+
 }

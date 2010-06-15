@@ -17,9 +17,6 @@ public class LensfieldCli {
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length == 0)
-            args = new String[] { "d:/temp/lensfield/numbers/" }; 
-
         System.err.println("Lensfield2");
         System.err.println("----------------------------------------");
 

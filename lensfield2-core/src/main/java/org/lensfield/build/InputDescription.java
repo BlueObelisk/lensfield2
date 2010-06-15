@@ -16,13 +16,13 @@ public class InputDescription {
     public final boolean arg;
     public final String name;
     public final Field field;
-    public final IoType type;
+    public final boolean multifile;
 
     public InputDescription(Class<?> clazz) {
         this.arg = false;
         this.name = "in";
         this.field = null;
-        this.type = getType(clazz);
+        this.multifile = false;
     }
 
     public InputDescription(Field field, String name) {
@@ -30,16 +30,16 @@ public class InputDescription {
         this.field = field;
         this.name = name;
         Class<?> clazz = field.getType();
-        this.type = getType(clazz);
+        this.multifile = getType(clazz);
     }
 
-    private IoType getType(Class<?> clazz) {
+    private boolean getType(Class<?> clazz) {
         if (InputStream.class.isAssignableFrom(clazz)) {
-            return IoType.FILE;
+            return false;
         } else if (MultiStreamIn.class.isAssignableFrom(clazz)) {
-            return IoType.MULTIFILE;
+            return true;
         } else {
-            return null;
+            throw new RuntimeException("Unknown type: "+clazz.getName());
         }
     }
 

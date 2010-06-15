@@ -36,7 +36,9 @@ public class BuildFileParser {
         } finally {
             try {
                 in.close();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

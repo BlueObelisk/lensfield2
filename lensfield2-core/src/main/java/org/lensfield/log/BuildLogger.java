@@ -99,8 +99,7 @@ public class BuildLogger {
         out.print("(source ");
         out.print(name);
         out.print("(");
-        for (Iterator<FileState> it = files.iterator(); it.hasNext();) {
-            FileState output = it.next();
+        for (FileState output : files) {
             writeList(output.getPath(), dateFormat.format(output.getLastModified()));
         }
         out.println("))");
@@ -212,8 +211,7 @@ public class BuildLogger {
                 writeList(f.getPath(), dateFormat.format(f.getLastModified()));
             } else {
                 out.print('(');
-                for (Iterator<FS> itx = files.iterator(); itx.hasNext();) {
-                    FileState f = itx.next();
+                for (FS f : files) {
                     writeList(f.getPath(), dateFormat.format(f.getLastModified()));
                 }
                 out.print(')');

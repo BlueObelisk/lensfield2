@@ -4,24 +4,26 @@
 package org.lensfield.process;
 
 import org.lensfield.*;
+import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.io.*;
+import org.lensfield.log.BuildLogger;
 import org.lensfield.state.FileState;
 import org.lensfield.state.TaskState;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author sea36
  */
 public class ProcessRunner {
+
+    private File root, tmpdir;
 
     private TaskState task;
     private Class<?> clazz;
@@ -31,6 +33,7 @@ public class ProcessRunner {
     private List<ParameterDescription> parameters;
 
     private Logger LOG;
+    private BuildLogger buildLog;
 
     public ProcessRunner(TaskState task) throws LensfieldException {
         this.task = task;
@@ -73,45 +76,6 @@ public class ProcessRunner {
 
 
 
-    public LensfieldProcess configureKtoL(Map<String,StreamIn> inputs, Map<String,List<OutputFileState>> outputs) throws Exception {
-
-        Object obj = clazz.newInstance();
-
-        configureParameters(obj);
-
-        if (!task.isNoArgs()) {
-            StreamIn in = inputs.values().iterator().next();
-            StreamOut out = outputs.values().iterator().next().get(0).getStream();
-            return new ArgProxy(obj, runMethod, in, out);
-        }
-        configureStreamInputs(obj, inputs);
-        configureStreamOutputs(obj, outputs);
-
-        return proxy(obj);
-    }
-
-    public LensfieldProcess configureKtoN(Map<String,StreamIn> inputs, Map<String, OutputMultiFileState> outputs) throws Exception {
-
-        Object obj = clazz.newInstance();
-
-        configureStreamInputs(obj, inputs);
-        configureMultiStreamOutputs(obj, outputs);
-        configureParameters(obj);
-
-        return proxy(obj);
-    }
-
-    public LensfieldProcess configureNtoK(Map<String,List<FileState>> inputs, Map<String, List<OutputFileState>> outputs, File root) throws Exception {
-
-        Object obj = clazz.newInstance();
-
-        configureMultiStreamInputs(obj, inputs, root);
-        configureStreamOutputs(obj, outputs);
-        configureParameters(obj);
-
-        return proxy(obj);
-    }
-
 
     private void configureParameters(Object obj) throws IllegalAccessException, LensfieldException {
         for (ParameterDescription param : this.parameters) {
@@ -119,62 +83,211 @@ public class ProcessRunner {
         }
     }
 
-    private void configureStreamInputs(Object obj, Map<String,StreamIn> inputs) throws IllegalAccessException, LensfieldException, IOException {
-        for (InputDescription input : this.inputs) {
-            if (inputs.containsKey(input.name)) {
-                StreamIn in = inputs.get(input.name);
-                input.field.set(obj, in);
+
+    public void runProcess(InputFileSet inputs, Map<String,FileList> outputs) throws Exception {
+
+        Object obj = clazz.newInstance();
+        configureParameters(obj);
+
+        List<Input> ins = Collections.emptyList();
+        Map<String, Output> outputMap = Collections.emptyMap();
+        try {
+            if (task.isNoArgs()) {
+
+                ins = new ArrayList<Input>();
+                Map<String,List<FileState>> inputMap = inputs.getMap();
+                for (InputDescription input : this.inputs) {
+                    if (inputMap.containsKey(input.name)) {
+                        List<FileState> list = inputMap.get(input.name);
+                        if (input.multifile) {
+                            List<InputFile> inputFiles = new ArrayList<InputFile>(list.size());
+                            int i = 1;
+                            for (FileState fs : list) {
+                                String path = fs.getPath();
+                                File file = new File(root, path);
+                                Map<String,String> params = fs.getParams();
+                                InputFile in = new InputFile(path, file, Collections.unmodifiableMap(params));
+                                inputFiles.add(in);
+                            }
+                            InputMultiFile in = new InputMultiFile(inputFiles, LOG);
+                            input.field.set(obj, in);
+                            ins.add(in);                                                        
+                        } else {
+                            if (list.size() != 1) {
+                                throw new LensfieldException("Single file input required");
+                            }
+                            FileState fs = list.get(0);
+                            String path = fs.getPath();
+                            File file = new File(root, path);
+                            Map<String,String> params = fs.getParams();
+                            InputFile in = new InputFile(path, file, Collections.unmodifiableMap(params));
+                            input.field.set(obj, in);
+                            ins.add(in);
+                        }
+                    } else {
+                        throw new LensfieldException("Missing input file: "+input.name);
+                    }
+                }
+
+                outputMap = new HashMap<String, Output>();
+
+                for (OutputDescription output : this.outputs) {
+                    if (outputs.containsKey(output.name)) {
+                        FileList list = outputs.get(output.name);
+                        if (output.multifile) {
+                            OutputMultiFile out = new OutputMultiFile(tmpdir, list.getGlob(), inputs.getParameters());
+                            outputMap.put(output.name, out);
+                            output.field.set(obj, out);
+                        } else {
+                            OutputFile out = configureOutputFile(inputs, list);
+                            outputMap.put(output.name, out);
+                            output.field.set(obj, out);
+                        }
+                    } else {
+                        throw new LensfieldException("Missing output file: "+output.name);
+                    }
+                }
+
+                runMethod.invoke(obj);
+
             } else {
-                throw new LensfieldException("Missing input file: "+input.name);
+                FileState fin = inputs.getMap().values().iterator().next().get(0);
+                InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParams());
+                FileList fileList = outputs.values().iterator().next();
+                OutputFile out = configureOutputFile(inputs, fileList);
+
+                ins = Collections.<Input>singletonList(in);
+                outputMap = Collections.<String, Output>singletonMap("out", out);
+
+                runArgsTask(obj, in, out);
+
+            }
+        } finally {
+            // Ensure all streams are closed
+            for (Input in : ins) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            for (Output out : outputMap.values()) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // Move temp files
+        renameTempFiles(task.getId(), outputMap);
+
+        Map<String,List<FileState>> outputFiles = new HashMap<String, List<FileState>>();
+        for (Map.Entry<String, Output> e : outputMap.entrySet()) {
+            List<FileState> list = new ArrayList<FileState>();
+            List<OutputFile> outs;
+            if (e.getValue() instanceof OutputFile) {
+                outs = Collections.singletonList((OutputFile)e.getValue());
+            }
+            else if (e.getValue() instanceof OutputMultiFile) {
+                outs = ((OutputMultiFile)e.getValue()).getOutputs();
+            }
+            else {
+                throw new RuntimeException();
+            }
+            for (OutputFile out : outs) {
+                FileState f = new FileState(out.getPath(), out.getFile().lastModified());
+                outputs.get(e.getKey()).addFile(f);
+                list.add(f);
+            }
+            outputFiles.put(e.getKey(), list);
+        }
+
+        buildLog.process(task.getId(), inputs.getMap(), outputFiles);
+
+    }
+
+    private OutputFile configureOutputFile(InputFileSet inputs, FileList fileList) throws IOException {
+        File tmpFile = new File(tmpdir, UUID.randomUUID().toString());
+        Map<String,String> params = new HashMap<String,String>(inputs.getParameters());
+        return new OutputFile(tmpFile, params, fileList.getGlob());
+    }
+
+    private void runArgsTask(Object obj, StreamIn in, StreamOut out) throws Exception {
+        try {
+            runMethod.invoke(obj, in, out);
+        } finally {
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private void configureMultiStreamInputs(Object obj, Map<String, List<FileState>> inputs, File root) throws IllegalAccessException, LensfieldException, IOException {
-        for (InputDescription input : this.inputs) {
-            if (inputs.containsKey(input.name)) {
-                List<FileState> fs = inputs.get(input.name);
-                MultiStreamIn in = new MultiStreamInImpl(root, fs, LOG);
-                input.field.set(obj, in);
-            } else {
-                throw new LensfieldException("Missing input file: "+input.name);
+
+
+    private void renameTempFiles(String name, Map<String, Output> outputFiles) throws LensfieldException {
+        for (Output out : outputFiles.values()) {
+            List<OutputFile> outputs;
+            if (out instanceof OutputFile) {
+                outputs = Collections.singletonList((OutputFile)out);
+            }
+            else if (out instanceof OutputMultiFile) {
+                outputs = ((OutputMultiFile)out).getOutputs();
+            }
+            else {
+                throw new RuntimeException();
+            }
+            for (OutputFile output : outputs) {
+                File tempFile = output.getFile();
+                // TODO handle missing glob parameters
+                String path = output.getGlob().format(output.getParams());
+                // TODO check for duplicate output paths
+                FileState fr = new FileState(path, tempFile.lastModified(), output.getParams());
+                File file = new File(root, fr.getPath());
+                File parent = file.getParentFile();
+                if (!parent.isDirectory()) {
+                    if (!parent.mkdirs()) {
+                        throw new LensfieldException("Unable to create output directory "+parent);
+                    }
+                }
+                if (file.isFile()) {
+                    if (!file.delete()) {
+                        throw new LensfieldException("Unable to delete file "+file);
+                    }
+                }
+                if (!tempFile.renameTo(file)) {
+                    throw new LensfieldException("Unable to rename file "+tempFile+" to "+file);
+                }
+                output.setPath(path);
+                output.setFile(file);
+                LOG.debug(name, "writing "+path);
             }
         }
     }
 
-    private void configureStreamOutputs(Object obj, Map<String, List<OutputFileState>> outputs) throws IllegalAccessException, LensfieldException, IOException {
-        for (OutputDescription output : this.outputs) {
-            if (outputs.containsKey(output.name)) {
-                StreamOut out = outputs.get(output.name).get(0).getStream();
-                output.field.set(obj, out);
-            } else {
-                throw new LensfieldException("Missing output file: "+output.name);
-            }
-        }
+
+    public void setRoot(File root) {
+        this.root = root;
     }
 
-    private void configureMultiStreamOutputs(Object obj, Map<String, OutputMultiFileState> outputs) throws IllegalAccessException, LensfieldException, IOException {
-        for (OutputDescription output : this.outputs) {
-            if (outputs.containsKey(output.name)) {
-                MultiStreamOut out = outputs.get(output.name).getOutput();
-                output.field.set(obj, out);
-            } else {
-                throw new LensfieldException("Missing output file: "+output.name);
-            }
-        }
+    public void setTmpdir(File tmpdir) {
+        this.tmpdir = tmpdir;
     }
-
-
-    private LensfieldProcess proxy(Object obj) {
-        if (obj instanceof LensfieldProcess) {
-            return (LensfieldProcess) obj;
-        } else {
-            return new ProcessProxy(obj, runMethod);
-        }
-    }
-
 
     public void setLogger(Logger log) {
         this.LOG = log;
     }
+
+    public void setBuildLog(BuildLogger buildLog) {
+        this.buildLog = buildLog;
+    }
+    
 }

@@ -4,7 +4,6 @@
 package org.lensfield.log;
 
 import org.apache.log4j.Logger;
-import org.lensfield.FileSet;
 import org.lensfield.state.*;
 
 import java.io.EOFException;
@@ -238,8 +237,7 @@ public class BuildStateReader {
             throw new IOException("Expected ']'; found: '"+((char)ch)+"'");
         }
         ch = in.read();
-        FileState fs = new FileState(path, lastModified);
-        return fs;                    
+        return new FileState(path, lastModified);
     }
 
     private void readTask() throws IOException, ParseException {

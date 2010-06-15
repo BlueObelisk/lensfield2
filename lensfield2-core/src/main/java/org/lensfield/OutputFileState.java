@@ -5,13 +5,12 @@ package org.lensfield;
 
 import org.lensfield.build.FileList;
 import org.lensfield.glob.Template;
+import org.lensfield.io.OutputFile;
 import org.lensfield.io.StreamOut;
-import org.lensfield.io.StreamOutImpl;
 import org.lensfield.state.FileState;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -51,7 +50,7 @@ public class OutputFileState extends FileState {
 
     public synchronized StreamOut getStream() throws IOException {
         if (stream == null) {
-            stream = new StreamOutImpl(tempFile, getParams());
+            stream = new OutputFile(tempFile, getParams());
         }
         return stream;
     }

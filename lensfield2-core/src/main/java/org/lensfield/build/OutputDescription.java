@@ -17,13 +17,13 @@ public class OutputDescription {
     public final boolean arg;
     public final String name;
     public final Field field;
-    public final IoType type;
+    public final boolean multifile;
 
     public OutputDescription(Class<?> clazz) {
         this.arg = false;
         this.name = "out";
         this.field = null;
-        this.type = getType(clazz);
+        this.multifile = false;
     }
 
     public OutputDescription(Field field, String name) {
@@ -31,16 +31,16 @@ public class OutputDescription {
         this.field = field;
         this.name = name;
         Class<?> clazz = field.getType();
-        this.type = getType(clazz);
+        this.multifile = getType(clazz);
     }
 
-    private IoType getType(Class<?> clazz) {
+    private boolean getType(Class<?> clazz) {
         if (OutputStream.class.isAssignableFrom(clazz)) {
-            return IoType.FILE;
+            return false;
         } else if (MultiStreamOut.class.isAssignableFrom(clazz)) {
-            return IoType.MULTIFILE;
+            return true;
         } else {
-            return null;
+            throw new RuntimeException("Unknown type: "+clazz.getName()); 
         }
     }
 }

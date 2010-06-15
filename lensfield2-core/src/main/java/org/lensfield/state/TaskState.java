@@ -4,7 +4,6 @@
 package org.lensfield.state;
 
 import org.lensfield.build.InputDescription;
-import org.lensfield.build.IoType;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 
@@ -154,12 +153,12 @@ public class TaskState {
 
     public boolean isKtoL() {
         for (InputDescription input : inputDescriptions.values()) {
-            if (input.type != IoType.FILE) {
+            if (input.multifile) {
                 return false;
             }
         }
         for (OutputDescription output : outputDescriptions.values()) {
-            if (output.type != IoType.FILE) {
+            if (output.multifile) {
                 return false;
             }
         }
@@ -168,12 +167,12 @@ public class TaskState {
 
     public boolean isNtoK() {
         for (InputDescription input : inputDescriptions.values()) {
-            if (input.type != IoType.MULTIFILE) {
+            if (!input.multifile) {
                 return false;
             }
         }
         for (OutputDescription output : outputDescriptions.values()) {
-            if (output.type != IoType.FILE) {
+            if (output.multifile) {
                 return false;
             }
         }
@@ -182,12 +181,12 @@ public class TaskState {
 
     public boolean isKtoN() {
         for (InputDescription input : inputDescriptions.values()) {
-            if (input.type != IoType.FILE) {
+            if (input.multifile) {
                 return false;
             }
         }
         for (OutputDescription output : outputDescriptions.values()) {
-            if (output.type != IoType.MULTIFILE) {
+            if (!output.multifile) {
                 return false;
             }
         }
