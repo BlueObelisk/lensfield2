@@ -6,9 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>sea36</groupId>
-        <artifactId>sea36-parent</artifactId>
-        <version>1-SNAPSHOT</version>
+        <groupId>wwmm</groupId>
+        <artifactId>wwmm-parent</artifactId>
+        <version>1</version>
     </parent>
 
     <groupId>org.lensfield.testing</groupId>

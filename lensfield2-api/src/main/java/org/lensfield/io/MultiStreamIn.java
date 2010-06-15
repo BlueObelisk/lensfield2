@@ -11,6 +11,6 @@ import java.io.InputStream;
  */
 public abstract class MultiStreamIn {
 
-    public abstract InputStream next() throws IOException;
+    public abstract StreamIn next() throws IOException;
     
 }
