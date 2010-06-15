@@ -38,24 +38,7 @@
                             </archive>
                         </configuration>
                     </execution>
-
-                    <execution>
-                        <id>create-project-bundle</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptorSourceDirectory>src/main/assembly</descriptorSourceDirectory>
-                            <descriptorRefs>
-                                <descriptorRef>bin</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>lensfield-${project.version}</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                        </configuration>
-                    </execution>
                 </executions>
-
             </plugin>
         </plugins>
     </build>
@@ -67,5 +50,40 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+
+                        <executions>
+                            <execution>
+                                <id>create-project-bundle</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <descriptorSourceDirectory>src/main/assembly</descriptorSourceDirectory>
+                                    <descriptorRefs>
+                                        <descriptorRef>bin</descriptorRef>
+                                    </descriptorRefs>
+                                    <finalName>lensfield-${project.version}</finalName>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+
+        </profile>
+    </profiles>
 
 </project>
