@@ -92,6 +92,7 @@ public class LensfieldProcessorITest {
         loadNumberData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "**/*.n"));
         model.addBuild(new Build("doubles",     "org.lensfield.testing.ops.number.Doubler",  "files",    "**/*.x2"));
@@ -114,6 +115,7 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
         model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
@@ -132,6 +134,7 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
         model.addBuild(new Build("joined", "org.lensfield.testing.ops.file.Joiner", "files", "output/all.txt"));
@@ -152,6 +155,7 @@ public class LensfieldProcessorITest {
         loadXyzData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*.txt"));
         model.addBuild(new Build("split", "org.lensfield.testing.ops.file.Splitter", "files", "output/*-{%i}.txt"));
@@ -175,6 +179,7 @@ public class LensfieldProcessorITest {
         loadNumberData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addSource(new Source("files", "**/*.n"));
         Build build1 = new Build("sum1", "org.lensfield.testing.ops.number.Summer",   "files",  "sum1.txt");
         build1.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
@@ -197,6 +202,7 @@ public class LensfieldProcessorITest {
         loadNumberData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
 
         model.addSource(new Source("files", "**/*.n"));
@@ -224,6 +230,7 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
         model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
@@ -245,6 +252,7 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
         model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
