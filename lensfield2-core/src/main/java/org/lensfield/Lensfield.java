@@ -274,7 +274,7 @@ public class Lensfield {
             processSource((Source)step);
         }
         else if (step instanceof Build) {
-            build((Build)step);
+            processBuildStep((Build)step);
         }
         else {
             throw new RuntimeException();
@@ -314,7 +314,7 @@ public class Lensfield {
     }
 
 
-    private void build(Build build) throws Exception {
+    private void processBuildStep(Build build) throws Exception {
         checkInputsExist(build);
 
         TaskState task = buildState.getTask(build.getName());
@@ -342,57 +342,16 @@ public class Lensfield {
 
     private void runKtoLStep(Build build, TaskState task) throws Exception {
 
-        Map<String,FileList> inputFileLists = getKtoLInputs(build, task);
+        Map<String,FileList> inputFileLists = getInputs(build, task);
         List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
 
         Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
 
-        TaskState prevTask = null;
-        if (!task.isUpdated()) {
-            if (prevBuildState != null) {
-                prevTask = prevBuildState.getTask(task.getId());
-            }
-        }
-
-        ProcessRunner procBuilder = new ProcessRunner(task);
-        procBuilder.setTmpdir(tmpdir);
-        procBuilder.setRoot(root);
-        procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
-        procBuilder.setBuildLog(buildLog);
-        
-        for (InputFileSet input : inputSets) {
-
-            Operation op = new Operation(build.getName(), input.getMap(), null);
-
-            // Check if up-to-date
-            if (!task.isUpdated() && prevTask != null) {
-                String fn = input.getMap().values().iterator().next().get(0).getPath();
-                Operation prevOp = prevTask.getInputOperationMap().get(fn);
-                if (prevOp != null) {
-                    if (isUpToDate(input.getMap(), prevOp)) {
-                        buildLog.process(task.getId(), input.getMap(), prevOp.getOutputFiles());
-                        for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
-                            String name = e.getKey();
-                            FileList output = e.getValue();
-                            for (FileState fs : prevOp.getOutputFiles().get(name)) {
-                                output.addFile(fs);
-                            }
-                        }
-                        continue;
-                    }
-                }
-            }
-
-            procBuilder.runProcess(input, outputFileLists);
-        }
-
-        for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
-            String name = e.getKey();
-            FileList files = e.getValue();
-            stateFileLists.put(build.getName() + (outputFileLists.size()==1?"":"/"+name), files);
-        }
+        run(task, inputSets, outputFileLists);
 
     }
+
+
 
     private boolean isUpToDate(Map<String,List<FileState>> input, Operation prevOp) {
         // Check input names match
@@ -457,7 +416,7 @@ public class Lensfield {
     }
 
 
-    private Map<String, FileList> getKtoLInputs(Build build, TaskState task) throws LensfieldException {
+    private Map<String, FileList> getInputs(Build build, TaskState task) throws LensfieldException {
         Map<String,FileList> map = new HashMap<String, FileList>();
         for (Input input : build.getInputs()) {
             String name = input.getName();
@@ -474,34 +433,47 @@ public class Lensfield {
     }
 
 
+    private void runKtoNStep(Build build, TaskState task) throws Exception {
+
+        Map<String, FileList> inputFileLists = getInputs(build, task);
+        List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
+
+        // TODO no inputs sets; empty output
+
+        Map<String,FileList> outputs = new HashMap<String,FileList>();
+        for (Output output : build.getOutputs()) {
+            String name = output.getName();
+            if (name == null) {
+                OutputDescription outd = task.getDefaultOutput();
+                if (outd == null) {
+                    throw new LensfieldException();
+                }
+                name = outd.name;
+            }
+            outputs.put(name, new FileList(new Template(output.getValue())));
+        }
+
+        run(task, inputSets, outputs);
+
+    }
+
+
     private void runNtoKStep(Build build, TaskState task) throws Exception {
 
-        Map<String, List<FileState>> inputs = getNtoKInputStates(build, task);
+        Map<String, FileList> inputFileLists = getInputs(build, task);
         Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
 
-        // TODO grouped input/outputs
-        if (!task.isUpdated() && prevBuildState != null) {
-            TaskState prevTask = prevBuildState.getTask(task.getId());
-            if (prevTask != null) {
-                String fn = inputs.values().iterator().next().get(0).getPath();
-                Operation prevOp = prevTask.getInputOperationMap().get(fn);
-                if (prevOp != null) {
-                    if (isUpToDate(inputs, prevOp)) {
-                        buildLog.process(task.getId(), inputs, prevOp.getOutputFiles());
-                        for (Map.Entry<String, List<FileState>> e : prevOp.getOutputFiles().entrySet()) {
-                            String name = e.getKey();
-                            List<FileState> files = e.getValue();
-                            FileList fileList = outputFileLists.get(name);
-                            for (FileState f : files) {
-                                fileList.addFile(f);
-                            }
-                            stateFileLists.put(build.getName()+(outputFileLists.size()==1?"":"/"+name), fileList);
-                        }
-                        return;
-                    }
-                }
-            }
+        Map<String,List<FileState>> inputMap = new HashMap<String, List<FileState>>();
+        for (Map.Entry<String,FileList> e : inputFileLists.entrySet()) {
+            inputMap.put(e.getKey(), e.getValue().getFiles());
         }
+
+        InputFileSet inputs = new InputFileSet(Collections.<String, String>emptyMap(), inputMap);
+
+        run(task, Collections.singletonList(inputs), outputFileLists);
+    }
+
+    private void run(TaskState task, List<InputFileSet> inputList, Map<String, FileList> outputFileLists) throws Exception {
 
         ProcessRunner procBuilder = new ProcessRunner(task);
         procBuilder.setTmpdir(tmpdir);
@@ -509,13 +481,46 @@ public class Lensfield {
         procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
         procBuilder.setBuildLog(buildLog);
 
-        InputFileSet inputSet = new InputFileSet(Collections.<String,String>emptyMap(), inputs);
-        procBuilder.runProcess(inputSet, outputFileLists);
+        TaskState prevTask = null;
+        if (!task.isUpdated()) {
+            if (prevBuildState != null) {
+                prevTask = prevBuildState.getTask(task.getId());
+            }
+        }
+
+        for (InputFileSet inputs : inputList) {
+
+            // TODO grouped input/outputs
+            if (prevTask != null) {
+                String fn = inputs.getMap().values().iterator().next().get(0).getPath();
+                Operation prevOp = prevTask.getInputOperationMap().get(fn);
+                if (prevOp != null) {
+                    if (isUpToDate(inputs.getMap(), prevOp)) {
+                        buildLog.process(task.getId(), inputs.getMap(), prevOp.getOutputFiles());
+                        for (Map.Entry<String, List<FileState>> e : prevOp.getOutputFiles().entrySet()) {
+                            String name = e.getKey();
+                            List<FileState> files = e.getValue();
+                            FileList fileList = outputFileLists.get(name);
+                            for (FileState f : files) {
+                                fileList.addFile(f);
+                            }
+                            stateFileLists.put(task.getId()+(outputFileLists.size()==1?"":"/"+name), fileList);
+                        }
+                        return;
+                    }
+                }
+            }
+
+            procBuilder.runProcess(inputs, outputFileLists);
+
+        }
+
+
 
         for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
             String name = e.getKey();
             FileList files = e.getValue();
-            stateFileLists.put(build.getName() + (outputFileLists.size()==1?"":"/"+name), files);
+            stateFileLists.put(task.getId() + (outputFileLists.size()==1?"":"/"+name), files);
         }
 
     }
@@ -536,73 +541,6 @@ public class Lensfield {
         return inputs;
     }
 
-
-
-    private void runKtoNStep(Build build, TaskState task) throws Exception {
-
-        Map<String, FileList> inputFileLists = getKtoLInputs(build, task);
-        List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
-
-        // TODO no inputs sets; empty output
-
-        Map<String,FileList> outputs = new HashMap<String,FileList>();
-        for (Output output : build.getOutputs()) {
-            String name = output.getName();
-            if (name == null) {
-                OutputDescription outd = task.getDefaultOutput();
-                if (outd == null) {
-                    throw new LensfieldException();
-                }
-                name = outd.name;
-            }
-            outputs.put(name, new FileList(new Template(output.getValue())));
-        }
-
-        TaskState prevTask = null;
-        if (!task.isUpdated()) {
-            if (prevBuildState != null) {
-                prevTask = prevBuildState.getTask(task.getId());
-                // Check if up-to-date
-            }
-        }
-
-        ProcessRunner procBuilder = new ProcessRunner(task);
-        procBuilder.setTmpdir(tmpdir);
-        procBuilder.setRoot(root);
-        procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
-        procBuilder.setBuildLog(buildLog);
-
-        for (InputFileSet input : inputSets) {
-
-            if (!task.isUpdated() && prevTask != null) {
-                String fn = input.getMap().values().iterator().next().get(0).getPath();
-                Operation prevOp = prevTask.getInputOperationMap().get(fn);
-                if (prevOp != null) {
-                    if (isUpToDate(input.getMap(), prevOp)) {
-                        buildLog.process(task.getId(), input.getMap(), prevOp.getOutputFiles());
-                        for (Map.Entry<String,FileList> e : outputs.entrySet()) {
-                            String name = e.getKey();
-                            FileList output = e.getValue();
-                            for (FileState fs : prevOp.getOutputFiles().get(name)) {
-                                output.addFile(fs);
-                            }
-                        }
-                        continue;
-                    }
-                }
-            }
-
-            procBuilder.runProcess(input, outputs);
-
-        }
-
-        for (Map.Entry<String,FileList> e : outputs.entrySet()) {
-            String name = e.getKey();
-            FileList files = e.getValue();
-            stateFileLists.put(build.getName() + (outputs.size()==1?"":"/"+name), files);
-        }
-
-    }
 
 
     protected void checkBuildStepsExist() throws LensfieldException {
