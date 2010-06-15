@@ -26,15 +26,6 @@ public class InputFileSet {
         return parameters;
     }
 
-
-//    public static List<FileSet> create(String[] inputs, Map<GlobMatch, FileState[]> map) {
-//        List<FileSet> list = new ArrayList<FileSet>(map.size());
-//        for (Map.Entry<GlobMatch, FileState[]> e : map.entrySet()) {
-//            list.add(new FileSet(e.getKey(), inputs, e.getValue()));
-//        }
-//        return list;
-//    }
-
     public Map<String, List<FileState>> getMap() {
         return inputs;
     }
