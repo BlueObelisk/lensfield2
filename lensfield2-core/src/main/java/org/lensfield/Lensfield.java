@@ -9,11 +9,11 @@ import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.GlobAnalyser;
 import org.lensfield.glob.Template;
+import org.lensfield.io.FileSource;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
 import org.lensfield.model.*;
 import org.lensfield.model.Process;
-import org.lensfield.ops.FileSource;
 import org.lensfield.process.ProcessRunner;
 import org.lensfield.state.*;
 

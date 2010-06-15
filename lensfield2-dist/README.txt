@@ -237,7 +237,7 @@ Examples
     :output     sum-sq.txt)
 --------------------------------------------------------------------------------
 ; Build file taking all files **/*.n, and copying each to **/*.nn
-; Illustrates dependency import and use of Lensfield2 'unaware' routines
+; Illustrates use of Lensfield2 'unaware' routines
 
 (source
     files       **/*.n)
@@ -248,4 +248,19 @@ Examples
     :output     **/*.nn
     :depends    commons-io:commons-io:1.4)
 --------------------------------------------------------------------------------
+; Splits a text file line-by-line
+; Illustates 1:n conversion
+; Note: {%i} in output glob is a special parameter for MultiStreamOutputs
+;       containing the number (1,2,3...) of the stream created.  
 
+(depends
+    org.lensfield.testing:lensfield2-testops1:0.1-SNAPSHOT)
+
+(source
+    files       input/*.txt)
+
+(build
+    split-files org.lensfield.testing.ops.file.Splitter
+    :input      files
+    :output     output/*-{%i}.txt)
+--------------------------------------------------------------------------------

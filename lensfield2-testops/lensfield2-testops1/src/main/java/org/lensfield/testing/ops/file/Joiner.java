@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield.ops;
+package org.lensfield.testing.ops.file;
 
 import org.lensfield.LensfieldInput;
 import org.lensfield.LensfieldOutput;

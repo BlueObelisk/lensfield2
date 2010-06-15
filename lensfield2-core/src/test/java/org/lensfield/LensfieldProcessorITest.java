@@ -114,8 +114,9 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
-        model.addBuild(new Build("copies", "org.lensfield.ops.Copier", "files", "output/*"));
+        model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 
         Lensfield lf = new Lensfield(model);
         lf.setRoot(workspace);
@@ -131,8 +132,9 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
-        model.addBuild(new Build("joined", "org.lensfield.ops.Joiner", "files", "output/all.txt"));
+        model.addBuild(new Build("joined", "org.lensfield.testing.ops.file.Joiner", "files", "output/all.txt"));
 
         Lensfield lf = new Lensfield(model);
         lf.setRoot(workspace);
@@ -150,8 +152,9 @@ public class LensfieldProcessorITest {
         loadXyzData(workspace);
 
         Model model = new Model();
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*.txt"));
-        model.addBuild(new Build("split", "org.lensfield.ops.Splitter", "files", "output/*-{%i}.txt"));
+        model.addBuild(new Build("split", "org.lensfield.testing.ops.file.Splitter", "files", "output/*-{%i}.txt"));
 
         Lensfield lf = new Lensfield(model);
         lf.setRoot(workspace);
@@ -221,8 +224,9 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
-        model.addBuild(new Build("copies", "org.lensfield.ops.Copier", "files", "output/*"));
+        model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 
         new Lensfield(model, workspace).build();
         assertTrue(new File(workspace, "output/a.txt").isFile());
@@ -241,8 +245,9 @@ public class LensfieldProcessorITest {
         loadAbcData(workspace);
 
         Model model = new Model();
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
-        model.addBuild(new Build("copies", "org.lensfield.ops.Copier", "files", "output/*"));
+        model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 
         new Lensfield(model, workspace).build();
         assertTrue(new File(workspace, "output/a.txt").isFile());

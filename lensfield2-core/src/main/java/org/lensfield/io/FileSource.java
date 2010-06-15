@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield.ops;
+package org.lensfield.io;
 
 import org.lensfield.Logger;
 import org.lensfield.state.FileState;
