@@ -17,17 +17,6 @@
 
     <name>Lensfield</name>
     <inceptionYear>2010</inceptionYear>
-    
-    <modules>
-        <module>lensfield2-api</module>
-        
-        <module>lensfield2-testops</module>
-
-        <module>lensfield2-core</module>
-        <module>lensfield2-cli</module>
-        <module>lensfield2-parser</module>
-        <module>lensfield2-dist</module>
-    </modules>
 
     <developers>
         <developer>
@@ -49,7 +38,7 @@
             <organization>Unilever Centre for Molecular Science Informatics, University of Cambridge</organization>
         </contributor>
     </contributors>
-    
+
     <repositories>
         <repository>
             <id>ucc-repo</id>
@@ -102,8 +91,8 @@
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-http</artifactId>
                 <version>1.0-beta-5</version>
-            </dependency>            
-            
+            </dependency>
+
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -112,5 +101,43 @@
 
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>api</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>lensfield2-api</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>testops</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>lensfield2-testops</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>all</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <modules>
+                <module>lensfield2-api</module>
+
+                <module>lensfield2-testops</module>
+
+                <module>lensfield2-core</module>
+                <module>lensfield2-cli</module>
+                <module>lensfield2-parser</module>
+                <module>lensfield2-dist</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>
