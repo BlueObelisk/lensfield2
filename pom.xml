@@ -10,7 +10,7 @@
         <version>1</version>
     </parent>
 
-    <groupId>org.lensfield.testing</groupId>
+    <groupId>org.lensfield</groupId>
     <artifactId>lensfield2</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
