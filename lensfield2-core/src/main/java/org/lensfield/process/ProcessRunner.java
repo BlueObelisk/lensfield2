@@ -42,9 +42,7 @@ public class ProcessRunner {
         parameters = new ArrayList<ParameterDescription>(task.getParameters());
         clazz = task.getClazz();
 
-        if (!LensfieldProcess.class.isAssignableFrom(clazz)) {
-            runMethod = task.getMethod();
-        }
+        runMethod = task.getMethod();
 
         checkClassInstantiable();
         ensureFieldsAccessible();
