@@ -359,7 +359,7 @@ public class Lensfield {
     private boolean isUpToDate(Map<String,List<FileState>> input, Operation prevOp) {
         // Check input names match
         if (!input.keySet().equals(prevOp.getInputFiles().keySet())) {
-//            System.err.println("input name mis-match. current:"+input.keySet()+"; prev:"+prevOp.getInputFiles().keySet());
+            System.err.println("[DEBUG] input name mis-match. current:"+input.keySet()+"; prev:"+prevOp.getInputFiles().keySet());
             return false;
         }
         // Check input files up-to-date
@@ -367,16 +367,16 @@ public class Lensfield {
             List<FileState> files = e.getValue();
             List<FileState> prevFiles = prevOp.getInputFiles().get(e.getKey());
             if (files.size() != prevFiles.size()) {
-//                System.err.println("input file count mis-match. current:"+files.size()+"; prev:"+prevFiles.size());
+                System.err.println("[DEBUG] input file count mis-match. current:"+files.size()+"; prev:"+prevFiles.size());
                 return false;
             }
             for (int i = 0; i < files.size(); i++) {
                 if (!files.get(i).getPath().equals(prevFiles.get(i).getPath())) {
-//                    System.err.println("input file name mis-match. current:"+files.get(i).getPath()+"; prev:"+prevFiles.get(i).getPath());
+                    System.err.println("[DEBUG] input file name mis-match. current:"+files.get(i).getPath()+"; prev:"+prevFiles.get(i).getPath());
                     return false;
                 }
                 if (isChanged(files.get(i).getLastModified(), prevFiles.get(i).getLastModified())) {
-//                    System.err.println("input file age mis-match. current:"+files.get(i).getLastModified()+"; prev:"+prevFiles.get(i).getLastModified());
+                    System.err.println("[DEBUG] input file age mis-match. current:"+files.get(i).getLastModified()+"; prev:"+prevFiles.get(i).getLastModified());
                     return false;
                 }
             }
@@ -386,11 +386,11 @@ public class Lensfield {
             for (FileState fs : fileStates) {
                 File f = new File(root, fs.getPath());
                 if (!f.isFile()) {
-//                    System.err.println("output file missing: "+fs.getPath());
+                    System.err.println("[DEBUG] output file missing: "+fs.getPath());
                     return false;
                 }
                 if (isChanged(fs.getLastModified(), f.lastModified())) {
-//                    System.err.println("output file age mismatch. existing:"+f.lastModified()+"; prev:"+fs.getLastModified());
+                    System.err.println("[DEBUG] output file age mismatch. existing:"+f.lastModified()+"; prev:"+fs.getLastModified());
                     return false;
                 }
             }
@@ -492,10 +492,11 @@ public class Lensfield {
         }
 
         for (InputFileSet inputs : inputList) {
-
             // TODO grouped input/outputs
             if (prevTask != null) {
+                // Get sample filename
                 String fn = inputs.getMap().values().iterator().next().get(0).getPath();
+                // Get relevant operation
                 Operation prevOp = prevTask.getInputOperationMap().get(fn);
                 if (prevOp != null) {
                     if (isUpToDate(inputs.getMap(), prevOp)) {
@@ -509,7 +510,7 @@ public class Lensfield {
                             }
                             stateFileLists.put(task.getId()+(outputFileLists.size()==1?"":"/"+name), fileList);
                         }
-                        return;
+                        continue;
                     }
                 }
             }
