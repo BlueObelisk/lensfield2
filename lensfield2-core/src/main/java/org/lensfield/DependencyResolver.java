@@ -87,7 +87,6 @@ public class DependencyResolver {
 
             // --- This magic from m2elipse/internal.embedder.MavenImpl.resolve() ---
             Artifact artifact = repositorySystem.createArtifact(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), "compile", "jar");
-
             ArtifactResolutionRequest request = new ArtifactResolutionRequest();
             request.setLocalRepository(getLocalRepository());
             request.setRemoteRepositories(getRemoteRepositories());
@@ -105,9 +104,13 @@ public class DependencyResolver {
                 throw new LensfieldException("Unable to resolve dependency: "+result.getMissingArtifacts());
             }
 
-            map.put(0, result.getOriginatingArtifact());
+            if (result.getOriginatingArtifact() != null) {
+                map.put(0, result.getOriginatingArtifact());
+            }
             for (ResolutionNode node : result.getArtifactResolutionNodes()) {
-                map.put(node.getDepth(), node.getArtifact());
+                if (node.getArtifact() != null) {
+                    map.put(node.getDepth(), node.getArtifact());
+                }
             }
         }
 

@@ -7,17 +7,32 @@ import org.lensfield.BuildFileParser;
 import org.lensfield.Lensfield;
 import org.lensfield.model.Model;
 
-import java.io.File;
+import java.io.*;
 
 /**
  * @author sea36
  */
 public class LensfieldCli {
 
+    private static String loadVersion() throws IOException {
+        InputStream in = LensfieldCli.class.getResourceAsStream("/META-INF/lensfield.version");
+        if (in == null) {
+            return "-undefined-";
+        }
+        try {
+            String version = new BufferedReader(new InputStreamReader(in)).readLine();
+            return version;
+        } finally {
+            in.close();
+        }
+    }
+
 
     public static void main(String[] args) throws Exception {
 
-        System.err.println("Lensfield2");
+        String version = loadVersion();
+
+        System.err.println("Lensfield2 ("+version+")");
         System.err.println("----------------------------------------");
 
         // Locate build file
