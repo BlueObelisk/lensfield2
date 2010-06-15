@@ -25,7 +25,6 @@
 
         <module>lensfield2-core</module>
         <module>lensfield2-cli</module>
-        <module>lensfield2-maven</module>
         <module>lensfield2-parser</module>
         <module>lensfield2-dist</module>
     </modules>
@@ -75,11 +74,6 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>lensfield2-parser</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>lensfield2-maven</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
