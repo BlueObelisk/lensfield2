@@ -15,6 +15,11 @@ import org.apache.maven.cli.AbstractMavenTransferListener;
 import org.apache.maven.cli.MavenLoggerManager;
 import org.apache.maven.model.Repository;
 import org.apache.maven.repository.RepositorySystem;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;
+import org.apache.maven.settings.building.SettingsBuilder;
+import org.apache.maven.settings.building.SettingsBuildingException;
+import org.apache.maven.settings.building.SettingsBuildingRequest;
 import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.DefaultContainerConfiguration;
 import org.codehaus.plexus.DefaultPlexusContainer;
@@ -49,6 +54,8 @@ public class DependencyResolver {
 
     private boolean forceUpdate = false;
     private boolean offline = false;
+    private SettingsBuilder settingsBuilder;
+    private Settings settings;
 
 
     public DependencyResolver(List<String> repositories) throws PlexusContainerException, ComponentLookupException, InvalidRepositoryException {
@@ -64,8 +71,11 @@ public class DependencyResolver {
         DefaultPlexusContainer plexus = new DefaultPlexusContainer(cc);
         plexus.setLoggerManager(new MavenLoggerManager(new ConsoleLogger(org.codehaus.plexus.logging.Logger.LEVEL_WARN, "LOG")));
 
-        repositorySystem = plexus.lookup(RepositorySystem.class);
+        this.repositorySystem = plexus.lookup(RepositorySystem.class);
+        this.settingsBuilder = plexus.lookup(SettingsBuilder.class);
         // ----
+        
+        this.settings = getSettings();
 
         // Init remote repositories
         for (String repoUrl : repositories) {
@@ -119,7 +129,14 @@ public class DependencyResolver {
 
 
     private ArtifactRepository getLocalRepository() throws InvalidRepositoryException {
-        return repositorySystem.createLocalRepository(RepositorySystem.defaultUserLocalRepository);
+        File localRepo;
+        if (settings.getLocalRepository() != null) {
+            localRepo = new File(settings.getLocalRepository());
+        } else {
+            localRepo = RepositorySystem.defaultUserLocalRepository;
+        }
+        LOG.info("Local repository: "+localRepo.getPath());
+        return repositorySystem.createLocalRepository(localRepo);
     }
 
 
@@ -251,5 +268,24 @@ public class DependencyResolver {
         }
         return urls;
     }
-        
+
+
+
+    public Settings getSettings() {
+        // Adapted from m2eclipse/org.maven.ide.eclipse.internal.embedder.MavenImpl
+        SettingsBuildingRequest request = new DefaultSettingsBuildingRequest();
+        try {
+            return settingsBuilder.build(request).getEffectiveSettings();
+        } catch(SettingsBuildingException ex) {
+            String msg = "Could not read settings.xml, assuming default values";
+            LOG.error(msg);
+            /*
+            * NOTE: This method provides input for various other core functions, just bailing out would make m2e highly
+            * unusuable. Instead, we fail gracefully and just ignore the broken settings, using defaults.
+            */
+            return new Settings();
+        }
+    }
+
+
 }
