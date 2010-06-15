@@ -92,13 +92,13 @@ public class Lensfield {
         this.workspace = new File(root, ".lf");
         if (!workspace.isDirectory()) {
             if (!workspace.mkdirs()) {
-                throw new IOException("Unable to create workspace: "+workspace);
+                throw new IOException("Unable to create workspace directory: "+workspace.getPath());
             }
         }
         this.tmpdir = new File(workspace, "tmp");
         if (!tmpdir.isDirectory()) {
             if (!tmpdir.mkdirs()) {
-                throw new IOException("Unable to create tmpdir: "+tmpdir);
+                throw new IOException("Unable to create temp directory: "+tmpdir.getPath());
             }
         }
     }
@@ -108,7 +108,7 @@ public class Lensfield {
         LOG.info("Resolving build order");
         LinkedHashSet<Process> order = new LinkedHashSet<Process>(model.getSources());
         if (order.isEmpty()) {
-            throw new LensfieldException("No source build steps");
+            throw new ConfigurationException("No source build steps");
         }
 
         for (Process proc : order) {
@@ -119,7 +119,7 @@ public class Lensfield {
         while (order.size() < processCount) {
             List<Process> nextSteps = findNextSteps(order);
             if (nextSteps.isEmpty()) {
-                throw new LensfieldException("Unable to resolve build order; cyclic dependencies");
+                throw new ConfigurationException("Unable to resolve build order; cyclic dependencies");
             }
             for (Process proc : nextSteps) {
                 LOG.debug(" - "+proc.getName());
@@ -250,14 +250,14 @@ public class Lensfield {
     }
 
 
-    private void initBuildLog() throws FileNotFoundException, LensfieldException {
+    private void initBuildLog() throws IOException, LensfieldException {
         LOG.info("Starting build log");
         File logFile = new File(workspace, "log.txt");
-        if (logFile.exists()) {
+        if (logFile.isFile()) {
             String ts = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(logFile.lastModified()));
             File backup = new File(workspace, "log-"+ts+".txt");
             if (!logFile.renameTo(backup)) {
-                throw new LensfieldException("Unable to move previous log"+backup);
+                throw new IOException("Unable to move previous log"+backup);
             }
         }
         buildLog = new BuildLogger(new FileOutputStream(logFile));
@@ -275,7 +275,7 @@ public class Lensfield {
             processBuildStep((Build)step);
         }
         else {
-            throw new RuntimeException("Unknown process: "+step.getName()+" ["+step.getClass().getName()+"]");
+            throw new LensfieldException("Unknown process: "+step.getName()+" ["+step.getClass().getName()+"]");
         }
 
     }
@@ -286,7 +286,7 @@ public class Lensfield {
         LOG.info("Processing source: "+source.getName());
 
         if (source.getParameters().isEmpty()) {
-            throw new LensfieldException("Source filter not defined");
+            throw new ConfigurationException("Source filter not defined");
         }
 
         String filter;
@@ -295,11 +295,11 @@ public class Lensfield {
             if (param.getName() == null || "filter".equals(param.getName())) {
                 filter = param.getValue();
             } else {
-                throw new LensfieldException();
+                throw new ConfigurationException("Source '"+source.getName()+"' has unknown parameter: "+param.getName());
             }
         } else {
             // TODO
-            throw new LensfieldException();
+            throw new ConfigurationException("Source '"+source.getName()+"'; expected 1 parameter, found "+source.getParameters().size());
         }
 
         FileSource finder = new FileSource(source.getName(), root, filter);
@@ -329,7 +329,7 @@ public class Lensfield {
         } else if (task.isKtoN()) {
             runKtoNStep(build, task);
         } else {
-            throw new LensfieldException("Unsupported operation");
+            throw new ConfigurationException("Unsupported operation: "+task.getId());
         }
         
     }
@@ -552,7 +552,7 @@ public class Lensfield {
         for (Build step : model.getBuilds()) {
             for (Input input : step.getInputs()) {
                 if (model.getProcess(input.getStep()) == null) {
-                    throw new LensfieldException("Missing build step: "+step.getName()+"("+input.getStep()+")");
+                    throw new ConfigurationException("Undefined input '"+input.getName()+"' on step '"+step.getName()+"'");
                 }
             }
         }
