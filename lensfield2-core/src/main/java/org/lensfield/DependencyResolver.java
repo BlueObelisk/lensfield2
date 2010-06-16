@@ -143,7 +143,7 @@ public class DependencyResolver {
         } else {
             localRepo = RepositorySystem.defaultUserLocalRepository;
         }
-        LOG.info("Local repository: "+localRepo.getPath());
+//        LOG.info("Local repository: "+localRepo.getPath());
         return repositorySystem.createLocalRepository(localRepo);
     }
 
