@@ -3,6 +3,10 @@
  */
 package org.lensfield;
 
+import org.codehaus.plexus.classworlds.ClassWorld;
+import org.codehaus.plexus.classworlds.realm.ClassRealm;
+import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
+import org.codehaus.plexus.classworlds.realm.NoSuchRealmException;
 import org.lensfield.api.Logger;
 import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
@@ -40,10 +44,32 @@ public class Lensfield {
     private File root = new File(".");
     private File workspace, tmpdir;
 
+    private ClassWorld classworld;
+
 
     public Lensfield(Model model, File root) {
         this.model = model;
         this.root = root;
+        this.classworld = initClassWorld();
+    }
+
+    public Lensfield(Model model, File root, ClassWorld classworld) {
+        this.model = model;
+        this.root = root;
+        this.classworld = classworld == null ? initClassWorld() : classworld;
+    }
+
+    private static ClassWorld initClassWorld() {
+        ClassWorld classWorld = new ClassWorld();
+        try {
+            ClassRealm core = classWorld.newRealm("lensfield.core", Thread.currentThread().getContextClassLoader());
+            classWorld.newRealm("lensfield.api", core);
+            classWorld.newRealm("plexus.core", core);
+        } catch (DuplicateRealmException e) {
+            // Impossible!
+            throw new RuntimeException(e);
+        }
+        return classWorld;
     }
 
 
@@ -572,7 +598,7 @@ public class Lensfield {
 
         System.setProperty("maven.artifact.threads", "1");  // Prevents hanging threads
 
-        DependencyResolver resolver = new DependencyResolver(model.getRepositories());
+        DependencyResolver resolver = new DependencyResolver(model.getRepositories(), classworld);
         resolver.configureDependencies(model, buildState);
     }
 

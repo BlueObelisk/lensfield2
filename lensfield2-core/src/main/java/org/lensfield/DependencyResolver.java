@@ -5,12 +5,12 @@ package org.lensfield;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import org.apache.log4j.Logger;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.InvalidRepositoryException;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
-import org.apache.maven.artifact.resolver.ResolutionNode;
 import org.apache.maven.cli.AbstractMavenTransferListener;
 import org.apache.maven.cli.MavenLoggerManager;
 import org.apache.maven.model.Repository;
@@ -23,14 +23,11 @@ import org.apache.maven.settings.building.SettingsBuildingRequest;
 import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.DefaultContainerConfiguration;
 import org.codehaus.plexus.DefaultPlexusContainer;
-import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.classworlds.ClassWorld;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.lensfield.model.Build;
 import org.lensfield.model.Dependency;
-
-import org.apache.log4j.Logger;
 import org.lensfield.model.Model;
 import org.lensfield.state.BuildState;
 import org.lensfield.state.DependencyState;
@@ -39,7 +36,6 @@ import org.lensfield.state.TaskState;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 
 /**
@@ -57,12 +53,14 @@ public class DependencyResolver {
     private SettingsBuilder settingsBuilder;
     private Settings settings;
 
+    private ClassWorld classworld;
 
-    public DependencyResolver(List<String> repositories) throws PlexusContainerException, ComponentLookupException, InvalidRepositoryException {
+
+    public DependencyResolver(List<String> repositories, ClassWorld classWorld) throws Exception {
+
+        this.classworld = classWorld;
 
         // --- This magic from m2eclipse/MavenPlugin() ---
-        ClassWorld classWorld = new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
-
         ContainerConfiguration cc = new DefaultContainerConfiguration();
         cc.setName("maven-plexus");
         cc.setClassWorld(classWorld);
@@ -113,14 +111,16 @@ public class DependencyResolver {
                 throw new LensfieldException("Unable to resolve dependency: "+result.getMissingArtifacts());
             }
 
-            if (result.getOriginatingArtifact() != null) {
-                map.put(0, result.getOriginatingArtifact());
-            }
-            for (ResolutionNode node : result.getArtifactResolutionNodes()) {
-                if (node.getArtifact() != null) {
-                    map.put(node.getDepth(), node.getArtifact());
-                }
-            }
+            map.putAll(0, result.getArtifacts());
+
+//            if (result.getOriginatingArtifact() != null) {
+//                map.put(0, result.getOriginatingArtifact());
+//            }
+//            for (ResolutionNode node : result.getArtifactResolutionNodes()) {
+//                if (node.getArtifact() != null) {
+//                    map.put(node.getDepth(), node.getArtifact());
+//                }
+//            }
         }
 
         return map;
@@ -250,9 +250,30 @@ public class DependencyResolver {
             task.addDependency(dependency);
         }
         URL[] urls = getUrls(dependencyList);
-        URLClassLoader classloader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
-        Class<?> clazz = classloader.loadClass(task.getClassName());
+        ClassRealm realm = classworld.newRealm("lensfield.build."+task.getId(), classworld.getRealm("lensfield.api"));
+        for (URL u : urls) {
+            realm.addURL(u);
+        }
+
+//        try {
+//            System.err.println(">>>>>>>>>>>>>>>>>>>>");
+//            ClassRealm r = realm;
+//            while (r != null) {
+//                r.display();
+//                if (r.getParent() instanceof ClassRealm) {
+//                    r = (ClassRealm)r.getParent();
+//                } else {
+//                    r = null;
+//                }
+//            }
+//            System.err.println("<<<<<<<<<<<<<<<<<<<<");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        
+        Class<?> clazz = realm.loadClass(task.getClassName());
         task.setClazz(clazz);
+
     }
 
     private List<Artifact> getDependencyList(ListMultimap<Integer,Artifact> dependencyMap) {
@@ -276,9 +297,7 @@ public class DependencyResolver {
         return urls;
     }
 
-
-
-    public Settings getSettings() {
+    private Settings getSettings() {
         // Adapted from m2eclipse/org.maven.ide.eclipse.internal.embedder.MavenImpl
         SettingsBuildingRequest request = new DefaultSettingsBuildingRequest();
         try {
@@ -293,6 +312,5 @@ public class DependencyResolver {
             return new Settings();
         }
     }
-
 
 }

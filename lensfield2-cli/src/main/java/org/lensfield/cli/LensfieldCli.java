@@ -3,6 +3,7 @@
  */
 package org.lensfield.cli;
 
+import org.codehaus.plexus.classworlds.ClassWorld;
 import org.lensfield.BuildFileParser;
 import org.lensfield.Lensfield;
 import org.lensfield.model.Model;
@@ -29,6 +30,11 @@ public class LensfieldCli {
 
 
     public static void main(String[] args) throws Exception {
+        main(args, null);
+    }
+
+
+    public static void main(String[] args, ClassWorld classworld) throws Exception {
 
         String version = loadVersion();
 
@@ -65,7 +71,7 @@ public class LensfieldCli {
             root = new File(".");
         }
 
-        Lensfield lensfield = new Lensfield(model, root);
+        Lensfield lensfield = new Lensfield(model, root, classworld);
         lensfield.build();
 
         System.err.println("----------------------------------------");
