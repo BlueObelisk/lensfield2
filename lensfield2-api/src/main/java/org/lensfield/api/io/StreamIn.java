@@ -15,4 +15,6 @@ public abstract class StreamIn extends InputStream {
 
     public abstract String getParameter(String name);
 
+    public abstract long length();
+
 }

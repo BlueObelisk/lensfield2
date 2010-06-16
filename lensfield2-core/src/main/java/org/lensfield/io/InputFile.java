@@ -40,6 +40,10 @@ public class InputFile extends StreamIn implements Input {
         return path;
     }
 
+    @Override
+    public long length() {
+        return file.length();
+    }
 
     // --- Delegate Methods ---
 
