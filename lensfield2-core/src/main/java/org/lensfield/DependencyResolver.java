@@ -130,10 +130,10 @@ public class DependencyResolver {
 
     private ArtifactRepository getLocalRepository() throws InvalidRepositoryException {
         File localRepo;
-        LOG.debug("sys.M2REPO: "+System.getProperty("m2.repo"));
-        LOG.debug("env.M2REPO: "+System.getenv("M2_REPO"));
+//        LOG.debug("sys.M2REPO: "+System.getProperty("m2.repo"));
+//        LOG.debug("env.M2REPO: "+System.getenv("M2_REPO"));
         if (System.getProperty("M2_REPO") != null) {
-            localRepo = new File(System.getProperty("M2_REPO"));
+            localRepo = new File(System.getProperty("m2.repo"));
         }
         else if (System.getenv("M2_REPO") != null) {
             localRepo = new File(System.getenv("M2_REPO"));
