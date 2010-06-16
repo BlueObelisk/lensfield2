@@ -80,7 +80,9 @@ public class ProcessRunner {
 
     private void configureParameters(Object obj) throws IllegalAccessException, LensfieldException {
         for (ParameterDescription param : this.parameters) {
-            param.field.set(obj, param.value);
+            if (param.value != null) {
+                param.field.set(obj, param.value);
+            }
         }
     }
 

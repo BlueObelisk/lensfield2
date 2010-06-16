@@ -13,6 +13,7 @@ import uk.ac.cam.ch.atomxom.feeds.DefaultFeedHandler;
 import uk.ac.cam.ch.atomxom.feeds.FeedCache;
 import uk.ac.cam.ch.atomxom.model.AtomEntry;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -38,6 +39,7 @@ public class AtomFeed {
     public void run() throws Exception {
         FeedCache cache = new FeedCache();
         cache.setHandler(new Handler());
+        cache.setCacheDir(new File(cacheDir));
         cache.poll(url);
     }
 
