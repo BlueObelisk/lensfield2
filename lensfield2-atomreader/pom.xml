@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>lensfield2-atomreader</artifactId>
+    <name>Lensfield Atom Feed Reader</name>
 
     <dependencies>
         <dependency>
