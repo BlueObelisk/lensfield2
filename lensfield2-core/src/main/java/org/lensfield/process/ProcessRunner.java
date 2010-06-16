@@ -4,6 +4,9 @@
 package org.lensfield.process;
 
 import org.lensfield.*;
+import org.lensfield.api.Logger;
+import org.lensfield.api.io.StreamIn;
+import org.lensfield.api.io.StreamOut;
 import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;

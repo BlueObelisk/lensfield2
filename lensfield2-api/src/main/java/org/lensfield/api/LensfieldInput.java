@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield;
+package org.lensfield.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface LensfieldParameter {
+public @interface LensfieldInput {
     String name() default "";
-    boolean required() default false;
 }

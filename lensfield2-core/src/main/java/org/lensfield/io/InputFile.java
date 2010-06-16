@@ -3,6 +3,8 @@
  */
 package org.lensfield.io;
 
+import org.lensfield.api.io.StreamIn;
+
 import java.io.*;
 import java.util.Map;
 

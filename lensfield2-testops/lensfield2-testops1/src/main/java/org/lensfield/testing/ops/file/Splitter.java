@@ -4,9 +4,10 @@
 package org.lensfield.testing.ops.file;
 
 import org.apache.commons.io.IOUtils;
-import org.lensfield.*;
-import org.lensfield.io.MultiStreamOut;
-import org.lensfield.io.StreamOut;
+import org.lensfield.api.LensfieldInput;
+import org.lensfield.api.LensfieldOutput;
+import org.lensfield.api.io.StreamOut;
+import org.lensfield.api.io.MultiStreamOut;
 
 import java.io.*;
 

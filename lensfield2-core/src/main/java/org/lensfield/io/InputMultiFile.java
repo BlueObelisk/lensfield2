@@ -3,7 +3,9 @@
  */
 package org.lensfield.io;
 
-import org.lensfield.Logger;
+import org.lensfield.api.Logger;
+import org.lensfield.api.io.MultiStreamIn;
+import org.lensfield.api.io.StreamIn;
 
 import java.io.IOException;
 import java.util.ArrayList;

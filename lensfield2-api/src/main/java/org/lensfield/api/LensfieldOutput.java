@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield;
+package org.lensfield.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

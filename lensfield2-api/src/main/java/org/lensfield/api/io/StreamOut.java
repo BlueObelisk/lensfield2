@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield.io;
+package org.lensfield.api.io;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -3,7 +3,7 @@
  */
 package org.lensfield.io;
 
-import org.lensfield.Logger;
+import org.lensfield.api.Logger;
 import org.lensfield.state.FileState;
 import org.lensfield.build.FileList;
 import org.lensfield.glob.Template;

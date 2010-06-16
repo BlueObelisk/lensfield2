@@ -3,6 +3,8 @@
  */
 package org.lensfield.io;
 
+import org.lensfield.api.io.MultiStreamOut;
+import org.lensfield.api.io.StreamOut;
 import org.lensfield.glob.Template;
 
 import java.io.File;

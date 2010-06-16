@@ -3,6 +3,8 @@
  */
 package org.lensfield;
 
+import org.lensfield.api.Logger;
+
 /**
  * @author sea36
  */

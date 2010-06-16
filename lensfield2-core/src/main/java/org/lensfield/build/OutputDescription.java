@@ -3,9 +3,8 @@
  */
 package org.lensfield.build;
 
-import org.lensfield.io.MultiStreamOut;
+import org.lensfield.api.io.MultiStreamOut;
 
-import java.io.File;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 

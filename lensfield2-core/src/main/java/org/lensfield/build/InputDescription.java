@@ -3,7 +3,7 @@
  */
 package org.lensfield.build;
 
-import org.lensfield.io.MultiStreamIn;
+import org.lensfield.api.io.MultiStreamIn;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield;
+package org.lensfield.api;
 
 /**
  * @author sea36

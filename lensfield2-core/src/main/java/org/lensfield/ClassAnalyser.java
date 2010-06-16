@@ -3,6 +3,9 @@
  */
 package org.lensfield;
 
+import org.lensfield.api.LensfieldInput;
+import org.lensfield.api.LensfieldOutput;
+import org.lensfield.api.LensfieldParameter;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
