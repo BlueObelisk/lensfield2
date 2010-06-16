@@ -200,9 +200,11 @@ public class BuildStateReader {
             if (ch != '[') {
                 throw new IOException();
             }
+            ch = in.read();
             files.add(readFileState());
             skipWhitespace();
         }
+        ch = in.read();
         return files;
     }
 
@@ -216,10 +218,11 @@ public class BuildStateReader {
         skipWhitespace();
         List<FileState> files = new ArrayList<FileState>();
         while (ch != ')') {
-            if (ch == '[') {
-                ch = in.read();
-                files.add(readFileState());
+            if (ch != '[') {
+                throw new IOException();
             }
+            ch = in.read();
+            files.add(readFileState());
             skipWhitespace();
         }
         ch = in.read();

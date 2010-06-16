@@ -25,9 +25,9 @@ public class LensfieldProcessorTest {
         model.addBuild(new Build("step2", "com.example.Foo", "step1", "**/*.2"));
         model.addBuild(new Build("step3", "com.example.Foo", "step2", "**/*.3"));
 
-        Lensfield proc = new Lensfield(model);
+        Lensfield lf = new Lensfield(model, null);
 
-        ArrayList<Process> order = proc.resolveBuildOrder();
+        ArrayList<Process> order = lf.resolveBuildOrder();
         assertEquals(3, order.size());
         assertEquals("step1", order.get(0).getName());
         assertEquals("step2", order.get(1).getName());
@@ -41,9 +41,9 @@ public class LensfieldProcessorTest {
         model.addSource(new Source("step1", "**/*.1"));
         model.addBuild(new Build("step2", "com.example.Foo", "step1", "**/*.2"));
         
-        Lensfield proc = new Lensfield(model);
+        Lensfield lf = new Lensfield(model, null);
 
-        ArrayList<Process> order = proc.resolveBuildOrder();
+        ArrayList<Process> order = lf.resolveBuildOrder();
         assertEquals(3, order.size());
         assertEquals("step1", order.get(0).getName());
         assertEquals("step2", order.get(1).getName());
@@ -102,7 +102,7 @@ public class LensfieldProcessorTest {
         model.addBuild(new Build("step2", "foo", "stepX", ""));
         model.addBuild(new Build("step3", "foo", "step2", ""));
 
-        Lensfield lf = new Lensfield(model);
+        Lensfield lf = new Lensfield(model, null);
         lf.checkBuildStepsExist();
 
     }

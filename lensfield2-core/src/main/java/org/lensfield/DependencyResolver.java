@@ -61,8 +61,7 @@ public class DependencyResolver {
     public DependencyResolver(List<String> repositories) throws PlexusContainerException, ComponentLookupException, InvalidRepositoryException {
 
         // --- This magic from m2eclipse/MavenPlugin() ---
-        ClassWorld classWorld = new ClassWorld("plexus.core",
-                Thread.currentThread().getContextClassLoader());
+        ClassWorld classWorld = new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
 
         ContainerConfiguration cc = new DefaultContainerConfiguration();
         cc.setName("maven-plexus");

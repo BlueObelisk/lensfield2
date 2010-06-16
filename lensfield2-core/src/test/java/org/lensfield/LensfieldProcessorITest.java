@@ -100,8 +100,7 @@ public class LensfieldProcessorITest {
         model.addBuild(new Build("sum-squares", "org.lensfield.testing.ops.number.Summer",   "squares",  "sum-sq.txt"));
         model.addBuild(new Build("sum-doubles", "org.lensfield.testing.ops.number.Summer",   "doubles",  "sum-x2.txt"));
 
-        Lensfield lensfield = new Lensfield(model);
-        lensfield.setRoot(workspace);
+        Lensfield lensfield = new Lensfield(model, workspace);
         lensfield.build();
 
         assertEquals("285", FileUtils.readFileToString(new File(workspace, "sum-sq.txt")));
@@ -120,8 +119,7 @@ public class LensfieldProcessorITest {
         model.addSource(new Source("files", "input/*"));
         model.addBuild(new Build("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 
-        Lensfield lf = new Lensfield(model);
-        lf.setRoot(workspace);
+        Lensfield lf = new Lensfield(model, workspace);
         lf.build();
 
         assertTrue(new File(workspace, "output/a.txt").isFile());
@@ -139,8 +137,7 @@ public class LensfieldProcessorITest {
         model.addSource(new Source("files", "input/*"));
         model.addBuild(new Build("joined", "org.lensfield.testing.ops.file.Joiner", "files", "output/all.txt"));
 
-        Lensfield lf = new Lensfield(model);
-        lf.setRoot(workspace);
+        Lensfield lf = new Lensfield(model, workspace);
         lf.build();
 
         File f = new File(workspace, "output/all.txt");
@@ -160,8 +157,7 @@ public class LensfieldProcessorITest {
         model.addSource(new Source("files", "input/*.txt"));
         model.addBuild(new Build("split", "org.lensfield.testing.ops.file.Splitter", "files", "output/*-{%i}.txt"));
 
-        Lensfield lf = new Lensfield(model);
-        lf.setRoot(workspace);
+        Lensfield lf = new Lensfield(model, workspace);
         lf.build();
 
         assertEquals("11111", FileUtils.readFileToString(new File(workspace, "output/x-1.txt")));
@@ -188,8 +184,7 @@ public class LensfieldProcessorITest {
         build2.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
         model.addBuild(build2);
 
-        Lensfield lf = new Lensfield(model);
-        lf.setRoot(workspace);
+        Lensfield lf = new Lensfield(model, workspace);
         lf.build();
 
         assertEquals("45", FileUtils.readFileToString(new File(workspace, "sum1.txt")));
@@ -216,8 +211,7 @@ public class LensfieldProcessorITest {
         model.addBuild(new Build("sum1", "org.lensfield.testing.ops.number.Summer",   "inc1",  "sum1.txt"));
         model.addBuild(new Build("sum2", "org.lensfield.testing.ops.number.Summer",   "inc2",  "sum2.txt"));
 
-        Lensfield lf = new Lensfield(model);
-        lf.setRoot(workspace);
+        Lensfield lf = new Lensfield(model, workspace);
         lf.build();
 
         assertEquals("54", FileUtils.readFileToString(new File(workspace, "sum1.txt")));

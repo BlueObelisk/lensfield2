@@ -60,12 +60,12 @@ public class LensfieldCli {
         BuildFileParser parser = new BuildFileParser();
         Model model = parser.parse(buildFile);
 
-        Lensfield lensfield = new Lensfield(model);
         File root = buildFile.getParentFile();
         if (root == null) {
             root = new File(".");
         }
-        lensfield.setRoot(root);
+
+        Lensfield lensfield = new Lensfield(model, root);
         lensfield.build();
 
         System.err.println("----------------------------------------");

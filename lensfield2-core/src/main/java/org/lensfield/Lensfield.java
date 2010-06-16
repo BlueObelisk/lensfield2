@@ -41,10 +41,6 @@ public class Lensfield {
     private File workspace, tmpdir;
 
 
-    public Lensfield(Model model) {
-        this.model = model;
-    }
-
     public Lensfield(Model model, File root) {
         this.model = model;
         this.root = root;
@@ -55,11 +51,7 @@ public class Lensfield {
         return root;
     }
 
-    public void setRoot(File root) {
-        this.root = root;
-    }
-
-
+    
     public synchronized void build() throws Exception {
 
         checkBuildStepsExist();
