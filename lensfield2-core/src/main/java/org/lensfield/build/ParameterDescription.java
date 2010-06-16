@@ -23,6 +23,13 @@ public class ParameterDescription {
         this.required = required;
     }
 
+    public ParameterDescription(String name, String value) {
+        this.name = name;
+        this.value = value;
+        field = null;
+        required = false;
+    }
+
 
     public String getName() {
         return name;

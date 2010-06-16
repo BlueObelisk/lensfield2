@@ -76,11 +76,11 @@ public class BuildLogger {
             out.print(task.getMethodName());
             out.print(' ');
             out.print(dateFormat.format(new Date(task.getLastModified())));
-            for (ParameterDescription param : task.getParameters()) {
-                out.print(" (param ");
-                out.print(param.getName());
-                out.print(' ');
-                writeToken(param.getValue());
+            if (!task.getParameters().isEmpty()) {
+                out.print(" (params ");
+                for (ParameterDescription param : task.getParameters()) {
+                    writeList(param.getName(), param.getValue());
+                }
                 out.print(')');
             }
             if (!task.getDependencyList().isEmpty()) {

@@ -15,5 +15,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface LensfieldParameter {
     String name() default "";
-    boolean required() default false;
+    boolean optional() default false;
 }

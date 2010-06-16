@@ -121,6 +121,7 @@ public class ProcessRunner {
                             String path = fs.getPath();
                             File file = new File(root, path);
                             Map<String,String> params = fs.getParams();
+                            LOG.debug("reading "+path);
                             InputFile in = new InputFile(path, file, Collections.unmodifiableMap(params));
                             input.field.set(obj, in);
                             ins.add(in);
@@ -153,6 +154,7 @@ public class ProcessRunner {
 
             } else {
                 FileState fin = inputs.getMap().values().iterator().next().get(0);
+                LOG.debug("reading "+fin.getPath());
                 InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParams());
                 FileList fileList = outputs.values().iterator().next();
                 OutputFile out = configureOutputFile(inputs, fileList);

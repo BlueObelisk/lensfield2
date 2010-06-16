@@ -4,6 +4,7 @@
 package org.lensfield.log;
 
 import org.apache.log4j.Logger;
+import org.lensfield.build.ParameterDescription;
 import org.lensfield.state.*;
 
 import java.io.EOFException;
@@ -261,6 +262,9 @@ public class BuildStateReader {
             if ("depends".equals(cmd)) {
                 readDependencies(task);
             }
+            else if ("params".equals(cmd)) {
+                readParameters(task);
+            }
             else {
                 throw new IOException("Unknown command: "+cmd);
             }
@@ -272,6 +276,34 @@ public class BuildStateReader {
             skipWhitespace();
         }
         build.addTask(task);
+    }
+
+    private void readParameters(TaskState task) throws IOException {
+        skipWhitespace();
+        while (ch != ')') {
+            if (ch == EOF) {
+                throw new EOFException();
+            }
+            if (ch != '[') {
+                throw new IOException();
+            }
+            ch = in.read();
+            readParameter(task);
+            skipWhitespace();
+        }
+    }
+
+    private void readParameter(TaskState task) throws IOException {
+        skipWhitespace();
+        String name = readToken();
+        skipWhitespace();
+        String value =  readToken();
+        skipWhitespace();
+        if (ch != ']') {
+            throw new IOException("Expected: ']'; found: '"+((char)ch)+"'");
+        }
+        ch = in.read();
+        task.addParameter(new ParameterDescription(name, value));
     }
 
     private void readDependencies(TaskState task) throws IOException, ParseException {

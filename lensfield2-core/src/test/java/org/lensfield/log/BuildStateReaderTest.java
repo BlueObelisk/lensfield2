@@ -18,4 +18,11 @@ public class BuildStateReaderTest {
         InputStream in = getClass().getResourceAsStream("log.txt");
         new BuildStateReader().parseBuildState(new InputStreamReader(in));
     }
+
+    @Test
+    public void testParseBuildLogWithParams() throws Exception {
+        InputStream in = getClass().getResourceAsStream("log-param.txt");
+        new BuildStateReader().parseBuildState(new InputStreamReader(in));
+    }
+
 }

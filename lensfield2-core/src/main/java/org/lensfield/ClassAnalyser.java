@@ -131,7 +131,7 @@ public class ClassAnalyser {
     private static void addParameter(TaskState task, Field f) {
         LensfieldParameter annot = f.getAnnotation(LensfieldParameter.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addParameter(new ParameterDescription(f, n, null, annot.required()));
+        task.addParameter(new ParameterDescription(f, n, null, !annot.optional()));
     }
 
 

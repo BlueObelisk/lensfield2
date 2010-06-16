@@ -71,6 +71,7 @@ public class Lensfield {
         initWorkspace();
 
         analyseBuildState();
+        checkBuildState();
         loadPreviousBuildState();
         comparePreviousBuildState();
 
@@ -85,6 +86,20 @@ public class Lensfield {
             }
         }
 
+    }
+
+    private void checkBuildState() throws ConfigurationException {
+        checkParameters();
+    }
+
+    private void checkParameters() throws ConfigurationException {
+        for (TaskState task : buildState.getTasks()) {
+            for (ParameterDescription param : task.getParameters()) {
+                if (param.isRequired() && param.value == null) {
+                    throw new ConfigurationException("Missing parameter '"+param.name+"' on task '"+task.getId()+"'");
+                }
+            }
+        }
     }
 
 
