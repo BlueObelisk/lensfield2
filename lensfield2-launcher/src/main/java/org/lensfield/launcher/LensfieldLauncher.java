@@ -87,7 +87,14 @@ public class LensfieldLauncher {
         if (update) {
             return;
         }
-        loader.run(args);
+        try {
+            loader.run(args);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println();
+            System.err.println(" ** BUILD FAILED");
+            System.exit(1);
+        }
 
     }
 
