@@ -31,11 +31,6 @@ public class LensfieldCli {
 
 
     public static void main(String[] args) throws Exception {
-        main(args, null);
-    }
-
-
-    public static void main(String[] args, ClassWorld classworld) throws Exception {
 
         String version = loadVersion();
 
@@ -70,7 +65,7 @@ public class LensfieldCli {
             root = new File(".");
         }
 
-        Lensfield lensfield = new Lensfield(model, root, classworld);
+        Lensfield lensfield = new Lensfield(model, root);
         run(lensfield, args);
 
         System.err.println("----------------------------------------");

@@ -1,36 +1,30 @@
-package org.lensfield.launcher;
+package org.lensfield.launcher.load;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.repository.RepositorySystem;
 import org.apache.maven.settings.Settings;
-import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
  * @author sea36
  */
-public class LensfieldLauncher {
+public class Loader {
 
-    private ClassWorld classWorld;
-    private boolean update;
+    private URLClassLoader apiLoader;
+    private URLClassLoader appLoader;
 
-    private Properties properties;
+    private void load(boolean update) throws Exception {
 
-    private LensfieldLauncher(ClassWorld classWorld, boolean update) throws Exception {
-
-        this.classWorld = classWorld;
-        this.update = update;
-
-    }
-
-    private void load() throws Exception {
-
-        DependencyResolver resolver = new DependencyResolver(classWorld);
+        DependencyResolver resolver = new DependencyResolver();
         Settings settings = resolver.getSettings();
         File localRepo;
         if (settings.getLocalRepository() != null) {
@@ -44,31 +38,28 @@ public class LensfieldLauncher {
             resolver.addRepository("ucc-repo", "https://maven.ch.cam.ac.uk/m2repo");
         }
 
-        ClassRealm api = classWorld.newRealm("lensfield.api");
+        List<URL> apiUrls = new ArrayList<URL>();
         for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.1-SNAPSHOT", update)) {
-            api.addURL(a.getFile().toURI().toURL());
+            apiUrls.add(a.getFile().toURI().toURL());
         }
-        for (Artifact a : resolver.resolveDependencies("log4j", "log4j", "1.2.13", update)) {
-            api.addURL(a.getFile().toURI().toURL());
-        }
+        apiLoader = new URLClassLoader(apiUrls.toArray(new URL[apiUrls.size()]));
 
-        ClassRealm core = classWorld.newRealm("lensfield.core", api);
-        core.importFrom("plexus.core", "");
+        List<URL> appUrls = new ArrayList<URL>();
         for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.1-SNAPSHOT", update)) {
-            core.addURL(a.getFile().toURI().toURL());
+            appUrls.add(a.getFile().toURI().toURL());
         }
-
+        appLoader = new URLClassLoader(appUrls.toArray(new URL[appUrls.size()]), apiLoader);
     }
 
     private void run(String[] args) throws Exception {
 
-        Class<?> clazz = classWorld.getRealm("lensfield.core").loadClass("org.lensfield.cli.LensfieldCli");
-        Method method = clazz.getMethod("main", String[].class, ClassWorld.class);
-        method.invoke(null, new Object[]{args, classWorld});
+        Class<?> clazz = appLoader.loadClass("org.lensfield.cli.LensfieldCli");
+        Method method = clazz.getMethod("main", String[].class);
+        method.invoke(null, new Object[]{args});
 
     }
 
-    public static void main(String[] args, ClassWorld classworld) throws Exception {
+    public static void main(String[] args) throws Exception {
 
         boolean update;
         if (args.length == 1 && "--update".equals(args[0])) {
@@ -78,14 +69,15 @@ public class LensfieldLauncher {
             update = false;
         }
 
-        LensfieldLauncher loader = new LensfieldLauncher(classworld, update);
+        Loader loader = new Loader();
         try {
-            loader.load();
+            loader.load(update);
         } catch (ArtifactResolutionException e) {
             return;
         }
         if (update) {
-            return;
+            System.err.println("Update complete");
+            System.exit(0);
         }
         try {
             loader.run(args);
@@ -97,5 +89,6 @@ public class LensfieldLauncher {
         }
 
     }
+
 
 }

@@ -1,4 +1,4 @@
-package org.lensfield.launcher;
+package org.lensfield.launcher.load;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.InvalidRepositoryException;
@@ -32,16 +32,15 @@ import java.util.Set;
 public class DependencyResolver {
 
     private RepositorySystem repositorySystem;
-    private ClassWorld classworld;
 
     private SettingsBuilder settingsBuilder;
 
     private File localRepository;
     private List<ArtifactRepository> remoteRepos = new ArrayList<ArtifactRepository>();
 
-    public DependencyResolver(ClassWorld classWorld) throws Exception {
+    public DependencyResolver() throws Exception {
 
-        this.classworld = classWorld;
+        ClassWorld classWorld = new ClassWorld("plexus.core", DependencyResolver.class.getClassLoader());
 
         // --- This magic from m2eclipse/MavenPlugin() ---
         ContainerConfiguration cc = new DefaultContainerConfiguration();

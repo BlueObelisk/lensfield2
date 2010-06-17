@@ -26,6 +26,7 @@ import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
+import org.lensfield.api.LensfieldInput;
 import org.lensfield.model.Build;
 import org.lensfield.model.Dependency;
 import org.lensfield.model.Model;
@@ -36,6 +37,7 @@ import org.lensfield.state.TaskState;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
 /**
@@ -53,12 +55,12 @@ public class DependencyResolver {
     private SettingsBuilder settingsBuilder;
     private Settings settings;
 
-    private ClassWorld classworld;
 
+    public DependencyResolver(List<String> repositories) throws Exception {
 
-    public DependencyResolver(List<String> repositories, ClassWorld classWorld) throws Exception {
-
-        this.classworld = classWorld;
+        System.setProperty("maven.artifact.threads", "1");  // Prevents hanging threads
+        
+        ClassWorld classWorld = new ClassWorld("plexus.core", DependencyResolver.class.getClassLoader());
 
         // --- This magic from m2eclipse/MavenPlugin() ---
         ContainerConfiguration cc = new DefaultContainerConfiguration();
@@ -250,10 +252,8 @@ public class DependencyResolver {
             task.addDependency(dependency);
         }
         URL[] urls = getUrls(dependencyList);
-        ClassRealm realm = classworld.newRealm("lensfield.build."+task.getId(), classworld.getRealm("lensfield.api"));
-        for (URL u : urls) {
-            realm.addURL(u);
-        }
+        ClassLoader apiLoader = LensfieldInput.class.getClassLoader();
+        URLClassLoader loader = new URLClassLoader(urls, apiLoader);
 
 //        try {
 //            System.err.println(">>>>>>>>>>>>>>>>>>>>");
@@ -271,7 +271,7 @@ public class DependencyResolver {
 //            e.printStackTrace();
 //        }
         
-        Class<?> clazz = realm.loadClass(task.getClassName());
+        Class<?> clazz = loader.loadClass(task.getClassName());
         task.setClazz(clazz);
 
     }

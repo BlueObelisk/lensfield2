@@ -34,14 +34,14 @@
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>boot</outputDirectory>
             <includes>
-                <include>org.codehaus.plexus:plexus-classworlds</include>
+                <include>org.lensfield.launcher:boot</include>
             </includes>
         </dependencySet>
         <dependencySet>
-            <useProjectArtifact>true</useProjectArtifact>
+            <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>lib</outputDirectory>
             <excludes>
-                <exclude>org.codehaus.plexus:plexus-classworlds</exclude>
+                <exclude>org.lensfield.launcher:boot</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
