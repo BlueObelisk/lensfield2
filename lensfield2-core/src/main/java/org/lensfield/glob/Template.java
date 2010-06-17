@@ -138,14 +138,14 @@ public class Template {
         }
     }
 
-    public String format(Map<String,String> params) {
+    public String format(Map<String,String> params) throws MissingParameterException {
         String p = formatPattern;
         for (Map.Entry<String,Integer> e : groupNames.entrySet()) {
             String name = e.getKey();
             Integer i = e.getValue();
             String value = params.get(name);
             if (value == null) {
-                throw new IllegalArgumentException("Missing parameter: "+name);
+                throw new MissingParameterException(name);
             }
             p = p.replace("{"+i+"}", value);
         }

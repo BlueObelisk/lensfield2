@@ -11,6 +11,7 @@ import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
+import org.lensfield.glob.MissingParameterException;
 import org.lensfield.io.*;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.state.FileState;
@@ -253,7 +254,14 @@ public class ProcessRunner {
             for (OutputFile output : outputs) {
                 File tempFile = output.getFile();
                 // TODO handle missing glob parameters
-                String path = output.getGlob().format(output.getParams());
+                String path = null;
+                try {
+                    path = output.getGlob().format(output.getParams());
+                } catch (MissingParameterException e) {
+                    System.err.println("Missing parameter: "+e.getName());
+                    System.err.println("Parameters: "+output.getParams());
+                    throw new LensfieldException("Failed to create output file", e);
+                }
                 // TODO check for duplicate output paths
                 FileState fr = new FileState(path, tempFile.lastModified(), output.getParams());
                 File file = new File(root, fr.getPath());
