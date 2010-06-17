@@ -26,6 +26,10 @@ public class Template {
         parseGlob();
     }
 
+    public String getGlob() {
+        return glob;
+    }
+
     public List<String> getGroupNames() {
         return new ArrayList<String>(groupNames.keySet());
     }

@@ -3,6 +3,7 @@
  */
 package org.lensfield.process;
 
+import org.apache.maven.model.FileSet;
 import org.lensfield.*;
 import org.lensfield.api.Logger;
 import org.lensfield.api.io.StreamIn;
@@ -187,7 +188,7 @@ public class ProcessRunner {
         }
 
         // Move temp files
-        renameTempFiles(task.getId(), outputMap);
+        renameTempFiles(task.getId(), inputs, outputMap);
 
         Map<String,List<FileState>> outputFiles = new HashMap<String, List<FileState>>();
         for (Map.Entry<String, Output> e : outputMap.entrySet()) {
@@ -239,7 +240,7 @@ public class ProcessRunner {
 
 
 
-    private void renameTempFiles(String name, Map<String, Output> outputFiles) throws LensfieldException {
+    private void renameTempFiles(String name, InputFileSet inputs, Map<String, Output> outputFiles) throws LensfieldException {
         for (Output out : outputFiles.values()) {
             List<OutputFile> outputs;
             if (out instanceof OutputFile) {
@@ -259,6 +260,14 @@ public class ProcessRunner {
                     path = output.getGlob().format(output.getParams());
                 } catch (MissingParameterException e) {
                     System.err.println("Missing parameter: "+e.getName());
+                    for (Map.Entry<String,List<FileState>> entry : inputs.getMap().entrySet()) {
+                        System.err.println("--- Input: "+entry.getKey());
+                        for (FileState f : entry.getValue()) {
+                            System.err.println(f.getPath()+"\t"+f.getParams());
+                        }
+                    }
+                    System.err.println("--- Output ---");
+                    System.err.println("Glob: "+output.getGlob().getGlob());
                     System.err.println("Parameters: "+output.getParams());
                     throw new LensfieldException("Failed to create output file", e);
                 }
