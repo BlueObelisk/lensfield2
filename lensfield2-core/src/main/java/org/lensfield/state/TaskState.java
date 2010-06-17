@@ -225,4 +225,8 @@ public class TaskState {
     public ParameterDescription getParameter(String name) {
         return parameterDescriptions.get(name);
     }
+
+    public boolean isSource() {
+        return this.getOperations().isEmpty() || this.getOperations().get(0).getInputFiles().isEmpty();
+    }
 }

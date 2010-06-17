@@ -3,6 +3,7 @@
  */
 package org.lensfield;
 
+import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
@@ -15,6 +16,7 @@ import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.GlobAnalyser;
 import org.lensfield.glob.Template;
 import org.lensfield.io.FileSource;
+import org.lensfield.io.OutputFile;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
 import org.lensfield.model.*;
@@ -45,6 +47,7 @@ public class Lensfield {
     private File workspace, tmpdir;
 
     private ClassWorld classworld;
+    private ArrayList<Process> buildOrder;
 
 
     public Lensfield(Model model, File root) {
@@ -77,11 +80,9 @@ public class Lensfield {
         return root;
     }
 
-    
-    public synchronized void build() throws Exception {
-
+    private void init() throws Exception {
         checkBuildStepsExist();
-        List<Process> buildOrder = resolveBuildOrder();
+        buildOrder = resolveBuildOrder();
 
         initBuildState();
         resolveDependencies();
@@ -91,6 +92,40 @@ public class Lensfield {
         analyseBuildState();
         checkBuildState();
         loadPreviousBuildState();
+    }
+
+
+    public synchronized void clean() throws Exception {
+        init();
+        
+        if (prevBuildState == null) {
+            throw new LensfieldException("No previous build state");
+        }
+        for (TaskState task : prevBuildState.getTasks()) {
+            if (task.isSource()) {
+                continue;
+            }
+            for (Operation op : task.getOperations()) {
+                for (List<FileState> outs : op.getOutputFiles().values()) {
+                    for (FileState out : outs) {
+                        String path = out.getPath();
+                        File f = new File(root, path);
+                        if (f.isFile()) {
+                            System.err.println("deleting "+path);
+                            if (!f.delete()) {
+                                System.err.println("Error deleting: "+path);
+                            }
+                        }
+                        // TODO delete directories
+                    }
+                }
+            }
+        }
+    }
+    
+    public synchronized void build() throws Exception {
+
+        init();
         comparePreviousBuildState();
 
         try {

@@ -6,6 +6,7 @@ package org.lensfield.cli;
 import org.codehaus.plexus.classworlds.ClassWorld;
 import org.lensfield.BuildFileParser;
 import org.lensfield.Lensfield;
+import org.lensfield.LensfieldException;
 import org.lensfield.model.Model;
 
 import java.io.*;
@@ -42,23 +43,21 @@ public class LensfieldCli {
         System.err.println("----------------------------------------");
 
         // Locate build file
-        File buildFile = null;
-        if (args.length == 0) {
-            buildFile = new File("build.lf");
-        } else if (args.length == 1) {
-            buildFile = new File(args[0]);
-            if (buildFile.isDirectory()) {
-                buildFile = new File(buildFile, "build.lf");
+        File buildFile = new File("build.lf");
+        if (args.length > 0) {
+            File file = new File(args[0]);
+            if (file.isFile()) {
+                buildFile = file;
             }
-        } else {
-            System.err.println("Error parsing command line.");
-            System.err.println("Usage:");
-            System.err.println("  lf [build path]");
-            System.exit(1);
+            else if (file.isDirectory()) {
+                buildFile = new File(file, "build.lf");
+            }
         }
 
         if (!buildFile.isFile()) {
             System.err.println(" ** ERROR ** 'build.lf' not found");
+            System.err.println("Usage:");
+            System.err.println("  lf [build path]");
             System.exit(1);
         }
 
@@ -72,11 +71,21 @@ public class LensfieldCli {
         }
 
         Lensfield lensfield = new Lensfield(model, root, classworld);
-        lensfield.build();
+        run(lensfield, args);
 
         System.err.println("----------------------------------------");
         System.err.println("BUILD COMPLETE");
 
+    }
+
+    private static void run(Lensfield lensfield, String[] args) throws Exception {
+        if (args.length > 0) {
+            if ("clean".equals(args[args.length-1])) {
+                lensfield.clean();
+                return;
+            }
+        }
+        lensfield.build();
     }
 
 }
