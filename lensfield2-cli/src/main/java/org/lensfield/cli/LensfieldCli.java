@@ -66,11 +66,17 @@ public class LensfieldCli {
         }
 
         Lensfield lensfield = new Lensfield(model, root);
-        run(lensfield, args);
-
-        System.err.println("----------------------------------------");
-        System.err.println("BUILD COMPLETE");
-
+        try {
+            run(lensfield, args);
+            System.err.println("----------------------------------------");
+            System.err.println("BUILD COMPLETE");
+        } catch (Exception e) {
+            System.err.println("----------------------------------------");
+            e.printStackTrace();
+            System.err.println("");
+            System.err.println("BUILD FAILED");
+        }
+        System.exit(0); // TODO why do we need to do this?
     }
 
     private static void run(Lensfield lensfield, String[] args) throws Exception {
