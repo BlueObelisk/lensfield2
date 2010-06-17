@@ -4,6 +4,8 @@
 package org.lensfield.build;
 
 import org.lensfield.api.io.MultiStreamOut;
+import org.lensfield.glob.Template;
+import org.lensfield.state.TaskState;
 
 import java.io.OutputStream;
 import java.lang.reflect.Field;
@@ -13,19 +15,24 @@ import java.lang.reflect.Field;
 */
 public class OutputDescription {
 
-    public final boolean arg;
-    public final String name;
-    public final Field field;
-    public final boolean multifile;
+    private final TaskState task;
 
-    public OutputDescription(Class<?> clazz) {
+    private final boolean arg;
+    private final String name;
+    private final Field field;
+    private final boolean multifile;
+    private Template glob;
+
+    public OutputDescription(TaskState task, Class<?> clazz) {
+        this.task = task;
         this.arg = false;
         this.name = "out";
         this.field = null;
         this.multifile = false;
     }
 
-    public OutputDescription(Field field, String name) {
+    public OutputDescription(TaskState task, Field field, String name) {
+        this.task = task;
         this.arg = false;
         this.field = field;
         this.name = name;
@@ -41,5 +48,34 @@ public class OutputDescription {
         } else {
             throw new RuntimeException("Unknown type: "+clazz.getName()); 
         }
+    }
+
+
+    public TaskState getTask() {
+        return task;
+    }
+
+    public boolean isArg() {
+        return arg;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Field getField() {
+        return field;
+    }
+
+    public boolean isMultifile() {
+        return multifile;
+    }
+
+    public Template getGlob() {
+        return glob;
+    }
+
+    public void setGlob(Template glob) {
+        this.glob = glob;
     }
 }

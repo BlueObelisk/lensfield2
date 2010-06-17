@@ -3,11 +3,6 @@
  */
 package org.lensfield;
 
-import org.apache.commons.io.FileUtils;
-import org.codehaus.plexus.classworlds.ClassWorld;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
-import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
-import org.codehaus.plexus.classworlds.realm.NoSuchRealmException;
 import org.lensfield.api.Logger;
 import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
@@ -16,7 +11,6 @@ import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.GlobAnalyser;
 import org.lensfield.glob.Template;
 import org.lensfield.io.FileSource;
-import org.lensfield.io.OutputFile;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
 import org.lensfield.model.*;
@@ -312,6 +306,20 @@ public class Lensfield {
         for (Build build : model.getBuilds()) {
             TaskState task = buildState.getTask(build.getName());
             ClassAnalyser.analyseClass(build, task);
+            configureOutputs(task, build);
+        }
+    }
+
+    private void configureOutputs(TaskState task, Build build) {
+        for (Output output : build.getOutputs()) {
+            OutputDescription outputDescription;
+            if (output.getName() == null) {
+                outputDescription = task.getDefaultOutput();
+            } else {
+                outputDescription = task.getOutput(output.getName());
+            }
+            // TODO if null
+            outputDescription.setGlob(new Template(output.getValue()));
         }
     }
 
@@ -368,7 +376,10 @@ public class Lensfield {
             throw new ConfigurationException("Source '"+source.getName()+"'; expected 1 parameter, found "+source.getParameters().size());
         }
 
-        FileSource finder = new FileSource(source.getName(), root, filter);
+        Template glob = new Template(filter);
+        TaskState task = new TaskState(source.getName());
+
+        FileSource finder = new FileSource(task.getId(), root, glob);
         finder.setLogger(LOG);
         FileList files = finder.run();
 
@@ -412,6 +423,7 @@ public class Lensfield {
     private void runKtoLStep(Build build, TaskState task) throws Exception {
 
         Map<String,FileList> inputFileLists = getInputs(build, task);
+        // TODO - single input
         List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
 
         Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
@@ -477,7 +489,7 @@ public class Lensfield {
                 if (outd == null) {
                     throw new LensfieldException();
                 }
-                name = outd.name;
+                name = outd.getName();
             }
             outputFileLists.put(name, new FileList(new Template(output.getValue())));
         }
@@ -494,7 +506,7 @@ public class Lensfield {
                 if (inpd == null) {
                     throw new LensfieldException();
                 }
-                name = inpd.name;
+                name = inpd.getName();
             }
             map.put(name, stateFileLists.get(input.getStep()));
         }
@@ -517,7 +529,7 @@ public class Lensfield {
                 if (outd == null) {
                     throw new LensfieldException();
                 }
-                name = outd.name;
+                name = outd.getName();
             }
             outputs.put(name, new FileList(new Template(output.getValue())));
         }
@@ -604,7 +616,7 @@ public class Lensfield {
                 if (inpd == null) {
                     throw new LensfieldException();
                 }
-                name = inpd.name;
+                name = inpd.getName();
             }
             inputs.put(name, stateFileLists.get(input.getStep()).getFiles());
         }

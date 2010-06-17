@@ -6,6 +6,7 @@ package org.lensfield.state;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
+import org.lensfield.glob.Template;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -28,7 +29,7 @@ public class TaskState {
     private transient Method method;
     private transient boolean noArgs;
     private transient boolean updated = true;
-    
+
     private List<Operation> operations = new ArrayList<Operation>();
 
     public TaskState(String id) {
@@ -37,10 +38,6 @@ public class TaskState {
 
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getClassName() {
@@ -98,7 +95,7 @@ public class TaskState {
 
     
     public void addInput(InputDescription input) {
-        inputDescriptions.put(input.name, input);
+        inputDescriptions.put(input.getName(), input);
     }
 
     public List<InputDescription> getInputs() {
@@ -107,11 +104,15 @@ public class TaskState {
 
     
     public void addOutput(OutputDescription output) {
-        outputDescriptions.put(output.name, output);
+        outputDescriptions.put(output.getName(), output);
     }
 
     public List<OutputDescription> getOutputs() {
         return new ArrayList<OutputDescription>(outputDescriptions.values());
+    }
+
+    public OutputDescription getOutput(String name) {
+        return outputDescriptions.get(name);
     }
     
     
@@ -153,12 +154,12 @@ public class TaskState {
 
     public boolean isKtoL() {
         for (InputDescription input : inputDescriptions.values()) {
-            if (input.multifile) {
+            if (input.isMultifile()) {
                 return false;
             }
         }
         for (OutputDescription output : outputDescriptions.values()) {
-            if (output.multifile) {
+            if (output.isMultifile()) {
                 return false;
             }
         }
@@ -167,12 +168,12 @@ public class TaskState {
 
     public boolean isNtoK() {
         for (InputDescription input : inputDescriptions.values()) {
-            if (!input.multifile) {
+            if (!input.isMultifile()) {
                 return false;
             }
         }
         for (OutputDescription output : outputDescriptions.values()) {
-            if (output.multifile) {
+            if (output.isMultifile()) {
                 return false;
             }
         }
@@ -181,12 +182,12 @@ public class TaskState {
 
     public boolean isKtoN() {
         for (InputDescription input : inputDescriptions.values()) {
-            if (input.multifile) {
+            if (input.isMultifile()) {
                 return false;
             }
         }
         for (OutputDescription output : outputDescriptions.values()) {
-            if (!output.multifile) {
+            if (!output.isMultifile()) {
                 return false;
             }
         }

@@ -3,6 +3,10 @@
  */
 package org.lensfield.state;
 
+import org.lensfield.build.OutputDescription;
+import org.lensfield.glob.Template;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,39 +15,35 @@ import java.util.Map;
  */
 public class FileState {
 
+    private Template glob;
     private String path;
     private long lastModified;
-    private Map<String,String> params = new HashMap<String, String>();
-
-    protected FileState() {
-        
-    }
-
-    public FileState(String path, long lastModified, Map<String, String> params) {
-        this.path = path;
-        this.lastModified = lastModified;
-        this.params.putAll(params);
-    }
+    private Map<String,String> params;
 
     public FileState(String path, long lastModified) {
         this.path = path;
         this.lastModified = lastModified;
     }
 
+    public FileState(Template glob, String path, long lastModified) {
+        this.glob = glob;
+        this.path = path;
+        this.lastModified = lastModified;
+    }
+
+    public FileState(Template glob, String path, long lastModified, Map<String, String> params) {
+        this.glob = glob;
+        this.path = path;
+        this.lastModified = lastModified;
+        this.params = Collections.unmodifiableMap(params);
+    }
+
     public String getPath() {
         return path;
     }
 
-    public void setPath(String path) {
-        this.path = path;
-    }
-
     public String getParam(String key) {
-        return params.get(key);
-    }
-
-    public void setParam(String key, String value) {
-        params.put(key, value);
+        return getParams().get(key);
     }
 
     public Map<String, String> getParams() {
@@ -51,6 +51,9 @@ public class FileState {
     }
 
     public void setParams(Map<String, String> params) {
+        if (this.params != null) {
+            throw new IllegalStateException("params already set");
+        }
         this.params = params;
     }
 
@@ -62,11 +65,13 @@ public class FileState {
         this.lastModified = lastModified;
     }
 
+    public Template getGlob() {
+        return glob;
+    }
+
     @Override
     public String toString() {
         return "["+path+" "+params+"]";
     }
 
-
 }
-

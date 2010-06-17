@@ -4,6 +4,7 @@
 package org.lensfield.build;
 
 import org.lensfield.api.io.MultiStreamIn;
+import org.lensfield.state.TaskState;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -13,10 +14,11 @@ import java.lang.reflect.Field;
 */
 public class InputDescription {
 
-    public final boolean arg;
-    public final String name;
-    public final Field field;
-    public final boolean multifile;
+    private TaskState task;
+    private final boolean arg;
+    private final String name;
+    private final Field field;
+    private final boolean multifile;
 
     public InputDescription(Class<?> clazz) {
         this.arg = false;
@@ -43,4 +45,24 @@ public class InputDescription {
         }
     }
 
+
+    public TaskState getTask() {
+        return task;
+    }
+
+    public boolean isArg() {
+        return arg;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Field getField() {
+        return field;
+    }
+
+    public boolean isMultifile() {
+        return multifile;
+    }
 }

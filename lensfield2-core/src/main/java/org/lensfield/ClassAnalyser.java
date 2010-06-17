@@ -59,7 +59,7 @@ public class ClassAnalyser {
                             && OutputStream.class.isAssignableFrom(parameterTypes[1])) {
                         task.setMethod(method, false);
                         task.addInput(new InputDescription(parameterTypes[0]));
-                        task.addOutput(new OutputDescription(parameterTypes[1]));
+                        task.addOutput(new OutputDescription(task, parameterTypes[1]));
                         return true;
                     }
                 }
@@ -125,7 +125,7 @@ public class ClassAnalyser {
         }
         LensfieldOutput annot = f.getAnnotation(LensfieldOutput.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addOutput(new OutputDescription(f, n));
+        task.addOutput(new OutputDescription(task, f, n));
     }
 
     private static void addParameter(TaskState task, Field f) {

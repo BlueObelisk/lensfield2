@@ -4,9 +4,11 @@
 package org.lensfield.io;
 
 import org.lensfield.api.Logger;
+import org.lensfield.build.OutputDescription;
 import org.lensfield.state.FileState;
 import org.lensfield.build.FileList;
 import org.lensfield.glob.Template;
+import org.lensfield.state.TaskState;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,28 +22,27 @@ public class FileSource {
     private Logger LOG;
 
     private String name;
-    private String filter;
+    private Template glob;
     private String root = "./";
 
     private FileList fileList;
 
 
-    public FileSource(String name, File root, String filter) {
+    public FileSource(String name, File root, Template glob) {
         this.name = name;
         this.root = root.getPath();
-        this.filter = filter;
+        this.glob = glob;
     }
 
     public synchronized FileList run() throws IOException {
-        this.fileList = new FileList(new Template(filter));
+        this.fileList = new FileList(glob);
         File rootDir = new File(root);
-        Template template = new Template(filter);
         StringBuilder s = new StringBuilder();
-        recurse(rootDir, s, template, 0);
+        recurse(rootDir, s, 0);
         return fileList;
     }
 
-    private void recurse(File dir, StringBuilder s, Template template, int depth) {
+    private void recurse(File dir, StringBuilder s, int depth) {
         int n = s.length();
         for (String fn : dir.list()) {
             s.append(fn);
@@ -52,13 +53,13 @@ public class FileSource {
                     continue;
                 }
                 s.append('/');
-                recurse(f, s, template, depth+1);
+                recurse(f, s, depth+1);
             } else {
                 String path = s.toString();
-                Map<String,String> params = template.matches(path);
+                Map<String,String> params = glob.matches(path);
                 if (params != null) {
                     LOG.debug(name, "adding "+path);
-                    FileState fr = new FileState(s.toString(), f.lastModified(), params);
+                    FileState fr = new FileState(glob, s.toString(), f.lastModified(), params);
                     fileList.addFile(fr);
                 }
             }

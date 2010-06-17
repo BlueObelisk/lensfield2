@@ -4,6 +4,7 @@
 package org.lensfield.log;
 
 import org.apache.log4j.Logger;
+import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.state.*;
 
@@ -80,6 +81,7 @@ public class BuildStateReader {
 
     private void readOp() throws IOException, ParseException {
         String taskName = readToken();
+        TaskState task = build.getTask(taskName);
 
         // Read inputs
         skipWhitespace();
@@ -171,7 +173,7 @@ public class BuildStateReader {
         skipWhitespace();
 
         Operation op = new Operation(taskName, inputFiles, outputFiles);
-        build.getTask(taskName).addOperation(op);
+        task.addOperation(op);
         for (List<FileState> files : op.getOutputFiles().values()) {
             build.addFiles(files);
         }
@@ -210,6 +212,7 @@ public class BuildStateReader {
 
     private void readSource() throws IOException, ParseException {
         String name = readToken();
+        TaskState task = new TaskState(name);
         skipWhitespace();
         if (ch != '(') {
             throw new IOException("Error! ["+((char)ch)+']');
@@ -226,7 +229,6 @@ public class BuildStateReader {
             skipWhitespace();
         }
         ch = in.read();
-        TaskState task = new TaskState(name);
         build.addTask(task);
         build.addFiles(files);
     }

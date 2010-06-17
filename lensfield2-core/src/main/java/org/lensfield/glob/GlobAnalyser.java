@@ -23,7 +23,7 @@ public class GlobAnalyser {
     }
 
     private static boolean allGroupsCommon(Template... globs) {
-        Set<String> common = new HashSet<String>(globs[0].getGroupNames());
+        Set<String> common = new LinkedHashSet<String>(globs[0].getGroupNames());
         for (int i = 1; i < globs.length; i++) {
             List<String> groups = new ArrayList<String>(globs[i].getGroupNames());
             if (common.size() != groups.size() || !common.containsAll(groups)) {
@@ -34,7 +34,7 @@ public class GlobAnalyser {
     }
 
     private static Set<String> getCommonGroups(Template... globs) {
-        Set<String> common = new HashSet<String>(globs[0].getGroupNames());
+        Set<String> common = new LinkedHashSet<String>(globs[0].getGroupNames());
         for (int i = 1; i < globs.length; i++) {
             List<String> groups = new ArrayList<String>(globs[i].getGroupNames());
             common.retainAll(groups);
@@ -46,7 +46,7 @@ public class GlobAnalyser {
 
     public static List<InputFileSet> getInputFileSets(Map<String, FileList> inputs) {
         int inputCount = inputs.size();
-
+        
         String[] groups = getCommonGroupNames(inputs);
 
         String[] inputNames = new String[inputs.size()];
@@ -58,7 +58,7 @@ public class GlobAnalyser {
             ix++;
         }
 
-        Map<GlobMatch,FileState[]> inputFiles = new HashMap<GlobMatch, FileState[]>();
+        Map<GlobMatch,FileState[]> inputFiles = new LinkedHashMap<GlobMatch, FileState[]>();
         for (FileState file : fileLists[0].getFiles()) {
             FileState[] files = new FileState[inputCount];
             files[0] = file;
@@ -88,7 +88,7 @@ public class GlobAnalyser {
             if (inputNames.length == 1) {
                 inputMap = Collections.singletonMap(inputNames[0], Collections.singletonList(files[0]));
             } else {
-                inputMap = new HashMap<String, List<FileState>>();
+                inputMap = new LinkedHashMap<String, List<FileState>>();
                 for (int i = 0; i < inputNames.length; i++) {
                     inputMap.put(inputNames[i], Collections.singletonList(files[i]));
                 }

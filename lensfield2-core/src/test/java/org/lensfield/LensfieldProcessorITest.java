@@ -97,6 +97,7 @@ public class LensfieldProcessorITest {
         model.addSource(new Source("files", "**/*.n"));
         model.addBuild(new Build("doubles",     "org.lensfield.testing.ops.number.Doubler",  "files",    "**/*.x2"));
         model.addBuild(new Build("squares",     "org.lensfield.testing.ops.number.Squarer",  "files",    "**/*.sq"));
+        model.addBuild(new Build("copies",      "org.lensfield.testing.ops.file.Copier",     "doubles",  "**/*.nn"));
         model.addBuild(new Build("sum-squares", "org.lensfield.testing.ops.number.Summer",   "squares",  "sum-sq.txt"));
         model.addBuild(new Build("sum-doubles", "org.lensfield.testing.ops.number.Summer",   "doubles",  "sum-x2.txt"));
 
