@@ -5,6 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <modules>
         <module>lensfield2-atomreader</module>
+        <module>lensfield2-launcher</module>
     </modules>
 
     <parent>
@@ -138,7 +139,7 @@
                 <module>lensfield2-core</module>
                 <module>lensfield2-cli</module>
                 <module>lensfield2-parser</module>
-                <module>lensfield2-dist</module>
+                <module>lensfield2-launcher</module>
             </modules>
         </profile>
     </profiles>

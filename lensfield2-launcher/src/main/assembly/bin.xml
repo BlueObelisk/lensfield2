@@ -1,0 +1,49 @@
+<assembly>
+
+    <id>bin-dist</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+    <baseDirectory>lensfield2-${project.version}</baseDirectory>
+
+    <fileSets>
+
+        <fileSet>
+            <includes>
+                <include>README*</include>
+                <include>LICENCE*</include>
+                <include>NOTICE*</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/etc</directory>
+            <outputDirectory>etc</outputDirectory>
+        </fileSet>
+
+    </fileSets>
+
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>boot</outputDirectory>
+            <includes>
+                <include>org.codehaus.plexus:plexus-classworlds</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>true</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <excludes>
+                <exclude>org.codehaus.plexus:plexus-classworlds</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
+
+</assembly>

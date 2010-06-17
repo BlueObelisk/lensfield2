@@ -38,14 +38,14 @@ goto CheckLfHome
 
 :StripLfHome
 @REM ==== Strip trailing slash ====
-if not "_%LF_HOME:~-1%"=="_\" goto CheckLfOpts
+if not "_%LF_HOME:~-1%"=="_\" goto CheckLfHome
 set "LF_HOME=%LF_HOME:~0,-1%"
 goto stripLfHome
 
 
 :CheckLfHome
 @REM ==== CHECK LF_HOME ====
-if exist "%LF_HOME%\bin\lf.bat" goto init
+if exist "%LF_HOME%\bin\lf.bat" goto CheckLfOpts
 echo.
 echo ERROR: LF_HOME is set to an invalid directory.
 echo LF_HOME = "%LF_HOME%"
@@ -60,7 +60,7 @@ if not "%LF_OPTS%" == "" goto init
 set "LF_OPTS=-Xmx512m"
 
 :init
-"%JAVA_HOME%\bin\java.exe" %LF_OPTS% -jar "%LF_HOME%\lib\lensfield.jar" %*
+"%JAVA_HOME%/bin/java" -classpath "%LF_HOME%\boot\plexus-classworlds-2.2.3.jar" -Dclassworlds.conf="%LF_HOME%\etc\lensfield.conf" -Dlensfield.home="%LF_HOME%" org.codehaus.plexus.classworlds.launcher.Launcher %*
 
 if ERRORLEVEL 1 goto error
 goto exit
