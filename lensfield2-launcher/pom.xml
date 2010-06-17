@@ -20,30 +20,36 @@
 
     <packaging>pom</packaging>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>bin</id>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <descriptorSourceDirectory>src/main/assembly</descriptorSourceDirectory>
-                            <descriptorRefs>
-                                <descriptorRef>bin</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>lensfield-${project.version}</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile>
+            <id>dist</id>
+            <build>
+                    <plugins>
+                        <plugin>
+                            <artifactId>maven-assembly-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>bin</id>
+                                    <goals>
+                                        <goal>single</goal>
+                                    </goals>
+                                    <phase>package</phase>
+                                    <configuration>
+                                        <descriptorSourceDirectory>src/main/assembly</descriptorSourceDirectory>
+                                        <descriptorRefs>
+                                            <descriptorRef>bin</descriptorRef>
+                                        </descriptorRefs>
+                                        <finalName>lensfield-${project.version}</finalName>
+                                        <appendAssemblyId>false</appendAssemblyId>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </build>            
+        </profile>
+
+    </profiles>
 
     <dependencies>
 
