@@ -90,121 +90,129 @@ public class ProcessRunner {
 
     public void runProcess(InputFileSet inputs, Map<String,FileList> outputs) throws Exception {
 
-        Object obj = clazz.newInstance();
-        configureParameters(obj);
-
-        List<Input> ins = Collections.emptyList();
-        Map<String, Output> outputMap = Collections.emptyMap();
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
-            if (task.isNoArgs()) {
+            Thread.currentThread().setContextClassLoader(clazz.getClassLoader());
 
-                ins = new ArrayList<Input>();
-                Map<String,Collection<FileState>> inputMap = inputs.getMap();
-                for (InputDescription input : this.inputs) {
-                    if (inputMap.containsKey(input.getName())) {
-                        Collection<FileState> list = inputMap.get(input.getName());
-                        if (input.isMultifile()) {
-                            List<InputFile> inputFiles = new ArrayList<InputFile>(list.size());
-                            int i = 1;
-                            for (FileState fs : list) {
+            Object obj = clazz.newInstance();
+            configureParameters(obj);
+
+            List<Input> ins = Collections.emptyList();
+            Map<String, Output> outputMap = Collections.emptyMap();
+            try {
+                if (task.isNoArgs()) {
+
+                    ins = new ArrayList<Input>();
+                    Map<String,Collection<FileState>> inputMap = inputs.getMap();
+                    for (InputDescription input : this.inputs) {
+                        if (inputMap.containsKey(input.getName())) {
+                            Collection<FileState> list = inputMap.get(input.getName());
+                            if (input.isMultifile()) {
+                                List<InputFile> inputFiles = new ArrayList<InputFile>(list.size());
+                                int i = 1;
+                                for (FileState fs : list) {
+                                    InputFile in = createInput(fs);
+                                    inputFiles.add(in);
+                                }
+                                InputMultiFile in = new InputMultiFile(inputFiles, LOG);
+                                input.getField().set(obj, in);
+                                ins.add(in);
+                            } else {
+                                if (list.size() != 1) {
+                                    throw new LensfieldException("Single file input required");
+                                }
+                                FileState fs = list.iterator().next();
                                 InputFile in = createInput(fs);
-                                inputFiles.add(in);
+                                LOG.debug("reading "+in.getPath());
+                                input.getField().set(obj, in);
+                                ins.add(in);
                             }
-                            InputMultiFile in = new InputMultiFile(inputFiles, LOG);
-                            input.getField().set(obj, in);
-                            ins.add(in);                                                        
                         } else {
-                            if (list.size() != 1) {
-                                throw new LensfieldException("Single file input required");
-                            }
-                            FileState fs = list.iterator().next();
-                            InputFile in = createInput(fs);
-                            LOG.debug("reading "+in.getPath());
-                            input.getField().set(obj, in);
-                            ins.add(in);
+                            throw new LensfieldException("Missing input file: "+input.getName());
                         }
-                    } else {
-                        throw new LensfieldException("Missing input file: "+input.getName());
+                    }
+
+                    outputMap = new HashMap<String, Output>();
+
+                    for (OutputDescription output : this.outputs) {
+                        if (outputs.containsKey(output.getName())) {
+                            FileList list = outputs.get(output.getName());
+                            if (output.isMultifile()) {
+                                OutputMultiFile out = new OutputMultiFile(tmpdir, list.getGlob(), inputs.getParameters());
+                                outputMap.put(output.getName(), out);
+                                output.getField().set(obj, out);
+                            } else {
+                                OutputFile out = configureOutputFile(inputs, list);
+                                outputMap.put(output.getName(), out);
+                                output.getField().set(obj, out);
+                            }
+                        } else {
+                            throw new LensfieldException("Missing output file: "+output.getName());
+                        }
+                    }
+
+                    runMethod.invoke(obj);
+
+                } else {
+                    FileState fin = inputs.getMap().values().iterator().next().iterator().next();
+                    LOG.debug("reading "+fin.getPath());
+                    InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParams());
+                    FileList fileList = outputs.values().iterator().next();
+                    OutputFile out = configureOutputFile(inputs, fileList);
+
+                    ins = Collections.<Input>singletonList(in);
+                    outputMap = Collections.<String, Output>singletonMap("out", out);
+
+                    runArgsTask(obj, in, out);
+
+                }
+            } finally {
+                // Ensure all streams are closed
+                for (Input in : ins) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
-
-                outputMap = new HashMap<String, Output>();
-
-                for (OutputDescription output : this.outputs) {
-                    if (outputs.containsKey(output.getName())) {
-                        FileList list = outputs.get(output.getName());
-                        if (output.isMultifile()) {
-                            OutputMultiFile out = new OutputMultiFile(tmpdir, list.getGlob(), inputs.getParameters());
-                            outputMap.put(output.getName(), out);
-                            output.getField().set(obj, out);
-                        } else {
-                            OutputFile out = configureOutputFile(inputs, list);
-                            outputMap.put(output.getName(), out);
-                            output.getField().set(obj, out);
-                        }
-                    } else {
-                        throw new LensfieldException("Missing output file: "+output.getName());
+                for (Output out : outputMap.values()) {
+                    try {
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
-
-                runMethod.invoke(obj);
-
-            } else {
-                FileState fin = inputs.getMap().values().iterator().next().iterator().next();
-                LOG.debug("reading "+fin.getPath());
-                InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParams());
-                FileList fileList = outputs.values().iterator().next();
-                OutputFile out = configureOutputFile(inputs, fileList);
-
-                ins = Collections.<Input>singletonList(in);
-                outputMap = Collections.<String, Output>singletonMap("out", out);
-
-                runArgsTask(obj, in, out);
-
             }
+
+            // Move temp files
+            renameTempFiles(task.getId(), inputs, outputMap);
+
+            Map<String,List<FileState>> outputFiles = new HashMap<String, List<FileState>>();
+            for (Map.Entry<String, Output> e : outputMap.entrySet()) {
+                List<FileState> list = new ArrayList<FileState>();
+                List<OutputFile> outs;
+                if (e.getValue() instanceof OutputFile) {
+                    outs = Collections.singletonList((OutputFile)e.getValue());
+                }
+                else if (e.getValue() instanceof OutputMultiFile) {
+                    outs = ((OutputMultiFile)e.getValue()).getOutputs();
+                }
+                else {
+                    throw new RuntimeException();
+                }
+                for (OutputFile out : outs) {
+                    FileState f = new FileState(out.getPath(), out.getFile().lastModified(), out.getParams());
+                    outputs.get(e.getKey()).addFile(f);
+                    list.add(f);
+                }
+                outputFiles.put(e.getKey(), list);
+            }
+
+            buildLog.process(task.getId(), inputs.getMap(), outputFiles);
+
         } finally {
-            // Ensure all streams are closed
-            for (Input in : ins) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            for (Output out : outputMap.values()) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            Thread.currentThread().setContextClassLoader(cl);
         }
-
-        // Move temp files
-        renameTempFiles(task.getId(), inputs, outputMap);
-
-        Map<String,List<FileState>> outputFiles = new HashMap<String, List<FileState>>();
-        for (Map.Entry<String, Output> e : outputMap.entrySet()) {
-            List<FileState> list = new ArrayList<FileState>();
-            List<OutputFile> outs;
-            if (e.getValue() instanceof OutputFile) {
-                outs = Collections.singletonList((OutputFile)e.getValue());
-            }
-            else if (e.getValue() instanceof OutputMultiFile) {
-                outs = ((OutputMultiFile)e.getValue()).getOutputs();
-            }
-            else {
-                throw new RuntimeException();
-            }
-            for (OutputFile out : outs) {
-                FileState f = new FileState(out.getPath(), out.getFile().lastModified(), out.getParams());
-                outputs.get(e.getKey()).addFile(f);
-                list.add(f);
-            }
-            outputFiles.put(e.getKey(), list);
-        }
-
-        buildLog.process(task.getId(), inputs.getMap(), outputFiles);
 
     }
 
