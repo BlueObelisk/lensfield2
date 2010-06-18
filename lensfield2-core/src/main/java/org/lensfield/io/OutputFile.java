@@ -49,7 +49,20 @@ public class OutputFile extends StreamOut implements Output {
 
     @Override
     public void setParameter(String name, String value) {
-        parameters.put("$"+name, value);
+        String pname;
+        if ("*".equals(name) || "**".equals(name)) {
+            pname = name;
+        }
+        else if ("**/".equals(name)) {
+            pname = "**";
+        }
+        else {
+            pname = "$"+name;
+        }
+        if (parameters.containsKey(name)) {
+            throw new IllegalStateException("Parameter: "+name+" already set");
+        }
+        parameters.put(pname, value);
     }
 
 

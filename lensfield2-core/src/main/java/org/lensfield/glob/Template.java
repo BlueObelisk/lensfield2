@@ -55,11 +55,11 @@ public class Template {
                             throw new IllegalArgumentException("glob error '/**/'");
                         }
                         i++;
-                        if (groupNames.containsKey("**/")) {
+                        if (groupNames.containsKey("**")) {
                             throw new IllegalArgumentException("Duplicate wildcard: **");
                         }
                         int x = groupNames.size();
-                        groupNames.put("**/", x);
+                        groupNames.put("**", x);
                         ptrn.append("(.*/|)");
                         fptrn.append('{').append(x).append('}');
                         wildcard = true;

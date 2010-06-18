@@ -36,11 +36,16 @@ public class AtomFeed {
     @LensfieldParameter(optional = true)
     private String dirLevels = "1";
 
+    @LensfieldParameter(optional = true)
+    private int maxEntries = -1;
+
     public void run() throws Exception {
         FeedCache cache = new FeedCache();
         cache.setHandler(new Handler());
         cache.setCacheDir(new File(cacheDir));
         cache.poll(url);
+        cache.setMaxEntries(maxEntries);
+        cache.setSkipOldEntries(false);
     }
 
     private class Handler extends DefaultFeedHandler {
