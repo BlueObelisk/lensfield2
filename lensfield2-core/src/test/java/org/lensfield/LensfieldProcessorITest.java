@@ -14,11 +14,11 @@ import org.lensfield.model.Source;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author sea36
@@ -129,7 +129,7 @@ public class LensfieldProcessorITest {
     }
 
     @Test
-    public void testAbcJoin() throws Exception {
+    public void testAbcJoinN1() throws Exception {
         loadAbcData(workspace);
 
         Model model = new Model();
@@ -149,7 +149,80 @@ public class LensfieldProcessorITest {
 
 
     @Test
-    public void testXyzSplit() throws Exception {
+    public void testChain11() throws Exception {
+        loadAbcData(workspace);
+
+        Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
+        model.addSource(new Source("files", "input/*"));
+        model.addBuild(new Build("copy1", "org.lensfield.testing.ops.file.Copier", "files", "output/1-*"));
+        model.addBuild(new Build("copy2", "org.lensfield.testing.ops.file.Copier", "copy1", "output/2-*"));
+        model.addBuild(new Build("copy3", "org.lensfield.testing.ops.file.Copier", "copy2", "output/3-*"));
+
+        Lensfield lf = new Lensfield(model, workspace);
+        lf.build();
+
+        assertTrue(new File(workspace, "output/1-a.txt").isFile());
+        assertTrue(new File(workspace, "output/1-b.txt").isFile());
+        assertTrue(new File(workspace, "output/2-a.txt").isFile());
+        assertTrue(new File(workspace, "output/2-b.txt").isFile());
+        assertTrue(new File(workspace, "output/3-a.txt").isFile());
+        assertTrue(new File(workspace, "output/3-b.txt").isFile());
+
+    }
+
+    @Test
+    public void testChain11Repeat() throws Exception {
+        loadAbcData(workspace);
+
+        Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
+        model.addSource(new Source("files", "input/*"));
+        model.addBuild(new Build("copy1", "org.lensfield.testing.ops.file.Copier", "files", "output/1-*"));
+        model.addBuild(new Build("copy2", "org.lensfield.testing.ops.file.Copier", "copy1", "output/2-*"));
+        model.addBuild(new Build("copy3", "org.lensfield.testing.ops.file.Copier", "copy2", "output/3-*"));
+
+        Lensfield lf = new Lensfield(model, workspace);
+        lf.build();
+
+        assertTrue(new File(workspace, "output/1-a.txt").isFile());
+        assertTrue(new File(workspace, "output/1-b.txt").isFile());
+        assertTrue(new File(workspace, "output/2-a.txt").isFile());
+        assertTrue(new File(workspace, "output/2-b.txt").isFile());
+        assertTrue(new File(workspace, "output/3-a.txt").isFile());
+        assertTrue(new File(workspace, "output/3-b.txt").isFile());
+
+        Map<File,Long> ages = getAges(new File(workspace, "output/"));
+        Thread.sleep(1000);
+
+        new Lensfield(model, workspace).build();
+        checkAges(new File(workspace, "output/"), ages);
+    }
+
+    private static void checkAges(File file, Map<File, Long> ages) {
+        for (File f : file.listFiles()) {
+            if (!ages.containsKey(f)) {
+                fail("File missing: "+f);
+            }
+            if (f.lastModified() != ages.get(f).longValue()) {
+                fail("File modified: "+f);
+            }
+        }
+    }
+
+    private static Map<File, Long> getAges(File file) {
+        Map<File,Long> map = new HashMap<File, Long>();
+        for (File f : file.listFiles()) {
+            map.put(f, f.lastModified());
+        }
+        return map;
+    }
+
+
+    @Test
+    public void testXyzSplit1N() throws Exception {
         loadXyzData(workspace);
 
         Model model = new Model();
