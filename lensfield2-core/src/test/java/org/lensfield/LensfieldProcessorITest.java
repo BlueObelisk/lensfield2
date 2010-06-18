@@ -240,6 +240,25 @@ public class LensfieldProcessorITest {
         assertEquals("aaaaa", FileUtils.readFileToString(new File(workspace, "output/y-1.txt")));
         assertEquals("bbbbb", FileUtils.readFileToString(new File(workspace, "output/y-2.txt")));
         assertEquals("ccccc", FileUtils.readFileToString(new File(workspace, "output/y-3.txt")));
+    }
+
+    @Test
+    public void testXyzChain() throws Exception {
+        loadXyzData(workspace);
+
+        Model model = new Model();
+        model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
+        model.addSource(new Source("files", "input/*.txt"));
+        model.addBuild(new Build("split", "org.lensfield.testing.ops.file.Splitter", "files", "output/*-{%i}.txt"));
+        model.addBuild(new Build("copy", "org.lensfield.testing.ops.file.Copier", "split", "output/*-{%i}-copy.txt"));
+        model.addBuild(new Build("join", "org.lensfield.testing.ops.file.Joiner", "copy", "output/*-join.txt"));
+
+        Lensfield lf = new Lensfield(model, workspace);
+        lf.build();
+
+        assertEquals("111112222233333", FileUtils.readFileToString(new File(workspace, "output/x-join.txt")));
+        assertEquals("aaaaabbbbbccccc", FileUtils.readFileToString(new File(workspace, "output/y-join.txt")));
 
     }
 

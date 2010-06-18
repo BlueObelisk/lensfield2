@@ -5,6 +5,7 @@ package org.lensfield;
 
 import org.lensfield.state.FileState;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -14,10 +15,10 @@ import java.util.Map;
 public class InputFileSet {
 
     private Map<String,String> parameters;
-    private Map<String,List<FileState>> inputs;
+    private Map<String,Collection<FileState>> inputs;
     private boolean upToDate;
 
-    public InputFileSet(Map<String, String> params, Map<String, List<FileState>> inputMap) {
+    public InputFileSet(Map<String, String> params, Map<String, Collection<FileState>> inputMap) {
         this.parameters = params;
         this.inputs = inputMap;
     }
@@ -26,7 +27,7 @@ public class InputFileSet {
         return parameters;
     }
 
-    public Map<String, List<FileState>> getMap() {
+    public Map<String, Collection<FileState>> getMap() {
         return inputs;
     }
 

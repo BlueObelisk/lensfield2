@@ -3,6 +3,7 @@
  */
 package org.lensfield;
 
+import com.google.common.collect.Sets;
 import org.lensfield.api.Logger;
 import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
@@ -434,7 +435,7 @@ public class Lensfield {
             FileList fileList = e.getValue();
             inputSets = new ArrayList<InputFileSet>(fileList.getFiles().size());
             for (FileState fs : fileList.getFiles()) {
-                inputSets.add(new InputFileSet(fs.getParams(), Collections.singletonMap(name,Collections.singletonList(fs))));
+                inputSets.add(new InputFileSet(fs.getParams(), Collections.singletonMap(name,(Collection<FileState>)Collections.singletonList(fs))));
             }
         } else {
             inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
@@ -448,30 +449,44 @@ public class Lensfield {
 
 
 
-    private boolean isUpToDate(Map<String,List<FileState>> input, Operation prevOp) {
+    private boolean isUpToDate(Map<String,Collection<FileState>> input, Operation prevOp) {
         // Check input names match
         if (!input.keySet().equals(prevOp.getInputFiles().keySet())) {
             System.err.println("[DEBUG] input name mis-match. current:"+input.keySet()+"; prev:"+prevOp.getInputFiles().keySet());
             return false;
         }
         // Check input files up-to-date
-        for (Map.Entry<String,List<FileState>> e : input.entrySet()) {
-            List<FileState> files = e.getValue();
+        for (Map.Entry<String,Collection<FileState>> e : input.entrySet()) {
+            Collection<FileState> files = e.getValue();
             List<FileState> prevFiles = prevOp.getInputFiles().get(e.getKey());
             if (files.size() != prevFiles.size()) {
                 System.err.println("[DEBUG] input file count mis-match. current:"+files.size()+"; prev:"+prevFiles.size());
                 return false;
             }
-            for (int i = 0; i < files.size(); i++) {
-                if (!files.get(i).getPath().equals(prevFiles.get(i).getPath())) {
-                    System.err.println("[DEBUG] input file name mis-match. current:"+files.get(i).getPath()+"; prev:"+prevFiles.get(i).getPath());
+            Iterator<FileState> fit = files.iterator();
+            Iterator<FileState> pit = prevFiles.iterator();
+            while (fit.hasNext()) {
+                FileState f = fit.next();
+                FileState p = pit.next();
+                if (!f.getPath().equals(p.getPath())) {
+                    System.err.println("[DEBUG] input file name mis-match. current:"+f.getPath()+"; prev:"+p.getPath());
                     return false;
                 }
-                if (isChanged(files.get(i).getLastModified(), prevFiles.get(i).getLastModified())) {
-                    System.err.println("[DEBUG] input file age mis-match. current:"+files.get(i).getLastModified()+"; prev:"+prevFiles.get(i).getLastModified());
+                if (isChanged(f.getLastModified(), p.getLastModified())) {
+                    System.err.println("[DEBUG] input file age mis-match. current:"+f.getLastModified()+"; prev:"+p.getLastModified());
                     return false;
                 }
             }
+//            for (int i = 0; i < files.size(); i++) {
+//                if (!files.get(i).getPath().equals(prevFiles.get(i).getPath())) {
+//                    System.err.println("[DEBUG] input file name mis-match. current:"+files.get(i).getPath()+"; prev:"+prevFiles.get(i).getPath());
+//                    return false;
+//                }
+//                if (isChanged(files.get(i).getLastModified(), prevFiles.get(i).getLastModified())) {
+//                    System.err.println("[DEBUG] input file age mis-match. current:"+files.get(i).getLastModified()+"; prev:"+prevFiles.get(i).getLastModified());
+//                    return false;
+//                }
+//            }
         }
         // Check output files
         for (List<FileState> fileStates : prevOp.getOutputFiles().values()) {
@@ -558,14 +573,31 @@ public class Lensfield {
         Map<String, FileList> inputFileLists = getInputs(build, task);
         Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
 
-        Map<String,List<FileState>> inputMap = new HashMap<String, List<FileState>>();
-        for (Map.Entry<String,FileList> e : inputFileLists.entrySet()) {
-            inputMap.put(e.getKey(), e.getValue().getFiles());
+        Set<String> inputGroups = GlobAnalyser.getCommonGroups(getGlobs(inputFileLists.values()));
+        Set<String> outputGroups = GlobAnalyser.getCommonGroups(getGlobs(outputFileLists.values()));
+        Set<String> commonGroups = Sets.intersection(inputGroups, outputGroups);
+
+        List<InputFileSet> inputs = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
+        run(task, inputs, outputFileLists);
+
+
+//        Map<String,List<FileState>> inputMap = new HashMap<String, List<FileState>>();
+//        for (Map.Entry<String,FileList> e : inputFileLists.entrySet()) {
+//            inputMap.put(e.getKey(), e.getValue().getFiles());
+//        }
+//
+//        InputFileSet inputs = new InputFileSet(Collections.<String, String>emptyMap(), inputMap);
+//
+//        run(task, Collections.singletonList(inputs), outputFileLists);
+    }
+
+    private Template[] getGlobs(Collection<FileList> fileLists) {
+        Template[] globs = new Template[fileLists.size()];
+        int i = 0;
+        for (FileList fl : fileLists) {
+            globs[i++] = fl.getGlob();
         }
-
-        InputFileSet inputs = new InputFileSet(Collections.<String, String>emptyMap(), inputMap);
-
-        run(task, Collections.singletonList(inputs), outputFileLists);
+        return globs;
     }
 
     private void run(TaskState task, List<InputFileSet> inputList, Map<String, FileList> outputFileLists) throws Exception {
@@ -587,7 +619,7 @@ public class Lensfield {
             // TODO grouped input/outputs
             if (prevTask != null) {
                 // Get sample filename
-                String fn = inputs.getMap().values().iterator().next().get(0).getPath();
+                String fn = inputs.getMap().values().iterator().next().iterator().next().getPath();
                 // Get relevant operation
                 Operation prevOp = prevTask.getInputOperationMap().get(fn);
                 if (prevOp != null) {

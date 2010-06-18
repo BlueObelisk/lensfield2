@@ -11,10 +11,7 @@ import org.lensfield.state.TaskState;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author sea36
@@ -169,7 +166,7 @@ public class BuildLogger {
         return false;
     }
 
-    public <IF extends FileState, OF extends FileState> void process(String name, Map<String, List<IF>> input, Map<String, List<OF>> output) {
+    public <IF extends FileState, OF extends FileState> void process(String name, Map<String, Collection<IF>> input, Map<String, List<OF>> output) {
         out.print("(op ");
         out.print(name);
         out.print("(");
@@ -179,14 +176,14 @@ public class BuildLogger {
         out.println("))");
     }
 
-    private <FS extends FileState> void writeInputFiles(Map<String, List<FS>> map) {
-        for (Iterator<Map.Entry<String,List<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
-            Map.Entry<String, List<FS>> e = it.next();
+    private <FS extends FileState> void writeInputFiles(Map<String, Collection<FS>> map) {
+        for (Iterator<Map.Entry<String,Collection<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, Collection<FS>> e = it.next();
             out.print(e.getKey());
             out.print(' ');
-            List<FS> files = e.getValue();
+            Collection<FS> files = e.getValue();
             if (files.size() == 1) {
-                FileState f = files.get(0);
+                FileState f = files.iterator().next();
                 writeToken(f.getPath());
             } else {
                 out.print('(');

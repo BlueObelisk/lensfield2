@@ -98,10 +98,10 @@ public class ProcessRunner {
             if (task.isNoArgs()) {
 
                 ins = new ArrayList<Input>();
-                Map<String,List<FileState>> inputMap = inputs.getMap();
+                Map<String,Collection<FileState>> inputMap = inputs.getMap();
                 for (InputDescription input : this.inputs) {
                     if (inputMap.containsKey(input.getName())) {
-                        List<FileState> list = inputMap.get(input.getName());
+                        Collection<FileState> list = inputMap.get(input.getName());
                         if (input.isMultifile()) {
                             List<InputFile> inputFiles = new ArrayList<InputFile>(list.size());
                             int i = 1;
@@ -116,7 +116,7 @@ public class ProcessRunner {
                             if (list.size() != 1) {
                                 throw new LensfieldException("Single file input required");
                             }
-                            FileState fs = list.get(0);
+                            FileState fs = list.iterator().next();
                             InputFile in = createInput(fs);
                             LOG.debug("reading "+in.getPath());
                             input.getField().set(obj, in);
@@ -149,7 +149,7 @@ public class ProcessRunner {
                 runMethod.invoke(obj);
 
             } else {
-                FileState fin = inputs.getMap().values().iterator().next().get(0);
+                FileState fin = inputs.getMap().values().iterator().next().iterator().next();
                 LOG.debug("reading "+fin.getPath());
                 InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParams());
                 FileList fileList = outputs.values().iterator().next();
@@ -261,7 +261,7 @@ public class ProcessRunner {
                     path = output.getGlob().format(output.getParams());
                 } catch (MissingParameterException ex) {
                     System.err.println("Missing parameter: "+ex.getName());
-                    for (Map.Entry<String,List<FileState>> entry : inputs.getMap().entrySet()) {
+                    for (Map.Entry<String,Collection<FileState>> entry : inputs.getMap().entrySet()) {
                         System.err.println("--- Input: "+entry.getKey());
                         for (FileState f : entry.getValue()) {
                             System.err.println(f.getPath());
