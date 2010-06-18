@@ -9,6 +9,7 @@ import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.Template;
 
 import java.lang.reflect.Method;
+import java.net.URLClassLoader;
 import java.util.*;
 
 /**
@@ -31,6 +32,7 @@ public class TaskState {
     private transient boolean updated = true;
 
     private List<Operation> operations = new ArrayList<Operation>();
+    private ClassLoader classLoader;
 
     public TaskState(String id) {
         this.id = id;
@@ -229,5 +231,13 @@ public class TaskState {
 
     public boolean isSource() {
         return this.getOperations().isEmpty() || this.getOperations().get(0).getInputFiles().isEmpty();
+    }
+
+    public void setClassLoader(ClassLoader loader) {
+        this.classLoader = loader;
+    }
+
+    public ClassLoader getClassLoader() {
+        return classLoader;
     }
 }

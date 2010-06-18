@@ -278,7 +278,9 @@ public class DependencyResolver {
 //        }
         
         Class<?> clazz = loader.loadClass(task.getClassName());
+        task.setClassLoader(loader);
         task.setClazz(clazz);
+
 
     }
 

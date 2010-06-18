@@ -92,7 +92,7 @@ public class ProcessRunner {
 
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(clazz.getClassLoader());
+            Thread.currentThread().setContextClassLoader(task.getClassLoader());
 
             Object obj = clazz.newInstance();
             configureParameters(obj);
