@@ -11,12 +11,13 @@ import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.GlobAnalyser;
 import org.lensfield.glob.Template;
-import org.lensfield.io.FileSource;
+import org.lensfield.source.FileSource;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
 import org.lensfield.model.*;
 import org.lensfield.model.Process;
 import org.lensfield.process.ProcessRunner;
+import org.lensfield.source.ISource;
 import org.lensfield.state.*;
 
 import java.io.*;
@@ -316,10 +317,14 @@ public class Lensfield {
             OutputDescription outputDescription;
             if (output.getName() == null) {
                 outputDescription = task.getDefaultOutput();
-            } else {
+            }
+            else {
                 outputDescription = task.getOutput(output.getName());
             }
-            // TODO if null
+            if (outputDescription == null) {
+                // TODO
+                throw new NullPointerException();
+            }
             outputDescription.setGlob(new Template(output.getValue()));
         }
     }
@@ -360,31 +365,29 @@ public class Lensfield {
 
         LOG.info("Processing source: "+source.getName());
 
-        if (source.getParameters().isEmpty()) {
-            throw new ConfigurationException("Source filter not defined");
-        }
-
-        String filter;
-        if (source.getParameters().size() == 1) {
-            Parameter param = source.getParameters().get(0);
-            if (param.getName() == null || "filter".equals(param.getName())) {
-                filter = param.getValue();
-            } else {
-                throw new ConfigurationException("Source '"+source.getName()+"' has unknown parameter: "+param.getName());
-            }
-        } else {
-            // TODO
-            throw new ConfigurationException("Source '"+source.getName()+"'; expected 1 parameter, found "+source.getParameters().size());
-        }
-
-        Template glob = new Template(filter);
+        Template glob = new Template(source.getTemplate());
         TaskState task = new TaskState(source.getName());
         OutputDescription output = new OutputDescription(task, "out");
         task.addOutput(output);
 
-        FileSource finder = new FileSource(task.getId(), root, glob);
+        ISource finder;
+        if (source.getClassName() == null) {
+            finder = new FileSource();
+        } else {
+            DependencyResolver dr = new DependencyResolver(model.getRepositories(), getClass().getClassLoader());
+            Class<?> c = dr.loadClass(source.getClassName(), source.getDependencies());
+            finder = (ISource) c.newInstance();
+        }
+
         finder.setLogger(LOG);
-        FileList files = finder.run();
+        finder.setName(task.getId());
+        finder.setRoot(root);
+        finder.setGlob(glob);
+        finder.configure(source.getParameters());
+        List<FileState> fileList = finder.run();
+
+        FileList files = new FileList(glob);
+        files.addFiles(fileList);
 
         buildLog.process(source.getName(), files.getFiles());
 

@@ -14,6 +14,7 @@ public abstract class Process {
     private final String name;
 
     private final List<Parameter> parameters = new ArrayList<Parameter>();
+    private List<Dependency> dependencies = new ArrayList<Dependency>();
 
     public Process(String name) {
         if (name == null) {
@@ -31,12 +32,22 @@ public abstract class Process {
         return name;
     }
 
+
     public List<Parameter> getParameters() {
         return parameters;
     }
 
     public void addParameter(Parameter parameter) {
         parameters.add(parameter);
+    }
+
+
+    public void addDependency(String groupId, String artifactId, String version) {
+        dependencies.add(new Dependency(groupId, artifactId, version));
+    }
+
+    public List<Dependency> getDependencies() {
+        return dependencies;
     }
 
 }

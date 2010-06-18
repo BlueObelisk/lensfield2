@@ -15,9 +15,11 @@
     <dependencies>
         <dependency>
             <groupId>org.lensfield</groupId>
-            <artifactId>lensfield2-api</artifactId>
+            <artifactId>lensfield2-core</artifactId>
             <version>0.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>uk.ac.cam.ch.atomxom</groupId>
             <artifactId>atomxom-feeds</artifactId>

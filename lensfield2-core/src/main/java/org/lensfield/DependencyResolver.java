@@ -24,7 +24,6 @@ import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.DefaultContainerConfiguration;
 import org.codehaus.plexus.DefaultPlexusContainer;
 import org.codehaus.plexus.classworlds.ClassWorld;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.lensfield.api.LensfieldInput;
 import org.lensfield.model.Build;
@@ -47,6 +46,12 @@ public class DependencyResolver {
 
     private static final Logger LOG = Logger.getLogger(DependencyResolver.class);
 
+    static {
+        System.setProperty("maven.artifact.threads", "1");  // Prevents hanging threads
+    }
+
+    private static final ClassWorld classWorld = new ClassWorld("plexus.core", DependencyResolver.class.getClassLoader());
+
     private final RepositorySystem repositorySystem;
     private final List<ArtifactRepository> remoteRepositories = new ArrayList<ArtifactRepository>();
 
@@ -55,12 +60,14 @@ public class DependencyResolver {
     private SettingsBuilder settingsBuilder;
     private Settings settings;
 
+    private ClassLoader parentClassloader;
 
     public DependencyResolver(List<String> repositories) throws Exception {
+        this(repositories, LensfieldInput.class.getClassLoader());
+    }
 
-        System.setProperty("maven.artifact.threads", "1");  // Prevents hanging threads
-        
-        ClassWorld classWorld = new ClassWorld("plexus.core", DependencyResolver.class.getClassLoader());
+    public DependencyResolver(List<String> repositories, ClassLoader parentClassLoader) throws Exception {
+        this.parentClassloader = parentClassLoader;
 
         // --- This magic from m2eclipse/MavenPlugin() ---
         ContainerConfiguration cc = new DefaultContainerConfiguration();
@@ -252,8 +259,7 @@ public class DependencyResolver {
             task.addDependency(dependency);
         }
         URL[] urls = getUrls(dependencyList);
-        ClassLoader apiLoader = LensfieldInput.class.getClassLoader();
-        URLClassLoader loader = new URLClassLoader(urls, apiLoader);
+        URLClassLoader loader = new URLClassLoader(urls, parentClassloader);
 
 //        try {
 //            System.err.println(">>>>>>>>>>>>>>>>>>>>");
@@ -311,6 +317,19 @@ public class DependencyResolver {
             */
             return new Settings();
         }
+    }
+
+
+    public Class<?> loadClass(String className, List<Dependency> dependencies) throws Exception {
+        ListMultimap<Integer,Artifact> buildDependencies = resolveDependencies(dependencies);
+//        buildDependencies.putAll(globalDependencies);
+        List<Artifact> dependencyList = getDependencyList(buildDependencies);
+
+        URL[] urls = getUrls(dependencyList);
+        URLClassLoader loader = new URLClassLoader(urls, parentClassloader);
+
+        Class<?> clazz = loader.loadClass(className);
+        return clazz;
     }
 
 }

@@ -4,6 +4,7 @@
 package org.lensfield;
 
 import org.lensfield.model.*;
+import org.lensfield.model.Process;
 
 import java.io.*;
 
@@ -56,7 +57,10 @@ public class BuildFileParser {
                     parseDepends();
                 }
                 else if ("source".equals(command)) {
-                    parseSource();
+                    parseSource(null);
+                }
+                else if (command.startsWith("source/")) {
+                    parseSource(command.substring(7));
                 }
                 else if ("build".equals(command)) {
                     parseBuild();
@@ -106,7 +110,7 @@ public class BuildFileParser {
         }
     }
 
-    private void parseSource() throws IOException {
+    private void parseSource(String className) throws IOException {
         skipWhitespaceAndComments();
         if (')' == ch) {
             throw new IOException("Expected source name");
@@ -117,9 +121,32 @@ public class BuildFileParser {
             throw new IOException("Expected source glob");
         }
         String glob = readToken();
-        Source source = new Source(name);
-        source.addParameter(new Parameter(glob));
+        Source source = new Source(name, glob);
+        if (className != null) {
+            source.setClassName(className);
+        }
+        parseSourceParameters(source);
         model.addSource(source);
+    }
+
+    private void parseSourceParameters(Source source) throws IOException {
+        skipWhitespaceAndComments();
+        while (')' != ch) {
+            if (isEof()) {
+                throw new EOFException();
+            }
+            String arg = readToken();
+            if (":param".equals(arg) || ":parameter".equals(arg)) {
+                parseParameter(source);
+            }
+            else if (":depends".equals(arg)) {
+                parseDepends(source);
+            }
+            else {
+                throw new IOException("Expected source parameter; found '"+arg+"'");
+            }
+            skipWhitespaceAndComments();
+        }
     }
 
     private void parseBuild() throws IOException {
@@ -142,8 +169,8 @@ public class BuildFileParser {
     }
 
     private void parseBuildArgs(Build build) throws IOException {
+        skipWhitespaceAndComments();
         while (')' != ch) {
-            skipWhitespaceAndComments();
             if (isEof()) {
                 throw new EOFException();
             }
@@ -161,11 +188,10 @@ public class BuildFileParser {
                 parseDepends(build);
             }
             else {
-                throw new IOException("Expected build argument");
+                throw new IOException("Expected build argument; found '"+arg+"'");
             }
+            skipWhitespaceAndComments();                        
         }
-
-
     }
 
     private void parseInput(Build build) throws IOException {
@@ -198,7 +224,7 @@ public class BuildFileParser {
         }
     }
 
-    private void parseParameter(Build build) throws IOException {
+    private void parseParameter(Process build) throws IOException {
         skipWhitespaceAndComments();
         String x = readToken();
         skipWhitespaceAndComments();
@@ -213,7 +239,7 @@ public class BuildFileParser {
         }
     }
 
-    private void parseDepends(Build build) throws IOException {
+    private void parseDepends(Process build) throws IOException {
         skipWhitespaceAndComments();
         if (isEof()) {
             throw new EOFException();

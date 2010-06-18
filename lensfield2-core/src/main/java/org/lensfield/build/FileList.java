@@ -34,5 +34,8 @@ public class FileList {
     public Template getGlob() {
         return glob;
     }
-    
+
+    public void addFiles(List<FileState> fileList) {
+        files.addAll(fileList);
+    }
 }

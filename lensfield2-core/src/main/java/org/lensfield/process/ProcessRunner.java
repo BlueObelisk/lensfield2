@@ -3,6 +3,7 @@
  */
 package org.lensfield.process;
 
+import org.apache.commons.io.FileUtils;
 import org.lensfield.InputFileSet;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
@@ -240,7 +241,7 @@ public class ProcessRunner {
 
 
 
-    private void renameTempFiles(String name, InputFileSet inputs, Map<String, Output> outputFiles) throws LensfieldException {
+    private void renameTempFiles(String name, InputFileSet inputs, Map<String, Output> outputFiles) throws LensfieldException, IOException {
         for (Map.Entry<String,Output> e : outputFiles.entrySet()) {
             Output out = e.getValue();
             List<OutputFile> outputs;
@@ -286,14 +287,26 @@ public class ProcessRunner {
                         throw new LensfieldException("Unable to delete file "+file);
                     }
                 }
-                if (!tempFile.renameTo(file)) {
-                    throw new LensfieldException("Unable to rename file "+tempFile+" to "+file);
+                if (file.isFile() && isUnchanged(tempFile, file)) {
+                    LOG.debug(name, "unchanged "+path);
+                } else {
+                    LOG.debug(name, "writing "+path);
+                    if (!tempFile.renameTo(file)) {
+                        throw new LensfieldException("Unable to rename file "+tempFile+" to "+file);
+                    }
                 }
                 output.setPath(path);
                 output.setFile(file);
-                LOG.debug(name, "writing "+path);
+
             }
         }
+    }
+
+    private boolean isUnchanged(File f1, File f2) throws IOException {
+        if (f1.length() != f2.length()) {
+            return false;
+        }
+        return FileUtils.contentEquals(f1, f2);
     }
 
 

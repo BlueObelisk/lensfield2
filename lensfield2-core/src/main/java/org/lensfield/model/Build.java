@@ -18,8 +18,6 @@ public class Build extends Process {
     private final Map<String,Input> inputs = new LinkedHashMap<String,Input>();
     private final Map<String,Output> outputs = new LinkedHashMap<String,Output>();
 
-    private List<Dependency> dependencies = new ArrayList<Dependency>();
-
     public Build(String name, String clazz) {
         super(name);
         this.clazz = clazz;
@@ -39,7 +37,7 @@ public class Build extends Process {
 
     public void addInput(Input input) {
         if (inputs.containsKey(input.getName())) {
-            throw new IllegalArgumentException("Already has parameter '"+input.getName()+"'");
+            throw new IllegalArgumentException("Already has input '"+input.getName()+"'");
         }
         inputs.put(input.getName(), input);
     }
@@ -51,21 +49,13 @@ public class Build extends Process {
 
     public void addOutput(Output output) {
         if (outputs.containsKey(output.getName())) {
-            throw new IllegalArgumentException("Already has parameter '"+output.getName()+"'");
+            throw new IllegalArgumentException("Already has output '"+output.getName()+"'");
         }
         outputs.put(output.getName(), output);
     }
 
     public List<Output> getOutputs() {
         return new ArrayList<Output>(outputs.values());
-    }
-
-    public void addDependency(String groupId, String artifactId, String version) {
-        dependencies.add(new Dependency(groupId, artifactId, version));
-    }
-
-    public List<Dependency> getDependencies() {
-        return dependencies;
     }
 
 }

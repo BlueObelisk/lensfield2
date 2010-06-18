@@ -25,6 +25,8 @@ import java.util.Map;
  */
 public class ClassAnalyser {
 
+    private static boolean DEBUG = false;
+
     public static void analyseClass(Build build, TaskState task) throws Exception {
         checkNoArgConstructor(task);
         findRunMethod(task);
@@ -39,6 +41,7 @@ public class ClassAnalyser {
     private static void checkNoArgConstructor(TaskState task) throws IllegalAccessException, InstantiationException {
         Class<?> clazz = task.getClazz();
         clazz.newInstance();
+        if (DEBUG) System.err.println("CLASS: "+clazz.getName());
     }
 
 
@@ -52,6 +55,7 @@ public class ClassAnalyser {
                 Class<?>[] parameterTypes = method.getParameterTypes();
                 if (parameterTypes.length == 0) {
                     task.setMethod(method, true);
+                    if (DEBUG) System.err.println(method);
                     return true;
                 }
                 if (parameterTypes.length == 2) {
@@ -60,6 +64,7 @@ public class ClassAnalyser {
                         task.setMethod(method, false);
                         task.addInput(new InputDescription(parameterTypes[0]));
                         task.addOutput(new OutputDescription(task, parameterTypes[1]));
+                        if (DEBUG) System.err.println(method);
                         return true;
                     }
                 }
