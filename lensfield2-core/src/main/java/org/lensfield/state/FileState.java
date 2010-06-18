@@ -15,24 +15,11 @@ import java.util.Map;
  */
 public class FileState {
 
-    private Template glob;
     private String path;
     private long lastModified;
     private Map<String,String> params;
 
-    public FileState(String path, long lastModified) {
-        this.path = path;
-        this.lastModified = lastModified;
-    }
-
-    public FileState(Template glob, String path, long lastModified) {
-        this.glob = glob;
-        this.path = path;
-        this.lastModified = lastModified;
-    }
-
-    public FileState(Template glob, String path, long lastModified, Map<String, String> params) {
-        this.glob = glob;
+    public FileState(String path, long lastModified, Map<String,String> params) {
         this.path = path;
         this.lastModified = lastModified;
         this.params = Collections.unmodifiableMap(params);
@@ -63,10 +50,6 @@ public class FileState {
 
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
-    }
-
-    public Template getGlob() {
-        return glob;
     }
 
     @Override

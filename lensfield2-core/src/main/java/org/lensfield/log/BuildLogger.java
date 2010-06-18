@@ -112,7 +112,10 @@ public class BuildLogger {
 
 
     private void writeToken(String s) {
-        if (needsQuoting(s)) {
+        if (s.length() == 0) {
+            out.print("''");
+        }
+        else if (needsQuoting(s)) {
             writeQuotedToken(s);
         } else {
             writeUnquotedToken(s);
@@ -210,11 +213,28 @@ public class BuildLogger {
             List<FS> files = e.getValue();
             if (files.size() == 1) {
                 FileState f = files.get(0);
-                writeList(f.getPath(), dateFormat.format(f.getLastModified()));
+                String[] x = new String[2+2*f.getParams().size()];
+                x[0] = f.getPath();
+                x[1] = dateFormat.format(f.getLastModified());
+                int i = 2;
+                for (Map.Entry<String,String> p : f.getParams().entrySet()) {
+                    x[i++] = p.getKey();
+                    x[i++] = p.getValue();
+                }
+                writeList(x);
+//                writeList(f.getPath(), dateFormat.format(f.getLastModified()));
             } else {
                 out.print('(');
                 for (FS f : files) {
-                    writeList(f.getPath(), dateFormat.format(f.getLastModified()));
+                    String[] x = new String[2+2*f.getParams().size()];
+                    x[0] = f.getPath();
+                    x[1] = dateFormat.format(f.getLastModified());
+                    int i = 2;
+                    for (Map.Entry<String,String> p : f.getParams().entrySet()) {
+                        x[i++] = p.getKey();
+                        x[i++] = p.getValue();
+                    }
+                    writeList(x);
                 }
                 out.print(')');
             }

@@ -16,12 +16,17 @@ import java.lang.reflect.Field;
 public class OutputDescription {
 
     private final TaskState task;
-
-    private final boolean arg;
     private final String name;
-    private final Field field;
-    private final boolean multifile;
+
+    private boolean arg;
+    private Field field;
+    private boolean multifile;
     private Template glob;
+
+    public OutputDescription(TaskState task, String name) {
+        this.task = task;
+        this.name = name;
+    }
 
     public OutputDescription(TaskState task, Class<?> clazz) {
         this.task = task;

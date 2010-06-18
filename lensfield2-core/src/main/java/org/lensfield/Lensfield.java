@@ -378,6 +378,8 @@ public class Lensfield {
 
         Template glob = new Template(filter);
         TaskState task = new TaskState(source.getName());
+        OutputDescription output = new OutputDescription(task, "out");
+        task.addOutput(output);
 
         FileSource finder = new FileSource(task.getId(), root, glob);
         finder.setLogger(LOG);
@@ -424,7 +426,19 @@ public class Lensfield {
 
         Map<String,FileList> inputFileLists = getInputs(build, task);
         // TODO - single input
-        List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
+        List<InputFileSet> inputSets;
+        // if (inputFileLists.size() == 1) {   // TODO
+        if (false) {
+            Map.Entry<String,FileList> e = inputFileLists.entrySet().iterator().next();
+            String name = e.getKey();
+            FileList fileList = e.getValue();
+            inputSets = new ArrayList<InputFileSet>(fileList.getFiles().size());
+            for (FileState fs : fileList.getFiles()) {
+                inputSets.add(new InputFileSet(fs.getParams(), Collections.singletonMap(name,Collections.singletonList(fs))));
+            }
+        } else {
+            inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
+        }
 
         Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
 

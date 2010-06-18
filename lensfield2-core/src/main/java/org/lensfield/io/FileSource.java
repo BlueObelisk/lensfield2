@@ -4,11 +4,9 @@
 package org.lensfield.io;
 
 import org.lensfield.api.Logger;
-import org.lensfield.build.OutputDescription;
-import org.lensfield.state.FileState;
 import org.lensfield.build.FileList;
 import org.lensfield.glob.Template;
-import org.lensfield.state.TaskState;
+import org.lensfield.state.FileState;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +57,7 @@ public class FileSource {
                 Map<String,String> params = glob.matches(path);
                 if (params != null) {
                     LOG.debug(name, "adding "+path);
-                    FileState fr = new FileState(glob, s.toString(), f.lastModified(), params);
+                    FileState fr = new FileState(s.toString(), f.lastModified(), params);
                     fileList.addFile(fr);
                 }
             }

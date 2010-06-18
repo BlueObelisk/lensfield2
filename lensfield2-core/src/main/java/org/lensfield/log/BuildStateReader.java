@@ -239,11 +239,16 @@ public class BuildStateReader {
         skipWhitespace();
         long lastModified = dateFormat.parse(readToken()).getTime();
         skipWhitespace();
-        if (ch != ']') {
-            throw new IOException("Expected ']'; found: '"+((char)ch)+"'");
+        Map<String,String> params = new HashMap<String, String>();
+        while (ch != ']') {
+            String param = readToken();
+            skipWhitespace();
+            String value = readToken();
+            skipWhitespace();
+            params.put(param, value);
         }
         ch = in.read();
-        return new FileState(path, lastModified);
+        return new FileState(path, lastModified, params);
     }
 
     private void readTask() throws IOException, ParseException {

@@ -184,7 +184,6 @@ public class ProcessRunner {
 
         Map<String,List<FileState>> outputFiles = new HashMap<String, List<FileState>>();
         for (Map.Entry<String, Output> e : outputMap.entrySet()) {
-            Template glob = task.getOutput(e.getKey()).getGlob();
             List<FileState> list = new ArrayList<FileState>();
             List<OutputFile> outs;
             if (e.getValue() instanceof OutputFile) {
@@ -197,7 +196,7 @@ public class ProcessRunner {
                 throw new RuntimeException();
             }
             for (OutputFile out : outs) {
-                FileState f = new FileState(glob, out.getPath(), out.getFile().lastModified(), out.getParams());
+                FileState f = new FileState(out.getPath(), out.getFile().lastModified(), out.getParams());
                 outputs.get(e.getKey()).addFile(f);
                 list.add(f);
             }
@@ -212,11 +211,6 @@ public class ProcessRunner {
         String path = fs.getPath();
         File file = new File(root, path);
         Map<String,String> params = fs.getParams();
-        if (params == null) {
-            // todo
-//            params = task.getOutput(outputName).glob.matches(fs.getPath());
-            fs.setParams(params);
-        }
         InputFile in = new InputFile(path, file, params);
         return in;
     }
@@ -249,7 +243,6 @@ public class ProcessRunner {
     private void renameTempFiles(String name, InputFileSet inputs, Map<String, Output> outputFiles) throws LensfieldException {
         for (Map.Entry<String,Output> e : outputFiles.entrySet()) {
             Output out = e.getValue();
-            Template glob = task.getOutput(e.getKey()).getGlob();
             List<OutputFile> outputs;
             if (out instanceof OutputFile) {
                 outputs = Collections.singletonList((OutputFile)out);
@@ -280,7 +273,7 @@ public class ProcessRunner {
                     throw new LensfieldException("Failed to create output file", ex);
                 }
                 // TODO check for duplicate output paths
-                FileState fr = new FileState(glob, path, tempFile.lastModified(), output.getParams());
+                FileState fr = new FileState(path, tempFile.lastModified(), output.getParams());
                 File file = new File(root, fr.getPath());
                 File parent = file.getParentFile();
                 if (!parent.isDirectory()) {
