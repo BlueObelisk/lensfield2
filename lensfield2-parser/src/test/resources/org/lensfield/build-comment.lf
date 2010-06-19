@@ -1,0 +1,12 @@
+;
+; Sample Lensfield build file
+; Uses a lisp-like syntax
+;
+; Semi-colons prefix comments
+; Commands are enclosed in ( ... )
+;
+; Literals do not need to be quoted, unless they contain white-space or
+; special characters ';' or '(', in which case they can be quoted using
+; either single or double quotes. To include quote marks within a
+; quoted string they should be escaped using a backslash '\'.
+;

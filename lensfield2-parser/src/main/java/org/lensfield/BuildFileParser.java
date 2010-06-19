@@ -45,38 +45,40 @@ public class BuildFileParser {
 
 
     private void parse() throws IOException {
+        ch = (char) in.read();
         skipWhitespaceAndComments();
         if (isEof()) {
             return;
         }
         while (!isEof()) {
-            if ('(' == ch) {
-                ch = (char) in.read();
-                String command = readToken();
-                if ("depends".equals(command)) {
-                    parseDepends();
-                }
-                else if ("source".equals(command)) {
-                    parseSource(null);
-                }
-                else if (command.startsWith("source/")) {
-                    parseSource(command.substring(7));
-                }
-                else if ("build".equals(command)) {
-                    parseBuild();
-                }
-                else if ("repository".equals(command)) {
-                    parseRepository();
-                }
-                else {
-                    throw new IOException("Unknown command: "+command);
-                }
-                skipWhitespaceAndComments();
-                if (')' != ch) {
-                    throw new IOException("Expected ')'");
-                }
-                ch = (char) in.read();
+            if ('(' != ch) {
+                throw new IOException("Expected '(', found '"+((char)ch)+"'");
             }
+            ch = (char) in.read();
+            String command = readToken();
+            if ("depends".equals(command)) {
+                parseDepends();
+            }
+            else if ("source".equals(command)) {
+                parseSource(null);
+            }
+            else if (command.startsWith("source/")) {
+                parseSource(command.substring(7));
+            }
+            else if ("build".equals(command)) {
+                parseBuild();
+            }
+            else if ("repository".equals(command)) {
+                parseRepository();
+            }
+            else {
+                throw new IOException("Unknown command: "+command);
+            }
+            skipWhitespaceAndComments();
+            if (')' != ch) {
+                throw new IOException("Expected ')'");
+            }
+            ch = (char) in.read();
             skipWhitespaceAndComments();
         }
     }
