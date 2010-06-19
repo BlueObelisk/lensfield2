@@ -56,4 +56,7 @@ public abstract class Process {
         return classname;
     }
 
+    public void setClassname(String classname) {
+        this.classname = classname;
+    }
 }

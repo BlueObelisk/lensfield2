@@ -1,3 +1,6 @@
+/*
+ * Copyright 2010 Sam Adams
+ */
 package org.lensfield.launcher.load;
 
 import org.apache.maven.artifact.Artifact;
@@ -53,10 +56,20 @@ public class Loader {
 
     private void run(String[] args) throws Exception {
 
-        Class<?> clazz = appLoader.loadClass("org.lensfield.cli.LensfieldCli");
-        Method method = clazz.getMethod("main", String[].class);
-        method.invoke(null, new Object[]{args});
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try {
+            // Set context class loader
+            Thread.currentThread().setContextClassLoader(appLoader);
 
+            // Launch app loader
+            Class<?> clazz = appLoader.loadClass("org.lensfield.cli.LensfieldCli");
+            Method method = clazz.getMethod("main", String[].class);
+            method.invoke(null, new Object[]{args});
+        } finally {
+            // Restore context class loader
+            Thread.currentThread().setContextClassLoader(cl);
+        }
+        
     }
 
     public static void main(String[] args) throws Exception {

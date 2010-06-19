@@ -334,4 +334,13 @@ public class DependencyResolver {
         return clazz;
     }
 
+
+    public boolean isOffline() {
+        return offline;
+    }
+
+    public void setOffline(boolean offline) {
+        this.offline = offline;
+    }
+    
 }

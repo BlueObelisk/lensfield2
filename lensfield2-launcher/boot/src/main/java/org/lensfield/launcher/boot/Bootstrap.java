@@ -1,3 +1,6 @@
+/*
+ * Copyright 2010 Sam Adams
+ */
 package org.lensfield.launcher.boot;
 
 import java.io.File;
@@ -37,11 +40,19 @@ public class Bootstrap {
             }
         }
 
-        URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
-        Class<?> clazz = loader.loadClass("org.lensfield.launcher.load.Loader");
-        Method method = clazz.getMethod("main", String[].class);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try {
+            // Init class loader
+            URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
+            Thread.currentThread().setContextClassLoader(loader);
 
-        method.invoke(null, new Object[]{args});
+            // Launch app loader
+            Class<?> clazz = loader.loadClass("org.lensfield.launcher.load.Loader");
+            Method method = clazz.getMethod("main", String[].class);
+            method.invoke(null, new Object[]{args});
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
+        }
     }
 
 }

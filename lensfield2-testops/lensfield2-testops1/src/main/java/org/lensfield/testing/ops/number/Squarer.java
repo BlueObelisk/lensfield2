@@ -1,3 +1,6 @@
+/*
+ * Copyright 2010 Sam Adams
+ */
 package org.lensfield.testing.ops.number;
 
 import org.apache.commons.io.IOUtils;

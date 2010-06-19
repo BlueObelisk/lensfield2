@@ -123,7 +123,7 @@ public class BuildFileParser {
         String glob = readToken();
         Source source = new Source(name, glob);
         if (className != null) {
-            source.setClassName(className);
+            source.setClassname(className);
         }
         parseSourceParameters(source);
         model.addSource(source);

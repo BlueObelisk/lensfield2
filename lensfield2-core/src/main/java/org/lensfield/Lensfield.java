@@ -42,6 +42,8 @@ public class Lensfield {
     private File root = new File(".");
     private File workspace, tmpdir;
 
+    private boolean offline;
+
     private ArrayList<Process> buildOrder;
 
 
@@ -692,6 +694,7 @@ public class Lensfield {
         System.setProperty("maven.artifact.threads", "1");  // Prevents hanging threads
 
         DependencyResolver resolver = new DependencyResolver(model.getRepositories());
+        resolver.setOffline(offline);
         resolver.configureDependencies(model, buildState);
     }
 
@@ -701,5 +704,13 @@ public class Lensfield {
             build(step);
         }
     }
-    
+
+
+    public boolean isOffline() {
+        return offline;
+    }
+
+    public void setOffline(boolean offline) {
+        this.offline = offline;
+    }
 }

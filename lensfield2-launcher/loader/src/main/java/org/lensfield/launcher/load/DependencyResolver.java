@@ -1,3 +1,6 @@
+/*
+ * Copyright 2010 Sam Adams
+ */
 package org.lensfield.launcher.load;
 
 import org.apache.maven.artifact.Artifact;
