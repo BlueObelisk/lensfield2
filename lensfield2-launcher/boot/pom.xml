@@ -11,5 +11,6 @@
 
     <groupId>org.lensfield.launcher</groupId>
     <artifactId>boot</artifactId>
+    <name>Lensfield Launcher - Bootstrap Loader</name>
 
 </project>
