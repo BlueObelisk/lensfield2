@@ -11,9 +11,10 @@ import java.util.List;
  */
 public abstract class Process {
 
-    private final String name;
+    private String name;
+    private String classname;
 
-    private final List<Parameter> parameters = new ArrayList<Parameter>();
+    private List<Parameter> parameters = new ArrayList<Parameter>();
     private List<Dependency> dependencies = new ArrayList<Dependency>();
 
     public Process(String name) {
@@ -23,9 +24,9 @@ public abstract class Process {
         this.name = name;
     }
 
-    public Process(String name, String param) {
+    public Process(String name, String classname) {
         this.name = name;
-        this.parameters.add(new Parameter(param));
+        this.classname = classname;
     }
 
     public String getName() {
@@ -48,6 +49,11 @@ public abstract class Process {
 
     public List<Dependency> getDependencies() {
         return dependencies;
+    }
+
+
+    public String getClassName() {
+        return classname;
     }
 
 }

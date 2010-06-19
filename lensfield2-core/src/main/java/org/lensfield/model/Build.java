@@ -13,28 +13,20 @@ import java.util.Map;
  */
 public class Build extends Process {
 
-    private final String clazz;
-
     private final Map<String,Input> inputs = new LinkedHashMap<String,Input>();
     private final Map<String,Output> outputs = new LinkedHashMap<String,Output>();
 
-    public Build(String name, String clazz) {
-        super(name);
-        this.clazz = clazz;
+    public Build(String name, String classname) {
+        super(name, classname);
     }
 
-    public Build(String name, String clazz, String input, String output) {
-        super(name);
-        this.clazz = clazz;
+    public Build(String name, String classname, String input, String output) {
+        super(name, classname);
         this.inputs.put(null, new Input(input));
         this.outputs.put(null, new Output(output));
     }
 
-    public String getClassName() {
-        return clazz;
-    }
-
-
+    
     public void addInput(Input input) {
         if (inputs.containsKey(input.getName())) {
             throw new IllegalArgumentException("Already has input '"+input.getName()+"'");

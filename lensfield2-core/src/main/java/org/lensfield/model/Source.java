@@ -9,7 +9,6 @@ package org.lensfield.model;
 public class Source extends Process {
 
     private String template;
-    private String className;
 
     public Source(String name) {
         super(name);
@@ -28,11 +27,4 @@ public class Source extends Process {
         this.template = template;
     }
 
-    public String getClassName() {
-        return className;
-    }
-
-    public void setClassName(String className) {
-        this.className = className;
-    }
 }
