@@ -72,4 +72,19 @@ public class Model {
     public Process getProcess(String name) {
         return processes.get(name);
     }
+
+    public void addDependency(String id) {
+        int i0 = id.indexOf(':');
+        if (i0 == -1) {
+            throw new IllegalArgumentException("Bad dependency id: "+id);
+        }
+        int i1 = id.indexOf(':', i0+1);
+        if (i1 == -1) {
+            throw new IllegalArgumentException("Bad dependency id: "+id);
+        }
+        String groupId = id.substring(0, i0);
+        String artifactId = id.substring(i0+1, i1);
+        String version = id.substring(i1+1);
+        addDependency(groupId, artifactId, version);
+    }
 }
