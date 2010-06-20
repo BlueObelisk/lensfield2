@@ -51,13 +51,16 @@ public class Glob {
                             if (!newDir) {
                                 throw new IllegalArgumentException("Directory wildcard '**' cannot be prefixed");
                             }
+                            if ((i+2) >= glob.length() || glob.charAt(i+2) != '/') {
+                                throw new IllegalArgumentException("Directory wildcard '**' cannot be suffixed");
+                            }
                             if (groupNames.containsKey("**")) {
                                 throw new IllegalArgumentException("Only a single directory wildcard '**' is allowed");
                             }
-                            i++;
+                            i += 2;
                             int x = groupNames.size();
                             groupNames.put("**", x);
-                            segPattern.append(".*");
+                            segPattern.append("(.*/|)");
                             formatPattern.append('<').append(Integer.toString(x)).append('>');
                             wildcardDir = true;
                         }
@@ -67,7 +70,7 @@ public class Glob {
                             }
                             int x = groupNames.size();
                             groupNames.put("*", x);
-                            segPattern.append("[^/]*");
+                            segPattern.append("([^/]*)");
                             formatPattern.append('<').append(Integer.toString(x)).append('>');
                             wildcardSeg = true;
                         }
@@ -86,7 +89,7 @@ public class Glob {
                         }
                         int x = groupNames.size();
                         groupNames.put(n, x);
-                        segPattern.append("[^/]*");
+                        segPattern.append("([^/]*)");
                         formatPattern.append('<').append(Integer.toString(x)).append('>');
                         wildcardSeg = true;
                         i = i0+1;
@@ -98,7 +101,7 @@ public class Glob {
                             continue;
                         }
                         if (!wildcardDir) {
-                            pattern.append('/').append(segPattern);
+                            pattern.append(segPattern).append('/');
                             GlobSegment seg = new GlobSegment(glob.substring(segStart,i+1), Pattern.compile(segPattern.toString()), wildcardSeg, wildcardDir, false);
                             segPattern.setLength(0);
                             segments.add(seg);
@@ -125,6 +128,7 @@ public class Glob {
                             segPattern.append('\\');
                         }
                         segPattern.append(c);
+                        formatPattern.append(c);
                 }
             }
             newDir = false;
@@ -132,10 +136,11 @@ public class Glob {
 
         // Append last segment
         pattern.append(segPattern);
-        formatPattern.append(formatPattern);
 
         GlobSegment seg = new GlobSegment(glob.substring(segStart), Pattern.compile(segPattern.toString()), wildcardSeg, wildcardDir, true);
         segments.add(seg);
+        System.err.println(pattern.toString());
+        System.err.println(formatPattern.toString());
 
         if (IOCase.SYSTEM.isCaseSensitive()) {
             this.pattern = Pattern.compile(pattern.toString());

@@ -73,7 +73,7 @@ public class GlobMatcherTest {
     @Test
     public void testWildcardDir() {
         GlobMatcher glob = new GlobMatcher("*/a.a");
-        assertMatch(glob.find(workspace), "a/a.a", "b/a.a", "c/a.a", "d/a.a");
+        assertMatch(glob.find(workspace), "a/a.a", "b/a.a", "c/a.a");
     }
 
     @Test
@@ -105,7 +105,25 @@ public class GlobMatcherTest {
         GlobMatcher glob = new GlobMatcher("c/d*h");
         assertMatch(glob.find(workspace), "c/defgh", "c/dabch");
     }
-    
+
+    @Test
+    public void testWilddirFile() {
+        GlobMatcher glob = new GlobMatcher("**/a.a");
+        assertMatch(glob.find(workspace), "a.a", "a/a.a", "a/b/a.a", "a/b/c/a.a", "a/c/a.a", "b/a.a",
+                "b/b/a.a", "b/b/c/a.a", "c/a.a");
+    }
+
+    @Test
+    public void testWilddirDirFile() {
+        GlobMatcher glob = new GlobMatcher("**/c/a.a");
+        assertMatch(glob.find(workspace), "a/b/c/a.a", "a/c/a.a", "b/b/c/a.a", "c/a.a");
+    }
+
+    @Test
+    public void testDirWilddirFile() {
+        GlobMatcher glob = new GlobMatcher("a/**/a.a");
+        assertMatch(glob.find(workspace), "a/a.a", "a/b/a.a", "a/b/c/a.a", "a/c/a.a");
+    }
 
     private void assertMatch(List<String> list, String... files) {
         Set<String> set = new HashSet<String>(list);
