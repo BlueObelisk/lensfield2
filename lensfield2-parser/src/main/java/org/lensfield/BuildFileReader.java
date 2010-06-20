@@ -12,7 +12,11 @@ import org.lensfield.model.Parameter;
 import org.lensfield.model.Process;
 import org.lensfield.model.Source;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 
 /**
@@ -24,6 +28,11 @@ public class BuildFileReader {
     private LensfieldTokeniser.Token token;
 
     private Model model;
+
+    public synchronized Model parse(File file) throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        return parse(in);
+    }
 
     public synchronized Model parse(Reader in) throws IOException {
         tokeniser = new LensfieldTokeniser(in);

@@ -3,13 +3,15 @@
  */
 package org.lensfield.cli;
 
-import org.codehaus.plexus.classworlds.ClassWorld;
-import org.lensfield.BuildFileParser;
+import org.lensfield.BuildFileReader;
 import org.lensfield.Lensfield;
-import org.lensfield.LensfieldException;
 import org.lensfield.model.Model;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * @author sea36
@@ -57,7 +59,7 @@ public class LensfieldCli {
         }
 
         // Parse build file
-        BuildFileParser parser = new BuildFileParser();
+        BuildFileReader parser = new BuildFileReader();
         Model model = parser.parse(buildFile);
 
         File root = buildFile.getParentFile();
@@ -77,7 +79,6 @@ public class LensfieldCli {
             System.err.println("");
             System.err.println("BUILD FAILED");
         }
-        System.exit(0); // TODO why do we need to do this?
     }
 
     private static void run(Lensfield lensfield, String[] args) throws Exception {
