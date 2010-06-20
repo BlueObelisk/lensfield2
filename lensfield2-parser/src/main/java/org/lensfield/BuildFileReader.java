@@ -28,6 +28,7 @@ public class BuildFileReader {
     public synchronized Model parse(Reader in) throws IOException {
         tokeniser = new LensfieldTokeniser(in);
         try {
+            model = new Model();
             parse();
             return model;
         } finally {
