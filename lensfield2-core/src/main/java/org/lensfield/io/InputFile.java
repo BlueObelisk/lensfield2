@@ -3,9 +3,13 @@
  */
 package org.lensfield.io;
 
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.lensfield.api.io.StreamIn;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -23,7 +27,7 @@ public class InputFile extends StreamIn implements Input {
         this.path = path;
         this.file = file;
         this.parameters = params;
-        this.in = new BufferedInputStream(new FileInputStream(file));
+        this.in = new BufferedInputStream(new AutoCloseInputStream(new FileInputStream(file)));
     }
 
     public void reopen() throws IOException {
