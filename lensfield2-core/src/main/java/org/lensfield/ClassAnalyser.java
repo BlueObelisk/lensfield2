@@ -31,15 +31,24 @@ public class ClassAnalyser {
     private Class<?> clazz;
     private TaskState task;
 
-    public ClassAnalyser(TaskState task) throws ClassNotFoundException {
+    public ClassAnalyser(TaskState task, Class<?> clazz) throws ClassNotFoundException {
         this.task = task;
-        ClassLoader classLoader = task.createClassLoader();
-        clazz = classLoader.loadClass(task.getClassName());
+        this.clazz = clazz;
     }
 
     public static void analyseClass(Build build, TaskState task) throws Exception {
-        ClassAnalyser ca = new ClassAnalyser(task);
-        ca.analyseClass(build);
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        ClassLoader classLoader = task.createClassLoader();
+        Thread.currentThread().setContextClassLoader(classLoader);
+        try {
+            Class<?> clazz = classLoader.loadClass(task.getClassName());
+            ClassAnalyser ca = new ClassAnalyser(task, clazz);
+            ca.analyseClass(build);
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
+        }
+        
     }
 
     public void analyseClass(Build build) throws Exception {
