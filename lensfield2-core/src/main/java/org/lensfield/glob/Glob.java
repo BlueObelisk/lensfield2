@@ -5,6 +5,7 @@ import org.apache.commons.io.IOCase;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -13,10 +14,14 @@ import java.util.regex.Pattern;
 public class Glob {
 
     private final String glob;
+
     private Pattern pattern;
+    private String format;
 
     private List<GlobSegment> segments = new ArrayList<GlobSegment>();
-    private LinkedHashMap<String,Integer> groupNames = new LinkedHashMap<String, Integer>();
+
+    private LinkedHashMap<String,Integer> groupIndex = new LinkedHashMap<String, Integer>();
+    private List<String> groupNames = new ArrayList<String>();
 
     public Glob(String glob) {
         this.glob = glob;
@@ -54,22 +59,24 @@ public class Glob {
                             if ((i+2) >= glob.length() || glob.charAt(i+2) != '/') {
                                 throw new IllegalArgumentException("Directory wildcard '**' cannot be suffixed");
                             }
-                            if (groupNames.containsKey("**")) {
+                            if (groupIndex.containsKey("**")) {
                                 throw new IllegalArgumentException("Only a single directory wildcard '**' is allowed");
                             }
                             i += 2;
-                            int x = groupNames.size();
-                            groupNames.put("**", x);
+                            int x = groupIndex.size();
+                            groupIndex.put("**", x);
+                            groupNames.add("**");
                             segPattern.append("(.*/|)");
                             formatPattern.append('<').append(Integer.toString(x)).append('>');
                             wildcardDir = true;
                         }
                         else {
-                            if (groupNames.containsKey("*")) {
+                            if (groupIndex.containsKey("*")) {
                                 throw new IllegalArgumentException("Only a single file wildcard '*' is allowed");
                             }
-                            int x = groupNames.size();
-                            groupNames.put("*", x);
+                            int x = groupIndex.size();
+                            groupIndex.put("*", x);
+                            groupNames.add("*");
                             segPattern.append("([^/]*)");
                             formatPattern.append('<').append(Integer.toString(x)).append('>');
                             wildcardSeg = true;
@@ -84,11 +91,12 @@ public class Glob {
                             throw new IllegalArgumentException("Bad wildcard - no closing '}'");
                         }
                         String n = glob.substring(i+1, i0);
-                        if (groupNames.containsKey(n)) {
+                        if (groupIndex.containsKey(n)) {
                             throw new IllegalArgumentException("Only a single file wildcard '"+n+"' is allowed");
                         }
-                        int x = groupNames.size();
-                        groupNames.put(n, x);
+                        int x = groupIndex.size();
+                        groupIndex.put(n, x);
+                        groupNames.add(n);
                         segPattern.append("([^/]*)");
                         formatPattern.append('<').append(Integer.toString(x)).append('>');
                         wildcardSeg = true;
@@ -115,12 +123,18 @@ public class Glob {
 
                         continue;
 
-                        // Escape next character
+                    // Escape next character
                     case '\\':
                         if (i == glob.length()) {
                             throw new IllegalArgumentException("Bad escape character: "+glob);
                         }
                         escapeNext = true;
+                        break;
+
+                    // Special character for formatting
+                    case '<':
+                        segPattern.append(c);
+                        formatPattern.append("<<");
                         break;
 
                     default:
@@ -139,8 +153,8 @@ public class Glob {
 
         GlobSegment seg = new GlobSegment(glob.substring(segStart), Pattern.compile(segPattern.toString()), wildcardSeg, wildcardDir, true);
         segments.add(seg);
-        System.err.println(pattern.toString());
-        System.err.println(formatPattern.toString());
+//        System.err.println(pattern.toString());
+//        System.err.println(formatPattern.toString());
 
         if (IOCase.SYSTEM.isCaseSensitive()) {
             this.pattern = Pattern.compile(pattern.toString());
@@ -148,6 +162,7 @@ public class Glob {
             this.pattern = Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
         }
 
+        this.format = formatPattern.toString();
     }
 
     private static boolean escape(char ch) {
@@ -179,4 +194,37 @@ public class Glob {
     public boolean matches(String s) {
         return pattern.matcher(s).matches();
     }
+
+    public String format(Map<String,String> params) throws MissingParameterException {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < format.length(); i++) {
+            char c = format.charAt(i);
+            if (c == '<') {
+                if (format.charAt(i+1) == '<') {
+                    s.append('<');
+                    i++;
+                } else {
+                    int i0 = ++i;
+                    while (format.charAt(i) != '>') {
+                        i++;
+                    }
+                    String key = format.substring(i0, i);
+                    String name = groupNames.get(Integer.valueOf(key));
+                    String value = params.get(name);
+                    if (value == null) {
+                        if (params.containsKey(key)) {
+                            throw new MissingParameterException("Parameter '"+name+"' is null");
+                        } else {
+                            throw new MissingParameterException("Parameter '"+name+"' is undefined");
+                        }
+                    }
+                    s.append(value);
+                }
+            } else {
+                s.append(c);
+            }
+        }
+        return s.toString();
+    }
+
 }

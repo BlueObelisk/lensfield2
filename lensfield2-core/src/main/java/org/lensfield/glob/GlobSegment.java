@@ -27,11 +27,11 @@ public class GlobSegment {
         this.wildDir = wildDir;
         this.last = last;
 
-        System.err.println("--- SEGMENT -------");
-        System.err.println("  "+path+"\t["+pattern+"]\t"
-                +(last?"[last]":"")
-                +(wildcard?"[*]":"")
-                +(wildDir?"[**]":""));
+//        System.err.println("--- SEGMENT -------");
+//        System.err.println("  "+path+"\t["+pattern+"]\t"
+//                +(last?"[last]":"")
+//                +(wildcard?"[*]":"")
+//                +(wildDir?"[**]":""));
 
     }
 
