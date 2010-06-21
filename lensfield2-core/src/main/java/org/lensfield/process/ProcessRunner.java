@@ -14,7 +14,6 @@ import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.MissingParameterException;
-import org.lensfield.glob.Template;
 import org.lensfield.io.*;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.state.FileState;
@@ -22,6 +21,7 @@ import org.lensfield.state.TaskState;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -35,24 +35,55 @@ public class ProcessRunner {
     private TaskState task;
     private Class<?> clazz;
     private Method runMethod;
-    private List<InputDescription> inputs;
-    private List<OutputDescription> outputs;
-    private List<ParameterDescription> parameters;
+    private Map<InputDescription,Field> inputs;
+    private Map<OutputDescription,Field> outputs;
+    private Map<ParameterDescription, Field> parameters;
 
     private Logger LOG;
     private BuildLogger buildLog;
+    private ClassLoader classloader;
 
-    public ProcessRunner(TaskState task) throws LensfieldException {
+    public ProcessRunner(TaskState task) throws Exception {
         this.task = task;
-        inputs = new ArrayList<InputDescription>(task.getInputs());
-        outputs = new ArrayList<OutputDescription>(task.getOutputs());
-        parameters = new ArrayList<ParameterDescription>(task.getParameters());
-        clazz = task.getClazz();
-
-        runMethod = task.getMethod();
+        init();
 
         checkClassInstantiable();
         ensureFieldsAccessible();
+    }
+
+    private void init() throws Exception {
+        this.classloader = task.createClassLoader();
+        this.clazz = classloader.loadClass(task.getClassName());
+
+        Class<?> runClass = classloader.loadClass(task.getMethodClass());
+        runMethod = runClass.getDeclaredMethod(task.getMethodName(), task.getMethodParams());
+
+        inputs = new LinkedHashMap<InputDescription,Field>();
+        for (InputDescription input : task.getInputs()) {
+            if (task.isNoArgs()) {
+                Class<?> fieldClass = classloader.loadClass(input.getFieldClass());
+                Field field = fieldClass.getDeclaredField(input.getFieldName());
+                inputs.put(input,field);
+            } else {
+                inputs.put(input,null);
+            }
+        }
+        outputs = new LinkedHashMap<OutputDescription,Field>();
+        for (OutputDescription output : task.getOutputs()) {
+            if (task.isNoArgs()) {
+                Class<?> fieldClass = classloader.loadClass(output.getFieldClass());
+                Field field = fieldClass.getDeclaredField(output.getFieldName());
+                outputs.put(output,field);
+            } else {
+                outputs.put(output,null);
+            }
+        }
+        parameters = new LinkedHashMap<ParameterDescription,Field>();
+        for (ParameterDescription param: task.getParameters()) {
+            Class<?> fieldClass = classloader.loadClass(param.getFieldClass());
+            Field field = fieldClass.getDeclaredField(param.getFieldName());
+            parameters.put(param,field);
+        }
     }
 
     private void checkClassInstantiable() throws LensfieldException {
@@ -66,23 +97,28 @@ public class ProcessRunner {
     private void ensureFieldsAccessible() {
         // TODO handle security exception
         if (task.isNoArgs()) {
-            for (InputDescription input : inputs) {
-                input.getField().setAccessible(true);
+            for (Map.Entry<InputDescription,Field> input : inputs.entrySet()) {
+                Field field = input.getValue();
+                field.setAccessible(true);
             }
-            for (OutputDescription output : outputs) {
-                output.getField().setAccessible(true);
+            for (Map.Entry<OutputDescription,Field> output : outputs.entrySet()) {
+                Field field = output.getValue();
+                field.setAccessible(true);
             }
         }
-        for (ParameterDescription param : parameters) {
-            param.field.setAccessible(true);
+        for (Map.Entry<ParameterDescription,Field> param : parameters.entrySet()) {
+            Field field = param.getValue();
+            field.setAccessible(true);
         }
     }
 
 
     private void configureParameters(Object obj) throws IllegalAccessException, LensfieldException {
-        for (ParameterDescription param : this.parameters) {
-            if (param.value != null) {
-                param.field.set(obj, param.value);
+        for (Map.Entry<ParameterDescription,Field> e : parameters.entrySet()) {
+            ParameterDescription param = e.getKey();
+            Field field = e.getValue();
+            if (param.getValue() != null) {
+                field.set(obj, param.getValue());
             }
         }
     }
@@ -92,7 +128,7 @@ public class ProcessRunner {
 
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(task.getClassLoader());
+            Thread.currentThread().setContextClassLoader(classloader);
 
             Object obj = clazz.newInstance();
             configureParameters(obj);
@@ -104,7 +140,9 @@ public class ProcessRunner {
 
                     ins = new ArrayList<Input>();
                     Map<String,Collection<FileState>> inputMap = inputs.getMap();
-                    for (InputDescription input : this.inputs) {
+                    for (Map.Entry<InputDescription,Field> e : this.inputs.entrySet()) {
+                        InputDescription input = e.getKey();
+                        Field field = e.getValue();
                         if (inputMap.containsKey(input.getName())) {
                             Collection<FileState> list = inputMap.get(input.getName());
                             if (input.isMultifile()) {
@@ -115,7 +153,7 @@ public class ProcessRunner {
                                     inputFiles.add(in);
                                 }
                                 InputMultiFile in = new InputMultiFile(inputFiles, LOG);
-                                input.getField().set(obj, in);
+                                field.set(obj, in);
                                 ins.add(in);
                             } else {
                                 if (list.size() != 1) {
@@ -124,7 +162,7 @@ public class ProcessRunner {
                                 FileState fs = list.iterator().next();
                                 InputFile in = createInput(fs);
                                 LOG.debug("reading "+in.getPath());
-                                input.getField().set(obj, in);
+                                field.set(obj, in);
                                 ins.add(in);
                             }
                         } else {
@@ -134,17 +172,19 @@ public class ProcessRunner {
 
                     outputMap = new HashMap<String, Output>();
 
-                    for (OutputDescription output : this.outputs) {
+                    for (Map.Entry<OutputDescription,Field> e : this.outputs.entrySet()) {
+                        OutputDescription output = e.getKey();
+                        Field field = e.getValue();
                         if (outputs.containsKey(output.getName())) {
                             FileList list = outputs.get(output.getName());
                             if (output.isMultifile()) {
                                 OutputMultiFile out = new OutputMultiFile(tmpdir, list.getGlob(), inputs.getParameters());
                                 outputMap.put(output.getName(), out);
-                                output.getField().set(obj, out);
+                                field.set(obj, out);
                             } else {
                                 OutputFile out = configureOutputFile(inputs, list);
                                 outputMap.put(output.getName(), out);
-                                output.getField().set(obj, out);
+                                field.set(obj, out);
                             }
                         } else {
                             throw new LensfieldException("Missing output file: "+output.getName());
@@ -333,5 +373,5 @@ public class ProcessRunner {
     public void setBuildLog(BuildLogger buildLog) {
         this.buildLog = buildLog;
     }
-    
+
 }

@@ -9,6 +9,7 @@ import org.lensfield.build.ParameterDescription;
 import org.lensfield.glob.Template;
 
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
@@ -18,21 +19,25 @@ import java.util.*;
 public class TaskState {
 
     private String id;
-    private String className;
-    private String methodName = "run";
     private List<DependencyState> dependencyList = new ArrayList<DependencyState>();
     private long lastModified = System.currentTimeMillis();
 
-    private transient Class<?> clazz;
     private transient Map<String,ParameterDescription> parameterDescriptions = new HashMap<String,ParameterDescription>();
     private transient Map<String, InputDescription> inputDescriptions = new HashMap<String, InputDescription>();
     private transient Map<String, OutputDescription> outputDescriptions = new HashMap<String, OutputDescription>();
-    private transient Method method;
     private transient boolean noArgs;
     private transient boolean updated = true;
 
+    private String className;
+
+    private String methodName = "run";
+    private String methodClass;
+    private Class<?>[] methodParams;
+
+    private ClassLoader parentClassloader;
+    private URL[] dependencyUrls;
+
     private List<Operation> operations = new ArrayList<Operation>();
-    private ClassLoader classLoader;
 
     public TaskState(String id) {
         this.id = id;
@@ -55,13 +60,6 @@ public class TaskState {
         this.className = className;
     }
 
-    public Class<?> getClazz() {
-        return clazz;
-    }
-
-    public void setClazz(Class<?> clazz) {
-        this.clazz = clazz;
-    }
 
     public List<DependencyState> getDependencyList() {
         return dependencyList;
@@ -83,19 +81,16 @@ public class TaskState {
         dependencyList.add(dependency);
     }
 
-    public String getMethodName() {
-        return methodName;
-    }
 
     public void addParameter(ParameterDescription parameter) {
-        parameterDescriptions.put(parameter.name, parameter);
+        parameterDescriptions.put(parameter.getName(), parameter);
     }
 
     public List<ParameterDescription> getParameters() {
         return new ArrayList<ParameterDescription>(parameterDescriptions.values());
     }
 
-    
+
     public void addInput(InputDescription input) {
         inputDescriptions.put(input.getName(), input);
     }
@@ -104,7 +99,7 @@ public class TaskState {
         return new ArrayList<InputDescription>(inputDescriptions.values());
     }
 
-    
+
     public void addOutput(OutputDescription output) {
         outputDescriptions.put(output.getName(), output);
     }
@@ -116,15 +111,25 @@ public class TaskState {
     public OutputDescription getOutput(String name) {
         return outputDescriptions.get(name);
     }
-    
-    
+
+
     public void setMethod(Method method, boolean noArgs) {
-        this.method = method;
+        this.methodName = method.getName();
+        this.methodClass = method.getDeclaringClass().getName();
+        this.methodParams = method.getParameterTypes();
         this.noArgs = noArgs;
     }
 
-    public Method getMethod() {
-        return method;
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public String getMethodClass() {
+        return methodClass;
+    }
+
+    public Class<?>[] getMethodParams() {
+        return methodParams;
     }
 
     public boolean isNoArgs() {
@@ -233,11 +238,16 @@ public class TaskState {
         return this.getOperations().isEmpty() || this.getOperations().get(0).getInputFiles().isEmpty();
     }
 
-    public void setClassLoader(ClassLoader loader) {
-        this.classLoader = loader;
+
+    public void setDependencies(URL[] urls, ClassLoader parentClassloader) {
+        this.dependencyUrls = urls;
+        this.parentClassloader = parentClassloader;
     }
 
-    public ClassLoader getClassLoader() {
-        return classLoader;
+
+    public ClassLoader createClassLoader() {
+        return new URLClassLoader(dependencyUrls, parentClassloader);
     }
+
+
 }

@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,29 +28,42 @@ public class ClassAnalyser {
 
     private static boolean DEBUG = false;
 
+    private Class<?> clazz;
+    private TaskState task;
+
+    public ClassAnalyser(TaskState task) throws ClassNotFoundException {
+        this.task = task;
+        ClassLoader classLoader = task.createClassLoader();
+        clazz = classLoader.loadClass(task.getClassName());
+    }
+
     public static void analyseClass(Build build, TaskState task) throws Exception {
-        checkNoArgConstructor(task);
-        findRunMethod(task);
-        analyseFields(task);
-        setParameterValues(build, task);
+        ClassAnalyser ca = new ClassAnalyser(task);
+        ca.analyseClass(build);
+    }
+
+    public void analyseClass(Build build) throws Exception {
+        checkNoArgConstructor();
+        findRunMethod();
+        analyseFields();
+        setParameterValues(build);
     }
 
 
     /**
      * Throws exception if class instance cannot be created
      */
-    private static void checkNoArgConstructor(TaskState task) throws IllegalAccessException, InstantiationException {
-        Class<?> clazz = task.getClazz();
+    private void checkNoArgConstructor() throws IllegalAccessException, InstantiationException, ClassNotFoundException {
         clazz.newInstance();
         if (DEBUG) System.err.println("CLASS: "+clazz.getName());
     }
 
 
-    private static void findRunMethod(TaskState task) {
-        findRunMethod(task,task.getClazz());
+    private void findRunMethod() {
+        findRunMethod(clazz);
     }
 
-    private static boolean findRunMethod(TaskState task, Class<?> clazz) {
+    private boolean findRunMethod(Class<?> clazz) {
         for (Method method : clazz.getDeclaredMethods()) {
             if (task.getMethodName().equals(method.getName())) {
                 Class<?>[] parameterTypes = method.getParameterTypes();
@@ -72,18 +86,18 @@ public class ClassAnalyser {
         }
         Class<?> parent = clazz.getSuperclass();
         if (parent != null) {
-            return findRunMethod(task, parent);
+            return findRunMethod(parent);
         }
         return false;
     }
 
 
 
-    private static void analyseFields(TaskState task) throws LensfieldException {
-        analyseClass(task, task.getClazz());
+    private void analyseFields() throws LensfieldException {
+        analyseClass(clazz);
     }
 
-    private static void analyseClass(TaskState task, Class<?> clazz) throws LensfieldException {
+    private void analyseClass(Class<?> clazz) throws LensfieldException {
         for (Field f : clazz.getDeclaredFields()) {
             if (isInput(f)) {
                 addInput(task, f);
@@ -97,7 +111,7 @@ public class ClassAnalyser {
         }
         Class<?> parent = clazz.getSuperclass();
         if (parent != null) {
-            analyseClass(task, parent);
+            analyseClass(parent);
         }
     }
 
@@ -141,13 +155,13 @@ public class ClassAnalyser {
 
 
 
-    private static void setParameterValues(Build build, TaskState task) throws LensfieldException {
+    private void setParameterValues(Build build) throws LensfieldException {
         if (task.getParameters().size() == 1) {
             if (build.getParameters().size() == 1) {
                 Parameter p = build.getParameters().get(0);
                 if (p.getName() == null) {
                     build.getParameters().clear();
-                    build.getParameters().add(new Parameter(task.getParameters().get(0).name, p.getValue()));
+                    build.getParameters().add(new Parameter(task.getParameters().get(0).getName(), p.getValue()));
                 }
             }
         }
@@ -158,11 +172,11 @@ public class ClassAnalyser {
             paramMap.put(param.getName(), param.getValue());
         }
         for (ParameterDescription param : task.getParameters()) {
-            if (paramMap.containsKey(param.name)) {
-                param.value = paramMap.get(param.name);
+            if (paramMap.containsKey(param.getName())) {
+                param.setValue(paramMap.get(param.getName()));
             } else {
-                if (param.required) {
-                    throw new LensfieldException("Required parameter missing: "+param.name);
+                if (param.isRequired()) {
+                    throw new LensfieldException("Required parameter missing: "+param.getName());
                 }
             }
         }

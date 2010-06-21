@@ -18,8 +18,9 @@ public class OutputDescription {
     private final TaskState task;
     private final String name;
 
-    private boolean arg;
-    private Field field;
+    private String fieldName;
+    private String fieldClass;
+
     private boolean multifile;
     private Template glob;
 
@@ -30,18 +31,16 @@ public class OutputDescription {
 
     public OutputDescription(TaskState task, Class<?> clazz) {
         this.task = task;
-        this.arg = false;
         this.name = "out";
-        this.field = null;
         this.multifile = false;
     }
 
-    public OutputDescription(TaskState task, Field field, String name) {
+    public OutputDescription(TaskState task, Field f, String name) {
         this.task = task;
-        this.arg = false;
-        this.field = field;
+        this.fieldName = f.getName();
+        this.fieldClass = f.getDeclaringClass().getName();
         this.name = name;
-        Class<?> clazz = field.getType();
+        Class<?> clazz = f.getType();
         this.multifile = getType(clazz);
     }
 
@@ -60,16 +59,16 @@ public class OutputDescription {
         return task;
     }
 
-    public boolean isArg() {
-        return arg;
-    }
-
     public String getName() {
         return name;
     }
 
-    public Field getField() {
-        return field;
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public String getFieldClass() {
+        return fieldClass;
     }
 
     public boolean isMultifile() {

@@ -10,15 +10,18 @@ import java.lang.reflect.Field;
 */
 public class ParameterDescription {
 
-    public final String name;
-    public String value;
+    private final String name;
+    private String value;
 
-    public transient final Field field;
-    public transient final boolean required;
+    private String fieldName;
+    private String fieldClass;
+
+    private transient final boolean required;
 
     public ParameterDescription(Field f, String name, String value, boolean required) {
         this.name = name;
-        this.field = f;
+        this.fieldName = f.getName();
+        this.fieldClass = f.getDeclaringClass().getName();
         this.value = value;
         this.required = required;
     }
@@ -26,7 +29,6 @@ public class ParameterDescription {
     public ParameterDescription(String name, String value) {
         this.name = name;
         this.value = value;
-        field = null;
         required = false;
     }
 
@@ -35,8 +37,12 @@ public class ParameterDescription {
         return name;
     }
 
-    public Field getField() {
-        return field;
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public String getFieldClass() {
+        return fieldClass;
     }
 
     public String getValue() {
@@ -45,5 +51,9 @@ public class ParameterDescription {
 
     public boolean isRequired() {
         return required;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 }

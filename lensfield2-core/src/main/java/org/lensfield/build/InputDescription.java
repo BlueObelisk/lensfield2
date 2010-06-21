@@ -15,23 +15,23 @@ import java.lang.reflect.Field;
 public class InputDescription {
 
     private TaskState task;
-    private final boolean arg;
     private final String name;
-    private final Field field;
+
+    private String fieldName;
+    private String fieldClass;
+
     private final boolean multifile;
 
     public InputDescription(Class<?> clazz) {
-        this.arg = false;
         this.name = "in";
-        this.field = null;
         this.multifile = false;
     }
 
-    public InputDescription(Field field, String name) {
-        this.arg = false;
-        this.field = field;
+    public InputDescription(Field f, String name) {
         this.name = name;
-        Class<?> clazz = field.getType();
+        this.fieldName = f.getName();
+        this.fieldClass = f.getDeclaringClass().getName();
+        Class<?> clazz = f.getType();
         this.multifile = getType(clazz);
     }
 
@@ -50,16 +50,16 @@ public class InputDescription {
         return task;
     }
 
-    public boolean isArg() {
-        return arg;
-    }
-
     public String getName() {
         return name;
     }
 
-    public Field getField() {
-        return field;
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public String getFieldClass() {
+        return fieldClass;
     }
 
     public boolean isMultifile() {

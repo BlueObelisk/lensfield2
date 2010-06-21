@@ -76,7 +76,7 @@ public class BuildLogger {
             if (!task.getParameters().isEmpty()) {
                 out.print(" (params ");
                 for (ParameterDescription param : task.getParameters()) {
-                    if (param.value != null) {
+                    if (param.getValue() != null) {
                         writeList(param.getName(), param.getValue());
                     }
                 }

@@ -143,8 +143,8 @@ public class Lensfield {
     private void checkParameters() throws ConfigurationException {
         for (TaskState task : buildState.getTasks()) {
             for (ParameterDescription param : task.getParameters()) {
-                if (param.isRequired() && param.value == null) {
-                    throw new ConfigurationException("Missing parameter '"+param.name+"' on task '"+task.getId()+"'");
+                if (param.isRequired() && param.getValue() == null) {
+                    throw new ConfigurationException("Missing parameter '"+param.getName()+"' on task '"+task.getId()+"'");
                 }
             }
         }
@@ -263,8 +263,8 @@ public class Lensfield {
 
     private boolean areParametersChanged(TaskState current, TaskState old) {
         for (ParameterDescription param : current.getParameters()) {
-            ParameterDescription oldParam = old.getParameter(param.name);
-            if (oldParam == null || !param.value.equals(oldParam.value)) {
+            ParameterDescription oldParam = old.getParameter(param.getName());
+            if (oldParam == null || !param.getValue().equals(oldParam.getValue())) {
                 return true;
             }
         }

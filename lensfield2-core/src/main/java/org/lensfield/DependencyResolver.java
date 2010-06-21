@@ -259,29 +259,7 @@ public class DependencyResolver {
             task.addDependency(dependency);
         }
         URL[] urls = getUrls(dependencyList);
-        URLClassLoader loader = new URLClassLoader(urls, parentClassloader);
-
-//        try {
-//            System.err.println(">>>>>>>>>>>>>>>>>>>>");
-//            ClassRealm r = realm;
-//            while (r != null) {
-//                r.display();
-//                if (r.getParent() instanceof ClassRealm) {
-//                    r = (ClassRealm)r.getParent();
-//                } else {
-//                    r = null;
-//                }
-//            }
-//            System.err.println("<<<<<<<<<<<<<<<<<<<<");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-        
-        Class<?> clazz = loader.loadClass(task.getClassName());
-        task.setClassLoader(loader);
-        task.setClazz(clazz);
-
-
+        task.setDependencies(urls, parentClassloader);
     }
 
     private List<Artifact> getDependencyList(ListMultimap<Integer,Artifact> dependencyMap) {
