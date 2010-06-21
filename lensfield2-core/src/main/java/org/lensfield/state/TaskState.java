@@ -246,7 +246,8 @@ public class TaskState {
 
 
     public ClassLoader createClassLoader() {
-        return new URLClassLoader(dependencyUrls, parentClassloader);
+        ClassLoader cl = new URLClassLoader(dependencyUrls, parentClassloader);
+        return cl;
     }
 
 

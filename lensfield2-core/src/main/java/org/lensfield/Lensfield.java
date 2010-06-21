@@ -297,7 +297,7 @@ public class Lensfield {
         for (Process process : model.getProcesses()) {
             TaskState task = new TaskState(process.getName());
             if (process instanceof Build) {
-                task.setClassName(((Build)process).getClassName());
+                task.setClassName(process.getClassName());
             }
             buildState.addTask(task);
         }

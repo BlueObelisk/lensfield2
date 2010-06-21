@@ -22,6 +22,7 @@
         <module>lensfield2-testops1</module>
         <module>lensfield2-testops2</module>
         <module>lensfield2-testops3</module>
+        <module>testop-logging</module>
     </modules>
 
 
