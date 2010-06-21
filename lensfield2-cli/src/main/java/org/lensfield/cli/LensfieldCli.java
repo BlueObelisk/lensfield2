@@ -68,7 +68,7 @@ public class LensfieldCli {
         }
 
         Lensfield lensfield = new Lensfield(model, root);
-        lensfield.setOffline(true);
+//        lensfield.setOffline(true);
         try {
             run(lensfield, args);
             System.err.println("----------------------------------------");
