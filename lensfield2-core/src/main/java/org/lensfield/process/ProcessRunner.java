@@ -53,36 +53,42 @@ public class ProcessRunner {
 
     private void init() throws Exception {
         this.classloader = task.createClassLoader();
-        this.clazz = classloader.loadClass(task.getClassName());
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(this.classloader);
+        try {
+            this.clazz = classloader.loadClass(task.getClassName());
 
-        Class<?> runClass = classloader.loadClass(task.getMethodClass());
-        runMethod = runClass.getDeclaredMethod(task.getMethodName(), task.getMethodParams());
+            Class<?> runClass = classloader.loadClass(task.getMethodClass());
+            runMethod = runClass.getDeclaredMethod(task.getMethodName(), task.getMethodParams());
 
-        inputs = new LinkedHashMap<InputDescription,Field>();
-        for (InputDescription input : task.getInputs()) {
-            if (task.isNoArgs()) {
-                Class<?> fieldClass = classloader.loadClass(input.getFieldClass());
-                Field field = fieldClass.getDeclaredField(input.getFieldName());
-                inputs.put(input,field);
-            } else {
-                inputs.put(input,null);
+            inputs = new LinkedHashMap<InputDescription,Field>();
+            for (InputDescription input : task.getInputs()) {
+                if (task.isNoArgs()) {
+                    Class<?> fieldClass = classloader.loadClass(input.getFieldClass());
+                    Field field = fieldClass.getDeclaredField(input.getFieldName());
+                    inputs.put(input,field);
+                } else {
+                    inputs.put(input,null);
+                }
             }
-        }
-        outputs = new LinkedHashMap<OutputDescription,Field>();
-        for (OutputDescription output : task.getOutputs()) {
-            if (task.isNoArgs()) {
-                Class<?> fieldClass = classloader.loadClass(output.getFieldClass());
-                Field field = fieldClass.getDeclaredField(output.getFieldName());
-                outputs.put(output,field);
-            } else {
-                outputs.put(output,null);
+            outputs = new LinkedHashMap<OutputDescription,Field>();
+            for (OutputDescription output : task.getOutputs()) {
+                if (task.isNoArgs()) {
+                    Class<?> fieldClass = classloader.loadClass(output.getFieldClass());
+                    Field field = fieldClass.getDeclaredField(output.getFieldName());
+                    outputs.put(output,field);
+                } else {
+                    outputs.put(output,null);
+                }
             }
-        }
-        parameters = new LinkedHashMap<ParameterDescription,Field>();
-        for (ParameterDescription param: task.getParameters()) {
-            Class<?> fieldClass = classloader.loadClass(param.getFieldClass());
-            Field field = fieldClass.getDeclaredField(param.getFieldName());
-            parameters.put(param,field);
+            parameters = new LinkedHashMap<ParameterDescription,Field>();
+            for (ParameterDescription param: task.getParameters()) {
+                Class<?> fieldClass = classloader.loadClass(param.getFieldClass());
+                Field field = fieldClass.getDeclaredField(param.getFieldName());
+                parameters.put(param,field);
+            }
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
         }
     }
 
