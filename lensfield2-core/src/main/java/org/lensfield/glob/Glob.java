@@ -67,7 +67,7 @@ public class Glob {
                             groupIndex.put("**", x);
                             groupNames.add("**");
                             segPattern.append("(.*/|)");
-                            formatPattern.append('<').append(Integer.toString(x)).append('>');
+                            formatPattern.append('<').append(Integer.toString(x)).append('>').append('/');
                             wildcardDir = true;
                         }
                         else {
@@ -221,7 +221,10 @@ public class Glob {
                     s.append(value);
                 }
             } else {
-                s.append(c);
+                // Collapse '//+'
+                if (c != '/' || s.length() == 0 || s.charAt(s.length()-1) != '/') {
+                    s.append(c);
+                }
             }
         }
         return s.toString();
