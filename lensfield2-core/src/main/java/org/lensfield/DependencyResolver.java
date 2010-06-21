@@ -238,8 +238,10 @@ public class DependencyResolver {
 
     public void configureDependencies(Model model, BuildState buildState) throws Exception {
 
+        System.err.println("[DEBUG] Resolving global dependencies");
         ListMultimap<Integer,Artifact> globalDependencies = resolveDependencies(model.getDependencies());
         for (Build build : model.getBuilds()) {
+            System.err.println("[DEBUG] Resolving dependencies for: "+build.getName());
             TaskState task = buildState.getTask(build.getName());
             configureDependencies(build, task, globalDependencies);
         }
@@ -265,11 +267,12 @@ public class DependencyResolver {
     private List<Artifact> getDependencyList(ListMultimap<Integer,Artifact> dependencyMap) {
         List<Integer> depthList = new ArrayList<Integer>(dependencyMap.keySet());
         Collections.sort(depthList);
-        List<Artifact> dependencyList = new ArrayList<Artifact>();
+        Set<Artifact> dependencyList = new LinkedHashSet<Artifact>();
         for (Integer depth : depthList) {
             dependencyList.addAll(dependencyMap.get(depth));
         }
-        return dependencyList;
+//        System.err.println(dependencyList);
+        return new ArrayList<Artifact>(dependencyList);
     }
 
     private URL[] getUrls(List<Artifact> dependencyList) throws MalformedURLException {

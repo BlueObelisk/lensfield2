@@ -38,11 +38,12 @@ public class ClassAnalyser {
 
     public static void analyseClass(Build build, TaskState task) throws Exception {
 
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         ClassLoader classLoader = task.createClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
         try {
             Class<?> clazz = classLoader.loadClass(task.getClassName());
+//            DebugClassLoader.debug(clazz);
             ClassAnalyser ca = new ClassAnalyser(task, clazz);
             ca.analyseClass(build);
         } finally {
@@ -62,8 +63,12 @@ public class ClassAnalyser {
     /**
      * Throws exception if class instance cannot be created
      */
-    private void checkNoArgConstructor() throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        clazz.newInstance();
+    private void checkNoArgConstructor() throws LensfieldException {
+        try {
+            clazz.getConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new LensfieldException("No-arg constructor missing for class: "+clazz);
+        }
         if (DEBUG) System.err.println("CLASS: "+clazz.getName());
     }
 

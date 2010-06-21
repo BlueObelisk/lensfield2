@@ -4,6 +4,7 @@
 package org.lensfield.process;
 
 import org.apache.commons.io.FileUtils;
+import org.lensfield.DebugClassLoader;
 import org.lensfield.InputFileSet;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
@@ -46,18 +47,16 @@ public class ProcessRunner {
     public ProcessRunner(TaskState task) throws Exception {
         this.task = task;
         init();
-
-        checkClassInstantiable();
-        ensureFieldsAccessible();
     }
 
     private void init() throws Exception {
-        this.classloader = task.createClassLoader();
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(this.classloader);
         try {
+            this.classloader = task.createClassLoader();
+            Thread.currentThread().setContextClassLoader(this.classloader);
             System.err.println("LOADING CLASS: "+task.getClassName());
             this.clazz = classloader.loadClass(task.getClassName());
+//            DebugClassLoader.debug(clazz);
 
             Class<?> runClass = classloader.loadClass(task.getMethodClass());
             runMethod = runClass.getDeclaredMethod(task.getMethodName(), task.getMethodParams());
@@ -89,6 +88,10 @@ public class ProcessRunner {
                 parameters.put(param,field);
             }
             System.err.println("----------");
+
+            checkClassInstantiable();
+            ensureFieldsAccessible();
+            
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
         }
