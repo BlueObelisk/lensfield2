@@ -50,6 +50,9 @@ public class Bootstrap {
             Class<?> clazz = loader.loadClass("org.lensfield.launcher.load.Loader");
             Method method = clazz.getMethod("main", String[].class);
             method.invoke(null, new Object[]{args});
+            System.exit(0);
+        } catch (Exception e) {
+            System.exit(1);
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
         }
