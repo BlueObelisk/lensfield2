@@ -28,7 +28,7 @@ public class GlobMatcherTest {
         if (!workspace.mkdirs()) {
             throw new IOException("Failed to create workspace: "+workspace);
         }
-        File input = new File("lensfield2-core/src/test/data/files");
+        File input = new File("src/test/data/files");
         FileUtils.copyDirectory(input, workspace);
     }
 
