@@ -300,16 +300,13 @@ public class DependencyResolver {
     }
 
 
-    public Class<?> loadClass(String className, List<Dependency> dependencies) throws Exception {
+    public ClassLoader createClassLoader(List<Dependency> dependencies) throws Exception {
         ListMultimap<Integer,Artifact> buildDependencies = resolveDependencies(dependencies);
-//        buildDependencies.putAll(globalDependencies);
         List<Artifact> dependencyList = getDependencyList(buildDependencies);
 
         URL[] urls = getUrls(dependencyList);
         URLClassLoader loader = new URLClassLoader(urls, parentClassloader);
-
-        Class<?> clazz = loader.loadClass(className);
-        return clazz;
+        return loader;        
     }
 
 

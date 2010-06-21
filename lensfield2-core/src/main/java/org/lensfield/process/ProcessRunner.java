@@ -56,6 +56,7 @@ public class ProcessRunner {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(this.classloader);
         try {
+            System.err.println("LOADING CLASS: "+task.getClassName());
             this.clazz = classloader.loadClass(task.getClassName());
 
             Class<?> runClass = classloader.loadClass(task.getMethodClass());
@@ -87,6 +88,7 @@ public class ProcessRunner {
                 Field field = fieldClass.getDeclaredField(param.getFieldName());
                 parameters.put(param,field);
             }
+            System.err.println("----------");
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
         }

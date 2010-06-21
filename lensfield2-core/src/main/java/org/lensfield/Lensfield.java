@@ -372,30 +372,38 @@ public class Lensfield {
         OutputDescription output = new OutputDescription(task, "out");
         task.addOutput(output);
 
-        ISource finder;
-        if (source.getClassName() == null) {
-            finder = new FileSource();
-        } else {
-            DependencyResolver dr = new DependencyResolver(model.getRepositories(), getClass().getClassLoader());
-            Class<?> c = dr.loadClass(source.getClassName(), source.getDependencies());
-            finder = (ISource) c.newInstance();
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try {
+            ISource finder;
+            if (source.getClassName() == null) {
+                finder = new FileSource();
+            } else {
+                DependencyResolver dr = new DependencyResolver(model.getRepositories(), getClass().getClassLoader());
+                ClassLoader cloader = dr.createClassLoader(source.getDependencies());
+                Thread.currentThread().setContextClassLoader(cloader);
+                System.err.println("LOADING CLASS: "+source.getClassName());
+                Class<?> c = cloader.loadClass(source.getClassName());
+                System.err.println("----------");
+                finder = (ISource) c.newInstance();
+            }
+
+            finder.setLogger(LOG);
+            finder.setName(task.getId());
+            finder.setRoot(root);
+            finder.setGlob(glob);
+            finder.configure(source.getParameters());
+            List<FileState> fileList = finder.run();
+            FileList files = new FileList(glob);
+            files.addFiles(fileList);
+
+            buildLog.process(source.getName(), files.getFiles());
+
+            stateFileLists.put(source.getName(), files);
+            buildState.addFiles(files.getFiles());
+
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
         }
-
-        finder.setLogger(LOG);
-        finder.setName(task.getId());
-        finder.setRoot(root);
-        finder.setGlob(glob);
-        finder.configure(source.getParameters());
-        List<FileState> fileList = finder.run();
-
-        FileList files = new FileList(glob);
-        files.addFiles(fileList);
-
-        buildLog.process(source.getName(), files.getFiles());
-
-        stateFileLists.put(source.getName(), files);
-        buildState.addFiles(files.getFiles());
-        
     }
 
 
