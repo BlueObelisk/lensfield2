@@ -3,7 +3,6 @@
  */
 package org.lensfield.state;
 
-import org.lensfield.DebugClassLoader;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
@@ -247,7 +246,7 @@ public class TaskState {
 
 
     public ClassLoader createClassLoader() {
-        ClassLoader cl = new DebugClassLoader(dependencyUrls, parentClassloader, "("+id+")");
+        ClassLoader cl = new URLClassLoader(dependencyUrls, parentClassloader);
         return cl;
     }
 

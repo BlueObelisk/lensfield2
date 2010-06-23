@@ -4,7 +4,6 @@
 package org.lensfield.process;
 
 import org.apache.commons.io.FileUtils;
-import org.lensfield.DebugClassLoader;
 import org.lensfield.InputFileSet;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
