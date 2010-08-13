@@ -1,0 +1,44 @@
+#!/bin/sh
+# Lensfield Start-up File
+# Copyright (c) Sam Adams 2010
+# Inspired by Apache Maven Project
+
+# Required ENV vars:
+# JAVA_HOME - location of a JDK home dir
+
+if [ -z "$JAVA_HOME" ] ; then
+  echo "Warning: JAVA_HOME environment variable is not set."
+fi
+
+
+if [ -z "$LF_HOME" ] ; then
+  ## resolve links - $0 may be a link to lensfields's home
+  PRG="$0"
+
+  # need this for relative symlinks
+  while [ -h "$PRG" ] ; do
+    ls=`ls -ld "$PRG"`
+    link=`expr "$ls" : '.*-> \(.*\)$'`
+    if expr "$link" : '/.*' > /dev/null; then
+      PRG="$link"
+    else
+      PRG="`dirname "$PRG"`/$link"
+    fi
+  done
+
+  saveddir=`pwd`
+
+  LF_HOME=`dirname "$PRG"`/..
+
+  # make it fully qualified
+  LF_HOME=`cd "$LF_HOME" && pwd`
+
+  cd "$saveddir"
+fi
+
+exec "$JAVA_HOME/bin/java" \
+  $LF_OPTS \
+  -classpath "$LF_HOME/boot/boot-0.1-SNAPSHOT.jar" \
+  -Dlensfield.home="$LF_HOME" \
+  org.lensfield.launcher.boot.Bootstrap $*
+
