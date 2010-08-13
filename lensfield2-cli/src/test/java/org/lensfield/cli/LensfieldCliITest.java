@@ -49,6 +49,11 @@ private File workspace;
         FileUtils.copyDirectory(input, workspace);
     }
 
+    public static void loadSiblingData(File workspace) throws IOException {
+            File input = new File("src/test/data/siblings");
+            FileUtils.copyDirectory(input, workspace);
+        }
+
 
     @Test
     public void testNumbers() throws Exception {
@@ -79,4 +84,24 @@ private File workspace;
         assertEquals("54", FileUtils.readFileToString(new File(workspace, "sum1.txt")));
         assertEquals("63", FileUtils.readFileToString(new File(workspace, "sum2.txt")));
     }
+
+
+    @Test
+    public void testSiblings() throws Exception {
+        loadSiblingData(workspace);
+        LensfieldCli.main(new String[]{workspace.getPath()});
+
+        assertEquals("ab", FileUtils.readFileToString(new File(workspace, "a/1-2.txt")));
+        assertEquals("bc", FileUtils.readFileToString(new File(workspace, "a/2-3.txt")));
+        assertEquals("cd", FileUtils.readFileToString(new File(workspace, "a/3-4.txt")));
+        assertEquals("de", FileUtils.readFileToString(new File(workspace, "a/4-5.txt")));
+
+        assertEquals("ab", FileUtils.readFileToString(new File(workspace, "b/1-2.txt")));
+        
+        assertEquals("bc", FileUtils.readFileToString(new File(workspace, "c/2-3.txt")));
+        assertEquals("cd", FileUtils.readFileToString(new File(workspace, "c/3-4.txt")));
+
+    }
+
+
 }

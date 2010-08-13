@@ -422,7 +422,7 @@ public class Lensfield {
         } else if (task.isKtoN()) {
             runKtoNStep(build, task);
         } else {
-            throw new ConfigurationException("Unsupported operation: "+task.getId());
+            runMtoNStep(build, task);
         }
         
     }
@@ -721,4 +721,22 @@ public class Lensfield {
     public void setOffline(boolean offline) {
         this.offline = offline;
     }
+
+
+
+    private void runMtoNStep(Build build, TaskState task) throws Exception {
+
+        Map<String, FileList> inputFileLists = getInputs(build, task);
+        Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
+
+        Set<String> inputGroups = GlobAnalyser.getCommonGroups(getGlobs(inputFileLists.values()));
+        Set<String> outputGroups = GlobAnalyser.getCommonGroups(getGlobs(outputFileLists.values()));
+        Set<String> commonGroups = Sets.intersection(inputGroups, outputGroups);
+
+        List<InputFileSet> inputs = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
+        run(task, inputs, outputFileLists);
+
+    }
+
+
 }

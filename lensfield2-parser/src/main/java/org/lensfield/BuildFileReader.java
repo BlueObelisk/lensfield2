@@ -137,7 +137,7 @@ public class BuildFileReader {
         readToken();
         while (token.type != TokenType.GROUP_CLOSE) {
             if (token.type != TokenType.LITERAL) {
-                throw new IOException("Error reading depends. Expected: LITERAL; found: "+token);
+                throw new IOException("Error reading build step '"+name+"'. Expected: LITERAL; found: "+token);
             }
             if (":input".equals(token.value)) {
                 parseInput(build);

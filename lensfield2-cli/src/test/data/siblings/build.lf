@@ -1,0 +1,13 @@
+;
+; Include these maven artifacts in the build classpath
+;
+(depends
+    org.lensfield.testing:lensfield2-testops1:0.1-SNAPSHOT)
+
+(source                             ; Define a file source
+    inputs      **/x-*.txt)
+
+(build
+    outputs     org.lensfield.testing.ops.Coupler
+    :input      inputs
+    :output     **/{$x}.txt)
