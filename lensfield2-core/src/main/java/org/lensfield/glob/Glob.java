@@ -9,6 +9,15 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
+ * Represents a glob pattern.
+ *
+ * Patterns obey the following format:
+ *   '*' matches any number of characters in one directory (ie a single directory name or filename)
+ *   '**' matches any number of directories (zero or more), but does not match file names
+ *   '/' is a directory separator
+ *   '\' escapes the following character
+ *   '{...}' indicates a named pattern match
+ *   all other characters match themselves.
  * @author sea36
  */
 public class Glob {
@@ -23,6 +32,11 @@ public class Glob {
     private LinkedHashMap<String,Integer> groupIndex = new LinkedHashMap<String, Integer>();
     private List<String> groupNames = new ArrayList<String>();
 
+    /**
+     * Creates a new Glob.
+     * @param glob string representation of the Glob
+     * @throws IllegalArgumentException if the glob pattern is invalid.
+     */
     public Glob(String glob) {
         this.glob = glob;
         parseGlob();
