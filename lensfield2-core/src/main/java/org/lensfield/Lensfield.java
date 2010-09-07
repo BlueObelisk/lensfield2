@@ -9,14 +9,14 @@ import org.lensfield.build.FileList;
 import org.lensfield.build.InputDescription;
 import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
+import org.lensfield.glob.Glob;
 import org.lensfield.glob.GlobAnalyser;
-import org.lensfield.glob.Template;
-import org.lensfield.source.FileSource;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
 import org.lensfield.model.*;
 import org.lensfield.model.Process;
 import org.lensfield.process.ProcessRunner;
+import org.lensfield.source.FileSource;
 import org.lensfield.source.ISource;
 import org.lensfield.state.*;
 
@@ -327,7 +327,7 @@ public class Lensfield {
                 // TODO
                 throw new NullPointerException();
             }
-            outputDescription.setGlob(new Template(output.getValue()));
+            outputDescription.setGlob(new Glob(output.getValue()));
         }
     }
 
@@ -367,7 +367,7 @@ public class Lensfield {
 
         LOG.info("Processing source: "+source.getName());
 
-        Template glob = new Template(source.getTemplate());
+        Glob glob = new Glob(source.getTemplate());
         TaskState task = new TaskState(source.getName());
         OutputDescription output = new OutputDescription(task, "out");
         task.addOutput(output);
@@ -533,7 +533,7 @@ public class Lensfield {
                 }
                 name = outd.getName();
             }
-            outputFileLists.put(name, new FileList(new Template(output.getValue())));
+            outputFileLists.put(name, new FileList(new Glob(output.getValue())));
         }
         return outputFileLists;
     }
@@ -573,7 +573,7 @@ public class Lensfield {
                 }
                 name = outd.getName();
             }
-            outputs.put(name, new FileList(new Template(output.getValue())));
+            outputs.put(name, new FileList(new Glob(output.getValue())));
         }
 
         run(task, inputSets, outputs);
@@ -604,8 +604,8 @@ public class Lensfield {
 //        run(task, Collections.singletonList(inputs), outputFileLists);
     }
 
-    private Template[] getGlobs(Collection<FileList> fileLists) {
-        Template[] globs = new Template[fileLists.size()];
+    private Glob[] getGlobs(Collection<FileList> fileLists) {
+        Glob[] globs = new Glob[fileLists.size()];
         int i = 0;
         for (FileList fl : fileLists) {
             globs[i++] = fl.getGlob();

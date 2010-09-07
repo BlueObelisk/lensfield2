@@ -7,7 +7,6 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.repository.RepositorySystem;
 import org.apache.maven.settings.Settings;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -15,7 +14,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author sea36

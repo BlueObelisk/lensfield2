@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -114,7 +115,7 @@ public class Glob {
                         segPattern.append("([^/]*)");
                         formatPattern.append('<').append(Integer.toString(x)).append('>');
                         wildcardSeg = true;
-                        i = i0+1;
+                        i = i0;
                         break;
 
                     case '/':
@@ -209,7 +210,22 @@ public class Glob {
         return pattern.matcher(s).matches();
     }
 
+    public GlobMatch match(String s) {
+        Matcher m = pattern.matcher(s);
+        if (m.matches()) {
+            String[] groups = groupNames.toArray(new String[groupNames.size()]);
+            String[] values = new String[groups.length];
+            for (int i = 0; i < values.length; i++) {
+                values[i] = m.group(i+1);
+            }
+            GlobMatch match = new GlobMatch(groups, values);
+            return match;
+        }
+        return null;
+    }
+
     public String format(Map<String,String> params) throws MissingParameterException {
+        System.err.println(glob+"\t"+format+"\t"+params);
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < format.length(); i++) {
             char c = format.charAt(i);
@@ -242,6 +258,14 @@ public class Glob {
             }
         }
         return s.toString();
+    }
+
+    public String getGlob() {
+        return glob;
+    }
+
+    public List<String> getGroupNames() {
+        return new ArrayList<String>(groupNames);
     }
 
 }

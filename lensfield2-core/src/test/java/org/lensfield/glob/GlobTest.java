@@ -1,6 +1,5 @@
 package org.lensfield.glob;
 
-import com.google.common.collect.Maps;
 import org.junit.Test;
 
 import java.util.HashMap;

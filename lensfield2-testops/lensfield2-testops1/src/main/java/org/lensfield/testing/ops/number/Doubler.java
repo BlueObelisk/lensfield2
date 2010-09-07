@@ -6,8 +6,8 @@ package org.lensfield.testing.ops.number;
 import org.apache.commons.io.IOUtils;
 import org.lensfield.api.LensfieldInput;
 import org.lensfield.api.LensfieldOutput;
-import org.lensfield.api.io.StreamOut;
 import org.lensfield.api.io.StreamIn;
+import org.lensfield.api.io.StreamOut;
 
 import java.io.IOException;
 

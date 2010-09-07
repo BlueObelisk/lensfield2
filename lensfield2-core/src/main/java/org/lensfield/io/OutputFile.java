@@ -4,9 +4,12 @@
 package org.lensfield.io;
 
 import org.lensfield.api.io.StreamOut;
-import org.lensfield.glob.Template;
+import org.lensfield.glob.Glob;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -16,7 +19,7 @@ public class OutputFile extends StreamOut implements Output {
 
     private File file;
     private Map<String,String> parameters;
-    private Template glob;
+    private Glob glob;
     private String path;
 
 
@@ -28,7 +31,7 @@ public class OutputFile extends StreamOut implements Output {
         this.out = new BufferedOutputStream(new FileOutputStream(file));
     }
 
-    public OutputFile(File file, Map<String, String> params, Template glob) throws IOException {
+    public OutputFile(File file, Map<String, String> params, Glob glob) throws IOException {
         this.file = file;
         this.parameters = params;
         this.glob = glob;
@@ -70,7 +73,7 @@ public class OutputFile extends StreamOut implements Output {
         return file;
     }
 
-    public Template getGlob() {
+    public Glob getGlob() {
         return glob;
     }
 

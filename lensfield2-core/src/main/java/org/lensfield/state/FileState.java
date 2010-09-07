@@ -3,11 +3,7 @@
  */
 package org.lensfield.state;
 
-import org.lensfield.build.OutputDescription;
-import org.lensfield.glob.Template;
-
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

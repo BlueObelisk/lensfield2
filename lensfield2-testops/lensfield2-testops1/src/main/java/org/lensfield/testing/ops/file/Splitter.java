@@ -6,10 +6,13 @@ package org.lensfield.testing.ops.file;
 import org.apache.commons.io.IOUtils;
 import org.lensfield.api.LensfieldInput;
 import org.lensfield.api.LensfieldOutput;
-import org.lensfield.api.io.StreamOut;
 import org.lensfield.api.io.MultiStreamOut;
+import org.lensfield.api.io.StreamOut;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * @author sea36

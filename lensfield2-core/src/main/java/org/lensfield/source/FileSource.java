@@ -6,7 +6,8 @@ package org.lensfield.source;
 import org.lensfield.ConfigurationException;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
-import org.lensfield.glob.Template;
+import org.lensfield.glob.Glob;
+import org.lensfield.glob.GlobMatch;
 import org.lensfield.model.Parameter;
 import org.lensfield.state.FileState;
 
@@ -14,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author sea36
@@ -24,7 +24,7 @@ public class FileSource implements ISource {
     private Logger LOG;
 
     private String name;
-    private Template glob;
+    private Glob glob;
     private File root = new File(".");
 
     private List<FileState> fileList;
@@ -53,10 +53,10 @@ public class FileSource implements ISource {
                 recurse(f, s, depth+1, nfiles);
             } else {
                 String path = s.toString();
-                Map<String,String> params = glob.matches(path);
-                if (params != null) {
+                GlobMatch match = glob.match(path);
+                if (match != null) {
                     LOG.debug(name, "adding "+path);
-                    FileState fr = new FileState(s.toString(), f.lastModified(), params);
+                    FileState fr = new FileState(s.toString(), f.lastModified(), match.getMap());
                     fileList.add(fr);
                     if (++nfiles == maxFiles) {
                         break;
@@ -87,7 +87,7 @@ public class FileSource implements ISource {
         this.root = root;
     }
 
-    public void setGlob(Template glob) {
+    public void setGlob(Glob glob) {
         this.glob = glob;
     }
 

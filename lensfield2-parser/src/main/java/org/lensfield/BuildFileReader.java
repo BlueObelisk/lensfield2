@@ -4,20 +4,10 @@
 package org.lensfield;
 
 import org.lensfield.LensfieldTokeniser.TokenType;
-import org.lensfield.model.Build;
-import org.lensfield.model.Input;
-import org.lensfield.model.Model;
-import org.lensfield.model.Output;
-import org.lensfield.model.Parameter;
+import org.lensfield.model.*;
 import org.lensfield.model.Process;
-import org.lensfield.model.Source;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 
 /**
  * @author sea36

@@ -3,23 +3,21 @@
  */
 package org.lensfield.build;
 
+import org.lensfield.glob.Glob;
 import org.lensfield.state.FileState;
-import org.lensfield.glob.Template;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author sea36
  */
 public class FileList {
 
-    private Template glob;
+    private Glob glob;
     private List<FileState> files = new ArrayList<FileState>();
 
-    public FileList(Template glob) {
+    public FileList(Glob glob) {
         this.glob = glob;
     }
 
@@ -31,7 +29,7 @@ public class FileList {
         return files;
     }
 
-    public Template getGlob() {
+    public Glob getGlob() {
         return glob;
     }
 

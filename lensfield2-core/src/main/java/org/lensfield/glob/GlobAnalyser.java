@@ -6,8 +6,8 @@ package org.lensfield.glob;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import org.lensfield.InputFileSet;
-import org.lensfield.state.FileState;
 import org.lensfield.build.FileList;
+import org.lensfield.state.FileState;
 
 import java.util.*;
 
@@ -17,14 +17,14 @@ import java.util.*;
 public class GlobAnalyser {
 
     private static void run(String... s) {
-        Template[] globs = new Template[s.length];
+        Glob[] globs = new Glob[s.length];
         for (int i = 0; i < s.length; i++) {
-            globs[i] = new Template(s[i]);
+            globs[i] = new Glob(s[i]);
         }
         areAllGroupsCommon(globs);
     }
 
-    public static boolean areAllGroupsCommon(Template... globs) {
+    public static boolean areAllGroupsCommon(Glob... globs) {
         Set<String> common = new LinkedHashSet<String>(globs[0].getGroupNames());
         for (int i = 1; i < globs.length; i++) {
             List<String> groups = new ArrayList<String>(globs[i].getGroupNames());
@@ -35,7 +35,7 @@ public class GlobAnalyser {
         return true;
     }
 
-    public static Set<String> getCommonGroups(Template... globs) {
+    public static Set<String> getCommonGroups(Glob... globs) {
         Set<String> common = new LinkedHashSet<String>(globs[0].getGroupNames());
         for (int i = 1; i < globs.length; i++) {
             List<String> groups = new ArrayList<String>(globs[i].getGroupNames());
@@ -162,8 +162,8 @@ public class GlobAnalyser {
         return names;
     }
 
-    private static Template[] getGlobs(FileList[] inputs) {
-        Template[] globs = new Template[inputs.length];
+    private static Glob[] getGlobs(FileList[] inputs) {
+        Glob[] globs = new Glob[inputs.length];
         for (int i = 0; i < inputs.length; i++) {
             globs[i] = inputs[i].getGlob();
         }

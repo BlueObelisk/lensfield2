@@ -26,6 +26,11 @@ public class GlobMatch {
         }
     }
 
+    public GlobMatch(String[] groups, String[] values) {
+        this.groups = groups;
+        this.values = values;
+    }
+
     public Map<String,String> getMap() {
         Map<String,String> map = new HashMap<String, String>();
         for (int i = 0; i < groups.length; i++) {

@@ -4,7 +4,6 @@
 package org.lensfield.log;
 
 import org.apache.log4j.Logger;
-import org.lensfield.build.OutputDescription;
 import org.lensfield.build.ParameterDescription;
 import org.lensfield.state.*;
 

@@ -4,7 +4,7 @@
 package org.lensfield.build;
 
 import org.lensfield.api.io.MultiStreamOut;
-import org.lensfield.glob.Template;
+import org.lensfield.glob.Glob;
 import org.lensfield.state.TaskState;
 
 import java.io.OutputStream;
@@ -22,7 +22,7 @@ public class OutputDescription {
     private String fieldClass;
 
     private boolean multifile;
-    private Template glob;
+    private Glob glob;
 
     public OutputDescription(TaskState task, String name) {
         this.task = task;
@@ -75,11 +75,11 @@ public class OutputDescription {
         return multifile;
     }
 
-    public Template getGlob() {
+    public Glob getGlob() {
         return glob;
     }
 
-    public void setGlob(Template glob) {
+    public void setGlob(Glob glob) {
         this.glob = glob;
     }
 }

@@ -5,7 +5,7 @@ package org.lensfield.io;
 
 import org.lensfield.api.io.MultiStreamOut;
 import org.lensfield.api.io.StreamOut;
-import org.lensfield.glob.Template;
+import org.lensfield.glob.Glob;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,13 +17,13 @@ import java.util.*;
 public class OutputMultiFile extends MultiStreamOut implements Output {
 
     private File tmpDir;
-    private Template glob;
+    private Glob glob;
     private Map<String,String> parameters;
 
     private List<OutputFile> outputs = new ArrayList<OutputFile>();
     private int ix = 1;
 
-    public OutputMultiFile(File tmpdir, Template glob, Map<String,String> parameters) {
+    public OutputMultiFile(File tmpdir, Glob glob, Map<String,String> parameters) {
         this.tmpDir = tmpdir;
         this.glob = glob;
         this.parameters = parameters;

@@ -6,7 +6,6 @@ package org.lensfield;
 import org.lensfield.state.FileState;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 /**

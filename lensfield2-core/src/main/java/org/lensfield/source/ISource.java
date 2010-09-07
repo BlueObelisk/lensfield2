@@ -5,7 +5,7 @@ package org.lensfield.source;
 
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
-import org.lensfield.glob.Template;
+import org.lensfield.glob.Glob;
 import org.lensfield.model.Parameter;
 import org.lensfield.state.FileState;
 
@@ -21,7 +21,7 @@ public interface ISource {
 
     void setRoot(File root);
 
-    void setGlob(Template glob);
+    void setGlob(Glob glob);
 
     void setLogger(Logger logger);
 

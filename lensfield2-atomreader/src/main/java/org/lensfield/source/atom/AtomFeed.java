@@ -8,8 +8,8 @@ import nu.xom.Serializer;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
+import org.lensfield.glob.Glob;
 import org.lensfield.glob.MissingParameterException;
-import org.lensfield.glob.Template;
 import org.lensfield.model.Parameter;
 import org.lensfield.source.ISource;
 import org.lensfield.state.FileState;
@@ -32,7 +32,7 @@ import java.util.Map;
 public class AtomFeed implements ISource {
 
     private File root;
-    private Template glob;
+    private Glob glob;
     private List<FileState> fileList;
 
     private String url;
@@ -120,7 +120,7 @@ public class AtomFeed implements ISource {
         this.root = root;
     }
 
-    public void setGlob(Template glob) {
+    public void setGlob(Glob glob) {
         this.glob = glob;
     }
 

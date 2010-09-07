@@ -7,11 +7,7 @@ import org.lensfield.BuildFileReader;
 import org.lensfield.Lensfield;
 import org.lensfield.model.Model;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 /**
  * @author sea36

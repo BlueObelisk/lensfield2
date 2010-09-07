@@ -1,12 +1,11 @@
 package org.lensfield;
 
 import org.junit.Test;
+import org.lensfield.LensfieldTokeniser.Token;
+import org.lensfield.LensfieldTokeniser.TokenType;
 
 import java.io.IOException;
 import java.io.StringReader;
-
-import org.lensfield.LensfieldTokeniser.Token;
-import org.lensfield.LensfieldTokeniser.TokenType;
 
 import static org.junit.Assert.assertEquals;
 

@@ -1,7 +1,6 @@
 package org.lensfield.glob;
 
 import org.apache.commons.io.IOCase;
-import org.apache.commons.io.comparator.PathFileComparator;
 
 import java.util.regex.Pattern;
 

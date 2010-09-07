@@ -4,11 +4,12 @@
 package org.lensfield;
 
 import org.junit.Test;
-import org.lensfield.model.*;
+import org.lensfield.model.Build;
+import org.lensfield.model.Model;
 import org.lensfield.model.Process;
+import org.lensfield.model.Source;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
