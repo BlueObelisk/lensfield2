@@ -6,23 +6,18 @@ package org.lensfield.model;
 /**
  * @author sea36
  */
-public class Parameter {
+public class Parameter extends Resource {
 
-    private final String name;
     private final String value;
 
     public Parameter(String name, String value) {
-        this.name = name;
+        super(name);
         this.value = value;
     }
 
     public Parameter(String value) {
-        this.name = null;
+        super();
         this.value = value;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getValue() {

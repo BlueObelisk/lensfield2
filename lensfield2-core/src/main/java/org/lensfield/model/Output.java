@@ -6,23 +6,18 @@ package org.lensfield.model;
 /**
  * @author sea36
  */
-public class Output {
+public class Output extends Resource {
 
-    private final String name;
     private final String value;
 
     public Output(String name, String value) {
-        this.name = name;
+        super(name);
         this.value = value;
     }
 
     public Output(String value) {
-        this.name = null;
+        super();
         this.value = value;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getValue() {

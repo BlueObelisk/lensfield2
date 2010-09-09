@@ -6,23 +6,18 @@ package org.lensfield.model;
 /**
  * @author sea36
  */
-public class Input {
+public class Input extends Resource {
 
-    private final String name;
     private final String step;
 
     public Input(String name, String step) {
-        this.name = name;
+        super(name);
         this.step = step;
     }
 
     public Input(String step) {
-        this.name = null;
+        super();
         this.step = step;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getStep() {
