@@ -39,6 +39,12 @@
         </contributor>
     </contributors>
 
+    <scm>
+        <connection>scm:hg:http://bitbucket.org/sea36/lensfield2</connection>
+        <developerConnection>scm:hg:https://bitbucket.org/sea36/lensfield2</developerConnection>
+        <url>https://bitbucket.org/sea36/lensfield2</url>
+    </scm>
+
     <repositories>
         <repository>
             <id>ucc-repo</id>
