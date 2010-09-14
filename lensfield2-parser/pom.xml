@@ -9,6 +9,7 @@
         <groupId>org.lensfield</groupId>
         <artifactId>lensfield2</artifactId>
         <version>0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>lensfield2-parser</artifactId>
