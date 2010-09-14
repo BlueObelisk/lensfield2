@@ -18,7 +18,7 @@ import java.util.*;
  */
 public class BuildLogger {
 
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
     private PrintWriter out;
 
@@ -33,7 +33,7 @@ public class BuildLogger {
     }
 
     private String now() {
-        return dateFormat.format(new Date());
+        return DATE_FORMAT.format(new Date());
     }
 
 
@@ -72,7 +72,7 @@ public class BuildLogger {
             out.print('/');
             out.print(task.getMethodName());
             out.print(' ');
-            out.print(dateFormat.format(new Date(task.getLastModified())));
+            out.print(DATE_FORMAT.format(new Date(task.getLastModified())));
             if (!task.getParameters().isEmpty()) {
                 out.print(" (params ");
                 for (ParameterDescription param : task.getParameters()) {
@@ -85,7 +85,7 @@ public class BuildLogger {
             if (!task.getDependencyList().isEmpty()) {
                 out.print(" (depends ");
                 for (DependencyState depend : task.getDependencyList()) {
-                    String timestamp = dateFormat.format(new Date(depend.getLastModified()));
+                    String timestamp = DATE_FORMAT.format(new Date(depend.getLastModified()));
                     writeList(depend.getId(), timestamp);
                 }
                 out.print(')');
@@ -99,7 +99,7 @@ public class BuildLogger {
         out.print(name);
         out.print("(");
         for (FileState output : files) {
-            writeList(output.getPath(), dateFormat.format(output.getLastModified()));
+            writeList(output.getPath(), DATE_FORMAT.format(output.getLastModified()));
         }
         out.println("))");
     }
@@ -212,7 +212,7 @@ public class BuildLogger {
                 FileState f = files.get(0);
                 String[] x = new String[2+2*f.getParams().size()];
                 x[0] = f.getPath();
-                x[1] = dateFormat.format(f.getLastModified());
+                x[1] = DATE_FORMAT.format(f.getLastModified());
                 int i = 2;
                 for (Map.Entry<String,String> p : f.getParams().entrySet()) {
                     x[i++] = p.getKey();
@@ -225,7 +225,7 @@ public class BuildLogger {
                 for (FS f : files) {
                     String[] x = new String[2+2*f.getParams().size()];
                     x[0] = f.getPath();
-                    x[1] = dateFormat.format(f.getLastModified());
+                    x[1] = DATE_FORMAT.format(f.getLastModified());
                     int i = 2;
                     for (Map.Entry<String,String> p : f.getParams().entrySet()) {
                         x[i++] = p.getKey();

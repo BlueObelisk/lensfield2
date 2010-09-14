@@ -5,14 +5,22 @@ package org.lensfield.log;
 
 import org.apache.log4j.Logger;
 import org.lensfield.build.ParameterDescription;
-import org.lensfield.state.*;
+import org.lensfield.state.BuildState;
+import org.lensfield.state.DependencyState;
+import org.lensfield.state.FileState;
+import org.lensfield.state.Operation;
+import org.lensfield.state.TaskState;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author sea36
@@ -20,8 +28,6 @@ import java.util.*;
 public class BuildStateReader {
 
     private static final Logger LOG = Logger.getLogger(BuildStateReader.class);
-
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
     private static final int EOF = -1;
 
@@ -236,7 +242,7 @@ public class BuildStateReader {
         skipWhitespace();
         String path = readToken();
         skipWhitespace();
-        long lastModified = dateFormat.parse(readToken()).getTime();
+        long lastModified = BuildLogger.DATE_FORMAT.parse(readToken()).getTime();
         skipWhitespace();
         Map<String,String> params = new HashMap<String, String>();
         while (ch != ']') {
@@ -262,7 +268,7 @@ public class BuildStateReader {
 
         TaskState task = new TaskState(name);
         task.setClassName(clazz);
-        task.setLastModified(dateFormat.parse(timestamp).getTime());
+        task.setLastModified(BuildLogger.DATE_FORMAT.parse(timestamp).getTime());
 
         // Read dependencies
         while (ch == '(') {
@@ -340,12 +346,12 @@ public class BuildStateReader {
             throw new IOException("Expected: ']'; found: '"+((char)ch)+"'");
         }
         ch = in.read();
-        task.addDependency(new DependencyState(id, dateFormat.parse(ts).getTime()));
+        task.addDependency(new DependencyState(id, BuildLogger.DATE_FORMAT.parse(ts).getTime()));
     }
 
     private void readBuildStarted() throws IOException, ParseException {
         String timestamp = readToken();
-        Date date = dateFormat.parse(timestamp);
+        Date date = BuildLogger.DATE_FORMAT.parse(timestamp);
         build.setStarted(date.getTime());
     }
 
