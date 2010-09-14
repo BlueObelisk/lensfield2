@@ -23,7 +23,7 @@
         <dependency>
             <groupId>uk.ac.cam.ch.atomxom</groupId>
             <artifactId>atomxom-feeds</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
