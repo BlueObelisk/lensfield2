@@ -6,7 +6,7 @@
     <parent>
         <artifactId>lensfield2-testops</artifactId>
         <groupId>org.lensfield.testing</groupId>
-        <version>0.1</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>lensfield2-testops3</artifactId>
