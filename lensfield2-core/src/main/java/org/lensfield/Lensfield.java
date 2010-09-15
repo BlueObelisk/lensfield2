@@ -52,28 +52,6 @@ public class Lensfield {
         this.root = root;
     }
 
-//    public Lensfield(Model model, File root, ClassWorld classworld) {
-//        this.model = model;
-//        this.root = root;
-//    }
-//
-//    private static ClassWorld initClassWorld() {
-//        ClassWorld classWorld = new ClassWorld();
-//        try {
-//            ClassRealm core = classWorld.newRealm("lensfield.core", Thread.currentThread().getContextClassLoader());
-//            classWorld.newRealm("lensfield.api", core);
-//            classWorld.newRealm("plexus.core", core);
-//        } catch (DuplicateRealmException e) {
-//            // Impossible!
-//            throw new RuntimeException(e);
-//        }
-//        return classWorld;
-//    }
-
-
-    public File getRoot() {
-        return root;
-    }
 
     private void init() throws Exception {
         checkBuildStepsExist();
@@ -490,16 +468,6 @@ public class Lensfield {
                     return false;
                 }
             }
-//            for (int i = 0; i < files.size(); i++) {
-//                if (!files.get(i).getPath().equals(prevFiles.get(i).getPath())) {
-//                    System.err.println("[DEBUG] input file name mis-match. current:"+files.get(i).getPath()+"; prev:"+prevFiles.get(i).getPath());
-//                    return false;
-//                }
-//                if (isChanged(files.get(i).getLastModified(), prevFiles.get(i).getLastModified())) {
-//                    System.err.println("[DEBUG] input file age mis-match. current:"+files.get(i).getLastModified()+"; prev:"+prevFiles.get(i).getLastModified());
-//                    return false;
-//                }
-//            }
         }
         // Check output files
         for (List<FileState> fileStates : prevOp.getOutputFiles().values()) {
@@ -593,15 +561,6 @@ public class Lensfield {
         List<InputFileSet> inputs = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
         run(task, inputs, outputFileLists);
 
-
-//        Map<String,List<FileState>> inputMap = new HashMap<String, List<FileState>>();
-//        for (Map.Entry<String,FileList> e : inputFileLists.entrySet()) {
-//            inputMap.put(e.getKey(), e.getValue().getFiles());
-//        }
-//
-//        InputFileSet inputs = new InputFileSet(Collections.<String, String>emptyMap(), inputMap);
-//
-//        run(task, Collections.singletonList(inputs), outputFileLists);
     }
 
     private Glob[] getGlobs(Collection<FileList> fileLists) {
@@ -665,23 +624,6 @@ public class Lensfield {
         }
 
     }
-
-    private Map<String, List<FileState>> getNtoKInputStates(Build build, TaskState description) throws LensfieldException {
-        Map<String,List<FileState>> inputs = new HashMap<String, List<FileState>>();
-        for (Input input : build.getInputs()) {
-            String name = input.getName();
-            if (name == null) {
-                InputDescription inpd = description.getDefaultInput();
-                if (inpd == null) {
-                    throw new LensfieldException();
-                }
-                name = inpd.getName();
-            }
-            inputs.put(name, stateFileLists.get(input.getStep()).getFiles());
-        }
-        return inputs;
-    }
-
 
 
     protected void checkBuildStepsExist() throws LensfieldException {
