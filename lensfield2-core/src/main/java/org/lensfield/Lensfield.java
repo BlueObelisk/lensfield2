@@ -393,16 +393,20 @@ public class Lensfield {
 
         TaskState task = buildState.getTask(build.getName());
 
-        if (task.isKtoL()) {
-            runKtoLStep(build, task);
-        } else if (task.isNtoK()) {
-            runNtoKStep(build, task);
-        } else if (task.isKtoN()) {
-            runKtoNStep(build, task);
+        List<InputFileSet> inputSets ;
+        Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
+        if (task.isKtoL() || task.isKtoN()) {
+            // TODO no inputs sets; empty output
+            Map<String, FileList> inputFileLists = getInputs(build, task);
+            inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
         } else {
-            runMtoNStep(build, task);
+            Map<String, FileList> inputFileLists = getInputs(build, task);
+            Set<String> inputGroups = GlobAnalyser.getCommonGroups(getGlobs(inputFileLists.values()));
+            Set<String> outputGroups = GlobAnalyser.getCommonGroups(getGlobs(outputFileLists.values()));
+            Set<String> commonGroups = Sets.intersection(inputGroups, outputGroups);
+            inputSets = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
         }
-        
+        run(task, inputSets, outputFileLists);
     }
 
     private void checkInputsExist(Build step) throws LensfieldException {
@@ -412,32 +416,6 @@ public class Lensfield {
             }
         }
     }
-
-
-    private void runKtoLStep(Build build, TaskState task) throws Exception {
-
-        Map<String,FileList> inputFileLists = getInputs(build, task);
-        // TODO - single input
-        List<InputFileSet> inputSets;
-        // if (inputFileLists.size() == 1) {   // TODO
-        if (false) {
-            Map.Entry<String,FileList> e = inputFileLists.entrySet().iterator().next();
-            String name = e.getKey();
-            FileList fileList = e.getValue();
-            inputSets = new ArrayList<InputFileSet>(fileList.getFiles().size());
-            for (FileState fs : fileList.getFiles()) {
-                inputSets.add(new InputFileSet(fs.getParams(), Collections.singletonMap(name,(Collection<FileState>)Collections.singletonList(fs))));
-            }
-        } else {
-            inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
-        }
-
-        Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
-
-        run(task, inputSets, outputFileLists);
-
-    }
-
 
 
     private boolean isUpToDate(Map<String,Collection<FileState>> input, Operation prevOp) {
@@ -523,34 +501,6 @@ public class Lensfield {
         return map;
     }
 
-
-    private void runKtoNStep(Build build, TaskState task) throws Exception {
-
-        Map<String, FileList> inputFileLists = getInputs(build, task);
-        List<InputFileSet> inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
-
-        // TODO no inputs sets; empty output
-
-        Map<String,FileList> outputs = getOutputFileLists(build, task);
-
-        run(task, inputSets, outputs);
-
-    }
-
-
-    private void runNtoKStep(Build build, TaskState task) throws Exception {
-
-        Map<String, FileList> inputFileLists = getInputs(build, task);
-        Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
-
-        Set<String> inputGroups = GlobAnalyser.getCommonGroups(getGlobs(inputFileLists.values()));
-        Set<String> outputGroups = GlobAnalyser.getCommonGroups(getGlobs(outputFileLists.values()));
-        Set<String> commonGroups = Sets.intersection(inputGroups, outputGroups);
-
-        List<InputFileSet> inputs = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
-        run(task, inputs, outputFileLists);
-
-    }
 
     private Glob[] getGlobs(Collection<FileList> fileLists) {
         Glob[] globs = new Glob[fileLists.size()];
@@ -652,22 +602,5 @@ public class Lensfield {
     public void setOffline(boolean offline) {
         this.offline = offline;
     }
-
-
-
-    private void runMtoNStep(Build build, TaskState task) throws Exception {
-
-        Map<String, FileList> inputFileLists = getInputs(build, task);
-        Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
-
-        Set<String> inputGroups = GlobAnalyser.getCommonGroups(getGlobs(inputFileLists.values()));
-        Set<String> outputGroups = GlobAnalyser.getCommonGroups(getGlobs(outputFileLists.values()));
-        Set<String> commonGroups = Sets.intersection(inputGroups, outputGroups);
-
-        List<InputFileSet> inputs = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
-        run(task, inputs, outputFileLists);
-
-    }
-
 
 }
