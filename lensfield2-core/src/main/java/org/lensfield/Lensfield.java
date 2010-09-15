@@ -531,18 +531,7 @@ public class Lensfield {
 
         // TODO no inputs sets; empty output
 
-        Map<String,FileList> outputs = new HashMap<String,FileList>();
-        for (Output output : build.getOutputs()) {
-            String name = output.getName();
-            if (name == null) {
-                OutputDescription outd = task.getDefaultOutput();
-                if (outd == null) {
-                    throw new LensfieldException();
-                }
-                name = outd.getName();
-            }
-            outputs.put(name, new FileList(new Glob(output.getValue())));
-        }
+        Map<String,FileList> outputs = getOutputFileLists(build, task);
 
         run(task, inputSets, outputs);
 
