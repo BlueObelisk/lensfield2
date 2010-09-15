@@ -11,18 +11,12 @@ import java.util.Map;
  */
 public class Operation {
 
-    private String task;
     private Map<String, List<FileState>> inputFiles;
     private Map<String, List<FileState>> outputFiles;
 
-    public Operation(String task, Map<String, List<FileState>> inputFiles, Map<String, List<FileState>> outputFiles) {
-        this.task = task;
+    public Operation(Map<String, List<FileState>> inputFiles, Map<String, List<FileState>> outputFiles) {
         this.inputFiles = inputFiles;
         this.outputFiles = outputFiles;
-    }
-
-    public String getTask() {
-        return task;
     }
 
     public Map<String, List<FileState>> getInputFiles() {

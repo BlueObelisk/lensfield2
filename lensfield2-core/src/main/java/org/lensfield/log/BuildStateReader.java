@@ -177,7 +177,7 @@ public class BuildStateReader {
         ch = in.read();
         skipWhitespace();
 
-        Operation op = new Operation(taskName, inputFiles, outputFiles);
+        Operation op = new Operation(inputFiles, outputFiles);
         task.addOperation(op);
         for (List<FileState> files : op.getOutputFiles().values()) {
             build.addFiles(files);
