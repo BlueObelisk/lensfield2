@@ -38,7 +38,7 @@ fi
 
 exec "$JAVA_HOME/bin/java" \
   $LF_OPTS \
-  -classpath "$LF_HOME/boot/boot-0.1-SNAPSHOT.jar" \
+  -classpath "$LF_HOME/boot/boot-0.1.1.jar" \
   -Dlensfield.home="$LF_HOME" \
   org.lensfield.launcher.boot.Bootstrap $*
 

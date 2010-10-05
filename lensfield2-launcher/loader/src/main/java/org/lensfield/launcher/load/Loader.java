@@ -40,13 +40,13 @@ public class Loader {
         }
 
         List<URL> apiUrls = new ArrayList<URL>();
-        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.1-SNAPSHOT", update)) {
+        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.1.1", update)) {
             apiUrls.add(a.getFile().toURI().toURL());
         }
         apiLoader = new URLClassLoader(apiUrls.toArray(new URL[apiUrls.size()]));
 
         List<URL> appUrls = new ArrayList<URL>();
-        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.1-SNAPSHOT", update)) {
+        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.1.1", update)) {
             appUrls.add(a.getFile().toURI().toURL());
         }
         appLoader = new URLClassLoader(appUrls.toArray(new URL[appUrls.size()]), apiLoader);
