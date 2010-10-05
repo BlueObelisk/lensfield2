@@ -1,14 +1,14 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield.build;
+package org.lensfield.state;
 
 import java.lang.reflect.Field;
 
 /**
 * @author sea36
 */
-public class ParameterDescription {
+public class Parameter {
 
     private final String name;
     private String value;
@@ -18,7 +18,7 @@ public class ParameterDescription {
 
     private transient final boolean required;
 
-    public ParameterDescription(Field f, String name, String value, boolean required) {
+    public Parameter(Field f, String name, String value, boolean required) {
         this.name = name;
         this.fieldName = f.getName();
         this.fieldClass = f.getDeclaringClass().getName();
@@ -26,7 +26,7 @@ public class ParameterDescription {
         this.required = required;
     }
 
-    public ParameterDescription(String name, String value) {
+    public Parameter(String name, String value) {
         this.name = name;
         this.value = value;
         required = false;

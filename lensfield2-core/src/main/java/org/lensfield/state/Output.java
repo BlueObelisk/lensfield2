@@ -1,22 +1,26 @@
 /*
  * Copyright 2010 Sam Adams
  */
-package org.lensfield.build;
+package org.lensfield.state;
 
 import org.lensfield.api.io.MultiStreamOut;
+import org.lensfield.concurrent.Resource;
 import org.lensfield.glob.Glob;
-import org.lensfield.state.TaskState;
 
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
-* @author sea36
-*/
-public class OutputDescription {
+ * @author sea36
+ */
+public class Output {
 
-    private final TaskState task;
+    private final Process task;
     private final String name;
+
+    private volatile boolean closed;
 
     private String fieldName;
     private String fieldClass;
@@ -24,18 +28,20 @@ public class OutputDescription {
     private boolean multifile;
     private Glob glob;
 
-    public OutputDescription(TaskState task, String name) {
+    private List<Input> pipes = new ArrayList<Input>();
+
+    public Output(Process task, String name) {
         this.task = task;
         this.name = name;
     }
 
-    public OutputDescription(TaskState task, Class<?> clazz) {
+    public Output(Process task) {
         this.task = task;
         this.name = "out";
         this.multifile = false;
     }
 
-    public OutputDescription(TaskState task, Field f, String name) {
+    public Output(Process task, Field f, String name) {
         this.task = task;
         this.fieldName = f.getName();
         this.fieldClass = f.getDeclaringClass().getName();
@@ -50,12 +56,12 @@ public class OutputDescription {
         } else if (MultiStreamOut.class.isAssignableFrom(clazz)) {
             return true;
         } else {
-            throw new RuntimeException("Unknown type: "+clazz.getName()); 
+            throw new RuntimeException("Unknown type: "+clazz.getName());
         }
     }
 
 
-    public TaskState getTask() {
+    public Process getTask() {
         return task;
     }
 
@@ -82,4 +88,30 @@ public class OutputDescription {
     public void setGlob(Glob glob) {
         this.glob = glob;
     }
+
+    public void addPipe(Input input) {
+        input.setSource(this);
+        pipes.add(input);
+    }
+
+    public void addResource(Resource resource) {
+        String id = task.getId()+"/"+name;
+        System.err.println(id+" == "+resource.getPath());
+        for (Input input : pipes) {
+            System.err.println(id+" >> "+input.getProcess().getId()+"/"+input.getName());
+            input.add(resource);
+        }
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void close() {
+        this.closed = true;
+        for (Input pipe : pipes) {
+            pipe.close();
+        }
+    }
+
 }

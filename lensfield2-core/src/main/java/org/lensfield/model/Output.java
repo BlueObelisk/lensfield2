@@ -6,7 +6,7 @@ package org.lensfield.model;
 /**
  * @author sea36
  */
-public class Output extends Resource {
+public class Output extends Socket {
 
     private final String value;
 

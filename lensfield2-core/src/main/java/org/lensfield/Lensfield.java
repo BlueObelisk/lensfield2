@@ -3,27 +3,35 @@
  */
 package org.lensfield;
 
-import com.google.common.collect.Sets;
 import org.lensfield.api.Logger;
-import org.lensfield.build.FileList;
-import org.lensfield.build.InputDescription;
-import org.lensfield.build.OutputDescription;
-import org.lensfield.build.ParameterDescription;
+import org.lensfield.concurrent.Reactor;
 import org.lensfield.glob.Glob;
-import org.lensfield.glob.GlobAnalyser;
 import org.lensfield.log.BuildLogger;
 import org.lensfield.log.BuildStateReader;
-import org.lensfield.model.*;
-import org.lensfield.model.Process;
-import org.lensfield.process.ProcessRunner;
+import org.lensfield.model.Build;
+import org.lensfield.model.Model;
+import org.lensfield.model.Source;
 import org.lensfield.source.FileSource;
-import org.lensfield.source.ISource;
-import org.lensfield.state.*;
+import org.lensfield.state.BuildState;
+import org.lensfield.state.Dependency;
+import org.lensfield.state.Input;
+import org.lensfield.state.Output;
+import org.lensfield.state.Parameter;
+import org.lensfield.state.Process;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * @author sea36
@@ -36,15 +44,15 @@ public class Lensfield {
     private BuildState prevBuildState;
     private BuildLogger buildLog;
 
-    private Map<String, FileList> stateFileLists = new HashMap<String, FileList>();
-
     private Model model;
     private File root = new File(".");
     private File workspace, tmpdir;
 
-    private boolean offline;
+    private boolean offline = true;
 
-    private ArrayList<Process> buildOrder;
+    private ArrayList<org.lensfield.model.Process> buildOrder;
+
+    private Reactor reactor = new Reactor(this);
 
 
     public Lensfield(Model model, File root) {
@@ -63,8 +71,30 @@ public class Lensfield {
         initWorkspace();
 
         analyseBuildState();
+        configurePipes();
         checkBuildState();
         loadPreviousBuildState();
+    }
+
+    private void configurePipes() {
+        for (Build build : model.getBuilds()) {
+            Process process = buildState.getTask(build.getName());
+            for (org.lensfield.model.Input input : build.getInputs()) {
+                Input i;
+                if (input.getName() == null) {
+                    i = process.getDefaultInput();
+                } else {
+                    i = process.getInput(input.getName());
+                }
+                Process source = buildState.getTask(input.getStep());
+                System.err.print("PIPE "+source.getId()+"/"+source.getDefaultOutput().getName());
+                System.err.print(" >> ");
+                System.err.print(process.getId()+"/"+i.getName());
+                System.err.println();
+                source.getDefaultOutput().addPipe(i);
+            }
+            process.initGlobNames();
+        }
     }
 
 
@@ -74,25 +104,25 @@ public class Lensfield {
         if (prevBuildState == null) {
             throw new LensfieldException("No previous build state");
         }
-        for (TaskState task : prevBuildState.getTasks()) {
+        for (Process task : prevBuildState.getTasks()) {
             if (task.isSource()) {
                 continue;
             }
-            for (Operation op : task.getOperations()) {
-                for (List<FileState> outs : op.getOutputFiles().values()) {
-                    for (FileState out : outs) {
-                        String path = out.getPath();
-                        File f = new File(root, path);
-                        if (f.isFile()) {
-                            System.err.println("deleting "+path);
-                            if (!f.delete()) {
-                                System.err.println("Error deleting: "+path);
-                            }
-                        }
-                        // TODO delete directories
-                    }
-                }
-            }
+//            for (Operation op : task.getOperations()) {
+//                for (List<FileState> outs : op.getOutputFiles().values()) {
+//                    for (FileState out : outs) {
+//                        String path = out.getPath();
+//                        File f = new File(root, path);
+//                        if (f.isFile()) {
+//                            System.err.println("deleting "+path);
+//                            if (!f.delete()) {
+//                                System.err.println("Error deleting: "+path);
+//                            }
+//                        }
+//                        // TODO delete directories
+//                    }
+//                }
+//            }
         }
     }
     
@@ -104,6 +134,9 @@ public class Lensfield {
         try {
             initBuildLog();
             processBuildSteps(buildOrder);
+
+            reactor.run();
+
             buildLog.finishBuild();
 
         } finally {
@@ -119,8 +152,8 @@ public class Lensfield {
     }
 
     private void checkParameters() throws ConfigurationException {
-        for (TaskState task : buildState.getTasks()) {
-            for (ParameterDescription param : task.getParameters()) {
+        for (Process task : buildState.getTasks()) {
+            for (Parameter param : task.getParameters()) {
                 if (param.isRequired() && param.getValue() == null) {
                     throw new ConfigurationException("Missing parameter '"+param.getName()+"' on task '"+task.getId()+"'");
                 }
@@ -146,34 +179,34 @@ public class Lensfield {
     }
     
 
-    protected ArrayList<Process> resolveBuildOrder() throws LensfieldException {
+    protected ArrayList<org.lensfield.model.Process> resolveBuildOrder() throws LensfieldException {
         LOG.info("Resolving build order");
-        LinkedHashSet<Process> order = new LinkedHashSet<Process>(model.getSources());
+        LinkedHashSet<org.lensfield.model.Process> order = new LinkedHashSet<org.lensfield.model.Process>(model.getSources());
         if (order.isEmpty()) {
             throw new ConfigurationException("No source build steps");
         }
 
-        for (Process proc : order) {
+        for (org.lensfield.model.Process proc : order) {
             LOG.debug(" - "+proc.getName());
         }
 
         int processCount = model.getProcesses().size();
         while (order.size() < processCount) {
-            List<Process> nextSteps = findNextSteps(order);
+            List<org.lensfield.model.Process> nextSteps = findNextSteps(order);
             if (nextSteps.isEmpty()) {
                 throw new ConfigurationException("Unable to resolve build order; cyclic dependencies");
             }
-            for (Process proc : nextSteps) {
+            for (org.lensfield.model.Process proc : nextSteps) {
                 LOG.debug(" - "+proc.getName());
             }
             order.addAll(nextSteps);
         }
 
-        return new ArrayList<Process>(order);
+        return new ArrayList<org.lensfield.model.Process>(order);
     }
 
-    private List<Process> findNextSteps(Collection<Process> order) {
-        List<Process> nextSteps = new ArrayList<Process>();
+    private List<org.lensfield.model.Process> findNextSteps(Collection<org.lensfield.model.Process> order) {
+        List<org.lensfield.model.Process> nextSteps = new ArrayList<org.lensfield.model.Process>();
         for (Build step : model.getBuilds()) {
             if (!order.contains(step) && containsAllSteps(order, step.getInputs())) {
                 nextSteps.add(step);
@@ -182,8 +215,8 @@ public class Lensfield {
         return nextSteps;
     }
 
-    private boolean containsAllSteps(Collection<Process> order, List<Input> inputs) {
-        for (Input input : inputs) {
+    private boolean containsAllSteps(Collection<org.lensfield.model.Process> order, List<org.lensfield.model.Input> inputs) {
+        for (org.lensfield.model.Input input : inputs) {
             if (!order.contains(model.getProcess(input.getStep()))) {
                 return false;
             }
@@ -194,7 +227,7 @@ public class Lensfield {
 
     private void loadPreviousBuildState() throws IOException, ParseException {
         File logFile = new File(workspace, "log.txt");
-        if (logFile.isFile()) {
+        if (logFile.isFile() && false) {
             LOG.info("Loading last build log");
             BuildStateReader in = new BuildStateReader();
             Reader r = new BufferedReader(new FileReader(logFile));
@@ -213,8 +246,8 @@ public class Lensfield {
             return;
         }
         LOG.info("Comparing tasks to previous state");
-        for (TaskState current : buildState.getTasks()) {
-            TaskState old = prevBuildState.getTask(current.getId());
+        for (Process current : buildState.getTasks()) {
+            Process old = prevBuildState.getTask(current.getId());
             if (old != null) {
                 if (isTaskUnchanged(current, old)) {
                     LOG.debug("Task "+current.getId()+": up-to-date");
@@ -227,7 +260,7 @@ public class Lensfield {
         }
     }
 
-    private boolean isTaskUnchanged(TaskState current, TaskState old) {
+    private boolean isTaskUnchanged(Process current, Process old) {
         if (areDependenciesChanged(current,old)) {
             LOG.debug("Task "+current.getId()+ ": dependencies updated");
             return false;
@@ -239,9 +272,9 @@ public class Lensfield {
         return true;
     }
 
-    private boolean areParametersChanged(TaskState current, TaskState old) {
-        for (ParameterDescription param : current.getParameters()) {
-            ParameterDescription oldParam = old.getParameter(param.getName());
+    private boolean areParametersChanged(Process current, Process old) {
+        for (Parameter param : current.getParameters()) {
+            Parameter oldParam = old.getParameter(param.getName());
             if (oldParam == null || !param.getValue().equals(oldParam.getValue())) {
                 return true;
             }
@@ -249,9 +282,9 @@ public class Lensfield {
         return false;
     }
 
-    private boolean areDependenciesChanged(TaskState current, TaskState old) {
-        List<DependencyState> currentDependencies = current.getDependencyList();
-        List<DependencyState> oldDependencies = old.getDependencyList();
+    private boolean areDependenciesChanged(Process current, Process old) {
+        List<Dependency> currentDependencies = current.getDependencyList();
+        List<Dependency> oldDependencies = old.getDependencyList();
         if (currentDependencies.size() != oldDependencies.size()) {
             return true;
         }
@@ -272,8 +305,8 @@ public class Lensfield {
      */
     private void initBuildState() {
         buildState = new BuildState();
-        for (Process process : model.getProcesses()) {
-            TaskState task = new TaskState(process.getName());
+        for (org.lensfield.model.Process process : model.getProcesses()) {
+            Process task = new Process(process.getName(), reactor);
             if (process instanceof Build) {
                 task.setClassName(process.getClassName());
             }
@@ -285,25 +318,31 @@ public class Lensfield {
      * Analyses build state classes
      */
     private void analyseBuildState() throws Exception {
+        for (Source source : model.getSources()) {
+            Process task = buildState.getTask(source.getName());
+            configureOutputs(task, source);
+        }
         for (Build build : model.getBuilds()) {
-            TaskState task = buildState.getTask(build.getName());
+            Process task = buildState.getTask(build.getName());
             ClassAnalyser.analyseClass(build, task);
             configureOutputs(task, build);
         }
     }
 
-    private void configureOutputs(TaskState task, Build build) {
-        for (Output output : build.getOutputs()) {
-            OutputDescription outputDescription;
+    private void configureOutputs(Process task, Source source) {
+        Output output = new Output(task);
+        output.setGlob(new Glob(source.getTemplate()));
+        task.addOutput(output);
+    }
+
+    private void configureOutputs(Process task, Build build) {
+        for (org.lensfield.model.Output output : build.getOutputs()) {
+            Output outputDescription;
             if (output.getName() == null) {
                 outputDescription = task.getDefaultOutput();
             }
             else {
                 outputDescription = task.getOutput(output.getName());
-            }
-            if (outputDescription == null) {
-                // TODO
-                throw new NullPointerException();
             }
             outputDescription.setGlob(new Glob(output.getValue()));
         }
@@ -326,17 +365,17 @@ public class Lensfield {
     }
 
 
-    protected synchronized void build(Process step) throws Exception {
+    protected synchronized void build(org.lensfield.model.Process step) throws Exception {
 
         if (step instanceof Source) {
             processSource((Source)step);
         }
-        else if (step instanceof Build) {
-            processBuildStep((Build)step);
-        }
-        else {
-            throw new LensfieldException("Unknown process: "+step.getName()+" ["+step.getClass().getName()+"]");
-        }
+//        else if (step instanceof Build) {
+//            processBuildStep((Build)step);
+//        }
+//        else {
+//            throw new LensfieldException("Unknown process: "+step.getName()+" ["+step.getClass().getName()+"]");
+//        }
 
     }
 
@@ -345,231 +384,33 @@ public class Lensfield {
 
         LOG.info("Processing source: "+source.getName());
 
-        Glob glob = new Glob(source.getTemplate());
-        TaskState task = new TaskState(source.getName());
-        OutputDescription output = new OutputDescription(task, "out");
-        task.addOutput(output);
+        Process task = buildState.getTask(source.getName());
 
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        FileSource finder = new FileSource();
+        finder.setRoot(root.getPath());
+        finder.setGlob(source.getTemplate());
+        finder.setOutput(task.getDefaultOutput());
+        finder.configure(source.getParameters());
+
         try {
-            ISource finder;
-            if (source.getClassName() == null) {
-                finder = new FileSource();
-            } else {
-                DependencyResolver dr = new DependencyResolver(model.getRepositories(), getClass().getClassLoader());
-                ClassLoader cloader = dr.createClassLoader(source.getDependencies());
-                Thread.currentThread().setContextClassLoader(cloader);
-                System.err.println("LOADING CLASS: "+source.getClassName());
-                Class<?> c = cloader.loadClass(source.getClassName());
-                System.err.println("----------");
-                finder = (ISource) c.newInstance();
-            }
-
-            finder.setLogger(LOG);
-            finder.setName(task.getId());
-            finder.setRoot(root);
-            finder.setGlob(glob);
-            finder.configure(source.getParameters());
-            List<FileState> fileList = finder.run();
-            FileList files = new FileList(glob);
-            files.addFiles(fileList);
-
-            buildLog.process(source.getName(), files.getFiles());
-
-            stateFileLists.put(source.getName(), files);
-            buildState.addFiles(files.getFiles());
-
+            finder.run();
         } finally {
-            Thread.currentThread().setContextClassLoader(cl);
+            task.getDefaultOutput().close();
         }
-    }
-
-
-    private void processBuildStep(Build build) throws Exception {
-
-        LOG.info("Processing build step: "+build.getName());
-
-        checkInputsExist(build);
-
-        TaskState task = buildState.getTask(build.getName());
-
-        List<InputFileSet> inputSets ;
-        Map<String, FileList> outputFileLists = getOutputFileLists(build, task);
-        if (task.isKtoL() || task.isKtoN()) {
-            // TODO no inputs sets; empty output
-            Map<String, FileList> inputFileLists = getInputs(build, task);
-            inputSets = GlobAnalyser.getInputFileSets(inputFileLists);
-        } else {
-            Map<String, FileList> inputFileLists = getInputs(build, task);
-            Set<String> inputGroups = GlobAnalyser.getCommonGroups(getGlobs(inputFileLists.values()));
-            Set<String> outputGroups = GlobAnalyser.getCommonGroups(getGlobs(outputFileLists.values()));
-            Set<String> commonGroups = Sets.intersection(inputGroups, outputGroups);
-            inputSets = GlobAnalyser.getInputFileSets(inputFileLists, commonGroups);
-        }
-        run(task, inputSets, outputFileLists);
-    }
-
-    private void checkInputsExist(Build step) throws LensfieldException {
-        for (Input input : step.getInputs()) {
-            if (!stateFileLists.containsKey(input.getStep())) {
-                throw new LensfieldException("Dependency not run: "+input.getStep());
-            }
-        }
-    }
-
-
-    private boolean isUpToDate(Map<String,Collection<FileState>> input, Operation prevOp) {
-        // Check input names match
-        if (!input.keySet().equals(prevOp.getInputFiles().keySet())) {
-            System.err.println("[DEBUG] input name mis-match. current:"+input.keySet()+"; prev:"+prevOp.getInputFiles().keySet());
-            return false;
-        }
-        // Check input files up-to-date
-        for (Map.Entry<String,Collection<FileState>> e : input.entrySet()) {
-            Collection<FileState> files = e.getValue();
-            List<FileState> prevFiles = prevOp.getInputFiles().get(e.getKey());
-            if (files.size() != prevFiles.size()) {
-                System.err.println("[DEBUG] input file count mis-match. current:"+files.size()+"; prev:"+prevFiles.size());
-                return false;
-            }
-            Iterator<FileState> fit = files.iterator();
-            Iterator<FileState> pit = prevFiles.iterator();
-            while (fit.hasNext()) {
-                FileState f = fit.next();
-                FileState p = pit.next();
-                if (!f.getPath().equals(p.getPath())) {
-                    System.err.println("[DEBUG] input file name mis-match. current:"+f.getPath()+"; prev:"+p.getPath());
-                    return false;
-                }
-                if (isChanged(f.getLastModified(), p.getLastModified())) {
-                    System.err.println("[DEBUG] input file age mis-match. current:"+f.getLastModified()+"; prev:"+p.getLastModified());
-                    return false;
-                }
-            }
-        }
-        // Check output files
-        for (List<FileState> fileStates : prevOp.getOutputFiles().values()) {
-            for (FileState fs : fileStates) {
-                File f = new File(root, fs.getPath());
-                if (!f.isFile()) {
-                    System.err.println("[DEBUG] output file missing: "+fs.getPath());
-                    return false;
-                }
-                if (isChanged(fs.getLastModified(), f.lastModified())) {
-                    System.err.println("[DEBUG] output file age mismatch. existing:"+f.lastModified()+"; prev:"+fs.getLastModified());
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean isChanged(long lastModified0, long lastModified1) {
-        return Math.abs(lastModified0-lastModified1) >= 1000;
-    }
-
-    private Map<String, FileList> getOutputFileLists(Build build, TaskState task) throws LensfieldException {
-        Map<String,FileList> outputFileLists = new HashMap<String, FileList>();
-        for (Output output : build.getOutputs()) {
-            String name = output.getName();
-            if (name == null) {
-                OutputDescription outd = task.getDefaultOutput();
-                if (outd == null) {
-                    throw new LensfieldException();
-                }
-                name = outd.getName();
-            }
-            outputFileLists.put(name, new FileList(new Glob(output.getValue())));
-        }
-        return outputFileLists;
-    }
-
-
-    private Map<String, FileList> getInputs(Build build, TaskState task) throws LensfieldException {
-        Map<String,FileList> map = new HashMap<String, FileList>();
-        for (Input input : build.getInputs()) {
-            String name = input.getName();
-            if (name == null) {
-                InputDescription inpd = task.getDefaultInput();
-                if (inpd == null) {
-                    throw new LensfieldException();
-                }
-                name = inpd.getName();
-            }
-            map.put(name, stateFileLists.get(input.getStep()));
-        }
-        return map;
-    }
-
-
-    private Glob[] getGlobs(Collection<FileList> fileLists) {
-        Glob[] globs = new Glob[fileLists.size()];
-        int i = 0;
-        for (FileList fl : fileLists) {
-            globs[i++] = fl.getGlob();
-        }
-        return globs;
-    }
-
-    private void run(TaskState task, List<InputFileSet> inputList, Map<String, FileList> outputFileLists) throws Exception {
-
-        ProcessRunner procBuilder = new ProcessRunner(task);
-        procBuilder.setTmpdir(tmpdir);
-        procBuilder.setRoot(root);
-        procBuilder.setLogger(new TaskLogger(task.getId(), LOG));
-        procBuilder.setBuildLog(buildLog);
-
-        TaskState prevTask = null;
-        if (!task.isUpdated()) {
-            if (prevBuildState != null) {
-                prevTask = prevBuildState.getTask(task.getId());
-            }
-        }
-
-        for (InputFileSet inputs : inputList) {
-            // TODO grouped input/outputs
-            if (prevTask != null) {
-                // Get sample filename
-                String fn = inputs.getMap().values().iterator().next().iterator().next().getPath();
-                // Get relevant operation
-                Operation prevOp = prevTask.getInputOperationMap().get(fn);
-                if (prevOp != null) {
-                    if (isUpToDate(inputs.getMap(), prevOp)) {
-                        buildLog.process(task.getId(), inputs.getMap(), prevOp.getOutputFiles());
-                        for (Map.Entry<String, List<FileState>> e : prevOp.getOutputFiles().entrySet()) {
-                            String name = e.getKey();
-                            List<FileState> files = e.getValue();
-                            FileList fileList = outputFileLists.get(name);
-                            for (FileState f : files) {
-                                fileList.addFile(f);
-                            }
-                            stateFileLists.put(task.getId()+(outputFileLists.size()==1?"":"/"+name), fileList);
-                        }
-                        continue;
-                    }
-                }
-            }
-
-            procBuilder.runProcess(inputs, outputFileLists);
-
-        }
-
-
-
-        for (Map.Entry<String,FileList> e : outputFileLists.entrySet()) {
-            String name = e.getKey();
-            FileList files = e.getValue();
-            stateFileLists.put(task.getId() + (outputFileLists.size()==1?"":"/"+name), files);
-        }
-
+        
     }
 
 
     protected void checkBuildStepsExist() throws LensfieldException {
         LOG.info("Checking build steps");
         for (Build step : model.getBuilds()) {
-            for (Input input : step.getInputs()) {
-                if (model.getProcess(input.getStep()) == null) {
+            for (org.lensfield.model.Input input : step.getInputs()) {
+                String proc = input.getStep();
+                if (proc.indexOf('/') != -1) {
+                    int i = proc.indexOf('/');
+                    proc = proc.substring(0, i);
+                }
+                if (model.getProcess(proc) == null) {
                     throw new ConfigurationException("Undefined input '"+input.getName()+"' on step '"+step.getName()+"'");
                 }
             }
@@ -588,10 +429,14 @@ public class Lensfield {
     }
 
 
-    private void processBuildSteps(List<Process> buildOrder) throws Exception {
-        for (Process step: buildOrder) {
+    private void processBuildSteps(List<org.lensfield.model.Process> buildOrder) throws Exception {
+
+        for (org.lensfield.model.Process step: buildOrder) {
             build(step);
         }
+
+//        reactor.run();
+
     }
 
 
@@ -601,6 +446,32 @@ public class Lensfield {
 
     public void setOffline(boolean offline) {
         this.offline = offline;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+
+        Model model = new Model();
+        model.addSource(new Source("files", "n/**/*.n"));
+        model.addBuild(new Build("copy1", "org.apache.commons.io.IOUtils/copy", "files", "x/**/*.txt"));
+        model.addBuild(new Build("copy2", "org.apache.commons.io.IOUtils/copy", "files", "y/**/*.txt"));
+        Build b = new Build("merge", "org.lensfield.testing.ops.file.Joiner", "copy1", "z/**/x.txt");
+        b.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addBuild(b);
+
+        File root = new File("./workspace/");
+        Lensfield lf = new Lensfield(model, root);
+        lf.build();
+
+    }
+
+
+    public File getRootDir() {
+        return root;
+    }
+
+    public File getTmpDir() {
+        return tmpdir;
     }
 
 }

@@ -3,48 +3,37 @@
  */
 package org.lensfield.state;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author sea36
  */
 public class BuildState {
 
-    private Map<String,TaskState> taskMap = new HashMap<String,TaskState>();
+    private Map<String, Process> taskMap = new HashMap<String, Process>();
     private long started = System.currentTimeMillis();
-
-    private Map<String,FileState> outputFileMap = new HashMap<String, FileState>();    
 
     public long getStarted() {
         return started;
     }
 
-    public void addTask(TaskState task) {
+    public void addTask(Process task) {
         taskMap.put(task.getId(), task);
     }
 
-    public TaskState getTask(String id) {
+    public Process getTask(String id) {
         return taskMap.get(id);
     }
 
-    public List<TaskState> getTasks() {
-        return new ArrayList<TaskState>(taskMap.values());
+    public List<Process> getTasks() {
+        return new ArrayList<Process>(taskMap.values());
     }
 
     public void setStarted(long started) {
         this.started = started;
-    }
-
-
-
-    public void addFiles(Collection<FileState> files) {
-        for (FileState f : files) {
-            outputFileMap.put(f.getPath(),f);
-        }
-    }
-
-    public Map<String, FileState> getOutputFiles() {
-        return outputFileMap;
     }
 
 }

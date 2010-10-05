@@ -6,7 +6,7 @@ package org.lensfield.model;
 /**
  * @author sea36
  */
-public class Parameter extends Resource {
+public class Parameter extends Socket {
 
     private final String value;
 

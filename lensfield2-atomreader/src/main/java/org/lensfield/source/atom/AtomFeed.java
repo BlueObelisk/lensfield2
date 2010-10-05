@@ -8,11 +8,10 @@ import nu.xom.Serializer;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.Logger;
+import org.lensfield.concurrent.Resource;
 import org.lensfield.glob.Glob;
 import org.lensfield.glob.MissingParameterException;
 import org.lensfield.model.Parameter;
-import org.lensfield.source.ISource;
-import org.lensfield.state.FileState;
 import uk.ac.cam.ch.atomxom.feeds.DefaultFeedHandler;
 import uk.ac.cam.ch.atomxom.feeds.FeedCache;
 import uk.ac.cam.ch.atomxom.model.AtomEntry;
@@ -29,19 +28,19 @@ import java.util.Map;
 /**
  * @author sea36
  */
-public class AtomFeed implements ISource {
+public class AtomFeed {
 
     private File root;
     private Glob glob;
-    private List<FileState> fileList;
+    private List<Resource> fileList;
 
     private String url;
     private String cacheDir = ".lf/feedcache";
     private int splitDirs = 1;
     private int maxEntries = -1;
 
-    public synchronized List<FileState> run() throws Exception {
-        fileList = new ArrayList<FileState>();
+    public synchronized List<Resource> run() throws Exception {
+        fileList = new ArrayList<Resource>();
 
         FeedCache cache = new FeedCache();
         cache.setHandler(new Handler());
@@ -81,7 +80,7 @@ public class AtomFeed implements ISource {
                 } finally {
                     out.close();
                 }
-                FileState fs = new FileState(path, file.lastModified(), params);
+                Resource fs = new Resource(path, file.lastModified(), params);
                 fileList.add(fs);
             } catch (IOException e) {
                 throw new RuntimeException(e);

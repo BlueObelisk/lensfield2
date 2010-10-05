@@ -4,12 +4,9 @@
 package org.lensfield.log;
 
 import org.apache.log4j.Logger;
-import org.lensfield.build.ParameterDescription;
-import org.lensfield.state.BuildState;
-import org.lensfield.state.DependencyState;
-import org.lensfield.state.FileState;
-import org.lensfield.state.Operation;
-import org.lensfield.state.TaskState;
+import org.lensfield.concurrent.Resource;
+import org.lensfield.state.*;
+import org.lensfield.state.Process;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -86,7 +83,7 @@ public class BuildStateReader {
 
     private void readOp() throws IOException, ParseException {
         String taskName = readToken();
-        TaskState task = build.getTask(taskName);
+        org.lensfield.state.Process task = build.getTask(taskName);
 
         // Read inputs
         skipWhitespace();
@@ -96,7 +93,7 @@ public class BuildStateReader {
         ch = in.read();
         skipWhitespace();
 
-        Map<String,List<FileState>> inputFiles = null;
+        Map<String,List<Resource>> inputFiles = null;
         if (ch == ')') {
             inputFiles = Collections.emptyMap();
         } else {
@@ -104,18 +101,19 @@ public class BuildStateReader {
             String inpname = readToken();
             skipWhitespace();
             do {
-                List<FileState> inpfiles;
+                List<Resource> inpfiles = Collections.emptyList();
+                // TODO
                 if (ch == '(') {
                     ch = in.read();
                     skipWhitespace();
                     List<String> inpFileNames = readFileNameList();
-                    inpfiles = new ArrayList<FileState>(inpFileNames.size());
+                    inpfiles = new ArrayList<Resource>(inpFileNames.size());
                     for (String path : inpFileNames) {
-                        inpfiles.add(build.getOutputFiles().get(path));
+//                        inpfiles.add(build.getOutputFiles().get(path));
                     }
                 } else {
                     String path = readToken();
-                    inpfiles = Collections.singletonList(build.getOutputFiles().get(path));
+//                    inpfiles = Collections.singletonList(build.getOutputFiles().get(path));
                 }
                 skipWhitespace();
                 if (first) {
@@ -123,7 +121,7 @@ public class BuildStateReader {
                         inputFiles = Collections.singletonMap(inpname,inpfiles);
                         break;
                     } else {
-                        inputFiles = new HashMap<String, List<FileState>>();
+                        inputFiles = new HashMap<String, List<Resource>>();
                     }
                     first = false;
                 }
@@ -141,7 +139,7 @@ public class BuildStateReader {
         ch = in.read();
         skipWhitespace();
 
-        Map<String,List<FileState>> outputFiles = null;
+        Map<String,List<Resource>> outputFiles = null;
         if (ch == ')') {
             outputFiles = Collections.emptyMap();
         } else {
@@ -149,7 +147,7 @@ public class BuildStateReader {
             do {
                 String outpname = readToken();
                 skipWhitespace();
-                List<FileState> outpfiles;
+                List<Resource> outpfiles;
                 if (ch == '(') {
                     ch = in.read();
                     skipWhitespace();
@@ -159,7 +157,7 @@ public class BuildStateReader {
                         throw new IOException();
                     }
                     ch = in.read();
-                    outpfiles = Collections.singletonList(readFileState());
+                    outpfiles = Collections.singletonList(readResource());
                 }
                 skipWhitespace();
                 if (first) {
@@ -167,7 +165,7 @@ public class BuildStateReader {
                         outputFiles = Collections.singletonMap(outpname,outpfiles);
                         break;
                     } else {
-                        outputFiles = new HashMap<String, List<FileState>>();
+                        outputFiles = new HashMap<String, List<Resource>>();
                     }
                     first = false;
                 }
@@ -177,11 +175,13 @@ public class BuildStateReader {
         ch = in.read();
         skipWhitespace();
 
-        Operation op = new Operation(inputFiles, outputFiles);
-        task.addOperation(op);
-        for (List<FileState> files : op.getOutputFiles().values()) {
-            build.addFiles(files);
-        }
+        // TODO
+
+//        Operation op = new Operation(inputFiles, outputFiles);
+//        task.addOperation(op);
+//        for (List<Resource> files : op.getOutputFiles().values()) {
+//            build.addFiles(files);
+//        }
     }
 
     private List<String> readFileNameList() throws IOException {
@@ -198,8 +198,8 @@ public class BuildStateReader {
         return files;
     }
 
-    private List<FileState> readFileList() throws IOException, ParseException {
-        List<FileState> files = new ArrayList<FileState>();
+    private List<Resource> readFileList() throws IOException, ParseException {
+        List<Resource> files = new ArrayList<Resource>();
         while (ch != ')') {
             if (ch == EOF) {
                 throw new EOFException();
@@ -208,7 +208,7 @@ public class BuildStateReader {
                 throw new IOException();
             }
             ch = in.read();
-            files.add(readFileState());
+            files.add(readResource());
             skipWhitespace();
         }
         ch = in.read();
@@ -217,28 +217,28 @@ public class BuildStateReader {
 
     private void readSource() throws IOException, ParseException {
         String name = readToken();
-        TaskState task = new TaskState(name);
+        Process task = new Process(name, null);
         skipWhitespace();
         if (ch != '(') {
             throw new IOException("Error! ["+((char)ch)+']');
         }
         ch = in.read();
         skipWhitespace();
-        List<FileState> files = new ArrayList<FileState>();
+        List<Resource> files = new ArrayList<Resource>();
         while (ch != ')') {
             if (ch != '[') {
                 throw new IOException();
             }
             ch = in.read();
-            files.add(readFileState());
+            files.add(readResource());
             skipWhitespace();
         }
         ch = in.read();
         build.addTask(task);
-        build.addFiles(files);
+//        build.addFiles(files);    TODO
     }
 
-    private FileState readFileState() throws IOException, ParseException {
+    private Resource readResource() throws IOException, ParseException {
         skipWhitespace();
         String path = readToken();
         skipWhitespace();
@@ -253,7 +253,7 @@ public class BuildStateReader {
             params.put(param, value);
         }
         ch = in.read();
-        return new FileState(path, lastModified, params);
+        return new Resource(path, lastModified, params);
     }
 
     private void readTask() throws IOException, ParseException {
@@ -266,7 +266,7 @@ public class BuildStateReader {
         String timestamp = readToken();
         skipWhitespace();
 
-        TaskState task = new TaskState(name);
+        Process task = new Process(name, null);
         task.setClassName(clazz);
         task.setLastModified(BuildLogger.DATE_FORMAT.parse(timestamp).getTime());
 
@@ -293,7 +293,7 @@ public class BuildStateReader {
         build.addTask(task);
     }
 
-    private void readParameters(TaskState task) throws IOException {
+    private void readParameters(Process task) throws IOException {
         skipWhitespace();
         while (ch != ')') {
             if (ch == EOF) {
@@ -308,7 +308,7 @@ public class BuildStateReader {
         }
     }
 
-    private void readParameter(TaskState task) throws IOException {
+    private void readParameter(Process task) throws IOException {
         skipWhitespace();
         String name = readToken();
         skipWhitespace();
@@ -318,10 +318,10 @@ public class BuildStateReader {
             throw new IOException("Expected: ']'; found: '"+((char)ch)+"'");
         }
         ch = in.read();
-        task.addParameter(new ParameterDescription(name, value));
+        task.addParameter(new Parameter(name, value));
     }
 
-    private void readDependencies(TaskState task) throws IOException, ParseException {
+    private void readDependencies(Process task) throws IOException, ParseException {
         skipWhitespace();
         while (ch != ')') {
             if (ch == EOF) {
@@ -336,7 +336,7 @@ public class BuildStateReader {
         }
     }
 
-    private void readDependency(TaskState task) throws IOException, ParseException {
+    private void readDependency(Process task) throws IOException, ParseException {
         skipWhitespace();
         String id = readToken();
         skipWhitespace();
@@ -346,7 +346,7 @@ public class BuildStateReader {
             throw new IOException("Expected: ']'; found: '"+((char)ch)+"'");
         }
         ch = in.read();
-        task.addDependency(new DependencyState(id, BuildLogger.DATE_FORMAT.parse(ts).getTime()));
+        task.addDependency(new Dependency(id, BuildLogger.DATE_FORMAT.parse(ts).getTime()));
     }
 
     private void readBuildStarted() throws IOException, ParseException {

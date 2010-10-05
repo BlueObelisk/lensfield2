@@ -3,15 +3,15 @@ package org.lensfield.model;
 /**
  * @author sea36
  */
-public abstract class Resource {
+public abstract class Socket {
 
     private final String name;
 
-    protected Resource() {
+    protected Socket() {
         this.name = null;
     }
 
-    protected Resource(String name) {
+    protected Socket(String name) {
         this.name = name;
     }
 

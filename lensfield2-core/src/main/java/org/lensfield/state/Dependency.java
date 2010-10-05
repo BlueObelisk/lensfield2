@@ -8,19 +8,19 @@ import java.io.File;
 /**
  * @author sea36
  */
-public class DependencyState {
+public class Dependency {
 
     private String id;
     private long lastModified;
 
     private transient File file;
 
-    public DependencyState(String id, long lastModified) {
+    public Dependency(String id, long lastModified) {
         this.id = id;
         this.lastModified = lastModified;
     }
 
-    public DependencyState(String id, File file) {
+    public Dependency(String id, File file) {
         this.id = id;
         this.file = file;
         this.lastModified = file.lastModified();

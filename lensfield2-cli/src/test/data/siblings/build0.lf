@@ -1,0 +1,29 @@
+
+(source
+  zips    **/EPO-*.zip)
+
+(build
+  unzipped      foo.Unzipper
+  :input  zips
+  :output **/EPO-*/{$zipentry})
+
+(filter
+  patents
+  :input  unzipped
+  :filter **/EPO-*/patent.xml)
+
+(filter
+  tiffs
+  :input  unzipped
+  :filter **/EPO-*/tiff/tif{i}.tif)
+
+(build
+  full-patents  foo.PatentConverter
+  :input  patents + other-patents
+  :output **/EPO-*/patent-full.xml)
+
+
+(build
+  results       foo.PatentHarvester
+  :input  full-patents
+  :output results.xml)

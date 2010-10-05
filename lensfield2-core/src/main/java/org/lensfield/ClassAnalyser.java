@@ -6,12 +6,11 @@ package org.lensfield;
 import org.lensfield.api.LensfieldInput;
 import org.lensfield.api.LensfieldOutput;
 import org.lensfield.api.LensfieldParameter;
-import org.lensfield.build.InputDescription;
-import org.lensfield.build.OutputDescription;
-import org.lensfield.build.ParameterDescription;
 import org.lensfield.model.Build;
-import org.lensfield.model.Parameter;
-import org.lensfield.state.TaskState;
+import org.lensfield.state.Input;
+import org.lensfield.state.Output;
+import org.lensfield.state.Parameter;
+import org.lensfield.state.Process;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,27 +27,26 @@ public class ClassAnalyser {
     private static boolean DEBUG = false;
 
     private Class<?> clazz;
-    private TaskState task;
+    private Process task;
 
-    public ClassAnalyser(TaskState task, Class<?> clazz) throws ClassNotFoundException {
+    private ClassAnalyser(org.lensfield.state.Process task, Class<?> clazz) throws ClassNotFoundException {
         this.task = task;
         this.clazz = clazz;
     }
 
-    public static void analyseClass(Build build, TaskState task) throws Exception {
+    public static void analyseClass(Build build, Process task) throws Exception {
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         ClassLoader classLoader = task.createClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
         try {
             Class<?> clazz = classLoader.loadClass(task.getClassName());
-//            DebugClassLoader.debug(clazz);
             ClassAnalyser ca = new ClassAnalyser(task, clazz);
             ca.analyseClass(build);
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
         }
-        
+
     }
 
     public void analyseClass(Build build) throws Exception {
@@ -71,7 +69,6 @@ public class ClassAnalyser {
         if (DEBUG) System.err.println("CLASS: "+clazz.getName());
     }
 
-
     private void findRunMethod() {
         findRunMethod(clazz);
     }
@@ -79,21 +76,13 @@ public class ClassAnalyser {
     private boolean findRunMethod(Class<?> clazz) {
         for (Method method : clazz.getDeclaredMethods()) {
             if (task.getMethodName().equals(method.getName())) {
-                Class<?>[] parameterTypes = method.getParameterTypes();
-                if (parameterTypes.length == 0) {
-                    task.setMethod(method, true);
-                    if (DEBUG) System.err.println(method);
+                if (isNoArgsRunMethod(method)) {
+                    registerNoArgsRunMethod(method);
                     return true;
                 }
-                if (parameterTypes.length == 2) {
-                    if ( InputStream.class.isAssignableFrom(parameterTypes[0])
-                            && OutputStream.class.isAssignableFrom(parameterTypes[1])) {
-                        task.setMethod(method, false);
-                        task.addInput(new InputDescription(parameterTypes[0]));
-                        task.addOutput(new OutputDescription(task, parameterTypes[1]));
-                        if (DEBUG) System.err.println(method);
-                        return true;
-                    }
+                if (isArgsRunMethod(method)) {
+                    registerArgsRunMethod(method);
+                    return true;
                 }
             }
         }
@@ -104,6 +93,25 @@ public class ClassAnalyser {
         return false;
     }
 
+    private void registerArgsRunMethod(Method method) {
+        task.setMethod(method, false);
+        task.addInput(new Input(task));
+        task.addOutput(new Output(task));
+    }
+
+    private boolean isArgsRunMethod(Method method) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        return parameterTypes.length == 2 && InputStream.class.isAssignableFrom(parameterTypes[0]) && OutputStream.class.isAssignableFrom(parameterTypes[1]);
+    }
+
+    private void registerNoArgsRunMethod(Method method) {
+        task.setMethod(method, true);
+        if (DEBUG) System.err.println(method);
+    }
+
+    private boolean isNoArgsRunMethod(Method method) {
+        return method.getParameterTypes().length == 0;
+    }
 
 
     private void analyseFields() throws LensfieldException {
@@ -142,28 +150,28 @@ public class ClassAnalyser {
     }
 
 
-    private static void addInput(TaskState task, Field f) throws LensfieldException {
+    private static void addInput(Process task, Field f) throws LensfieldException {
         if (!task.isNoArgs()) {
             throw new LensfieldException("@LensfieldInput fields require no-args run method");
         }
         LensfieldInput annot = f.getAnnotation(LensfieldInput.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addInput(new InputDescription(f, n));
+        task.addInput(new Input(task, f, n));
     }
 
-    private static void addOutput(TaskState task, Field f) throws LensfieldException {
+    private static void addOutput(Process task, Field f) throws LensfieldException {
         if (!task.isNoArgs()) {
             throw new LensfieldException("@LensfieldOutput fields require no-args run method");
         }
         LensfieldOutput annot = f.getAnnotation(LensfieldOutput.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addOutput(new OutputDescription(task, f, n));
+        task.addOutput(new Output(task, f, n));
     }
 
-    private static void addParameter(TaskState task, Field f) {
+    private static void addParameter(Process task, Field f) {
         LensfieldParameter annot = f.getAnnotation(LensfieldParameter.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addParameter(new ParameterDescription(f, n, null, !annot.optional()));
+        task.addParameter(new Parameter(f, n, null, !annot.optional()));
     }
 
 
@@ -171,20 +179,20 @@ public class ClassAnalyser {
     private void setParameterValues(Build build) throws LensfieldException {
         if (task.getParameters().size() == 1) {
             if (build.getParameters().size() == 1) {
-                Parameter p = build.getParameters().get(0);
+                org.lensfield.model.Parameter p = build.getParameters().get(0);
                 if (p.getName() == null) {
                     build.getParameters().clear();
-                    build.getParameters().add(new Parameter(task.getParameters().get(0).getName(), p.getValue()));
+                    build.getParameters().add(new org.lensfield.model.Parameter(task.getParameters().get(0).getName(), p.getValue()));
                 }
             }
         }
 
         Map<String,String> paramMap = new HashMap<String, String>();
-        for (Parameter param : build.getParameters()) {
+        for (org.lensfield.model.Parameter param : build.getParameters()) {
             // TODO check for duplicates
             paramMap.put(param.getName(), param.getValue());
         }
-        for (ParameterDescription param : task.getParameters()) {
+        for (Parameter param : task.getParameters()) {
             if (paramMap.containsKey(param.getName())) {
                 param.setValue(paramMap.get(param.getName()));
             } else {

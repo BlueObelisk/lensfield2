@@ -168,8 +168,6 @@ public class Glob {
 
         GlobSegment seg = new GlobSegment(glob.substring(segStart), Pattern.compile(segPattern.toString()), wildcardSeg, wildcardDir, true);
         segments.add(seg);
-//        System.err.println(pattern.toString());
-//        System.err.println(formatPattern.toString());
 
         if (IOCase.SYSTEM.isCaseSensitive()) {
             this.pattern = Pattern.compile(pattern.toString());

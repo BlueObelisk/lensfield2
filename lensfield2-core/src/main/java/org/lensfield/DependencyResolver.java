@@ -27,11 +27,9 @@ import org.codehaus.plexus.classworlds.ClassWorld;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.lensfield.api.LensfieldInput;
 import org.lensfield.model.Build;
-import org.lensfield.model.Dependency;
 import org.lensfield.model.Model;
-import org.lensfield.state.BuildState;
-import org.lensfield.state.DependencyState;
-import org.lensfield.state.TaskState;
+import org.lensfield.state.*;
+import org.lensfield.state.Process;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -95,11 +93,11 @@ public class DependencyResolver {
     }
 
 
-    private ListMultimap<Integer, Artifact> resolveDependencies(Collection<Dependency> dependencies) throws InvalidRepositoryException, LensfieldException, MalformedURLException {
+    private ListMultimap<Integer, Artifact> resolveDependencies(Collection<org.lensfield.model.Dependency> dependencies) throws InvalidRepositoryException, LensfieldException, MalformedURLException {
 
         ListMultimap<Integer,Artifact> map = ArrayListMultimap.create();
 
-        for (Dependency dependency : dependencies) {
+        for (org.lensfield.model.Dependency dependency : dependencies) {
 
             // --- This magic from m2elipse/internal.embedder.MavenImpl.resolve() ---
             Artifact artifact = repositorySystem.createArtifact(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), "compile", "jar");
@@ -109,7 +107,7 @@ public class DependencyResolver {
             request.setArtifact(artifact);
             request.setResolveTransitively(true);
             request.setForceUpdate(forceUpdate);
-            request.setOffline(offline);
+            request.setOffline(isOffline());
 
             request.setTransferListener(new AbstractMavenTransferListener(System.err) {});
 
@@ -122,14 +120,6 @@ public class DependencyResolver {
 
             map.putAll(0, result.getArtifacts());
 
-//            if (result.getOriginatingArtifact() != null) {
-//                map.put(0, result.getOriginatingArtifact());
-//            }
-//            for (ResolutionNode node : result.getArtifactResolutionNodes()) {
-//                if (node.getArtifact() != null) {
-//                    map.put(node.getDepth(), node.getArtifact());
-//                }
-//            }
         }
 
         return map;
@@ -138,8 +128,6 @@ public class DependencyResolver {
 
     private ArtifactRepository getLocalRepository() throws InvalidRepositoryException {
         File localRepo;
-//        LOG.debug("sys.M2REPO: "+System.getProperty("m2.repo"));
-//        LOG.debug("env.M2REPO: "+System.getenv("M2_REPO"));
         if (System.getProperty("m2.repo") != null) {
             localRepo = new File(System.getProperty("m2.repo"));
         }
@@ -151,7 +139,6 @@ public class DependencyResolver {
         } else {
             localRepo = RepositorySystem.defaultUserLocalRepository;
         }
-//        LOG.info("Local repository: "+localRepo.getPath());
         return repositorySystem.createLocalRepository(localRepo);
     }
 
@@ -159,18 +146,11 @@ public class DependencyResolver {
     private List<ArtifactRepository> getRemoteRepositories() {
         ArrayList<ArtifactRepository> repositories = new ArrayList<ArtifactRepository>();
 
-//        for(Profile profile : getActiveProfiles()) {
-//          addArtifactRepositories(repositories, profile.getRepositories());
-//        }
-
         for (ArtifactRepository repo : remoteRepositories) {
             repositories.add(repo);
         }
 
         addDefaultRepository(repositories);
-
-//        injectSettings(repositories);
-//        removeDuplicates(repositories);
 
         return repositories;
     }
@@ -185,56 +165,9 @@ public class DependencyResolver {
         try {
             repositories.add(0, repositorySystem.createDefaultRemoteRepository());
         } catch(InvalidRepositoryException ex) {
-//            MavenLogger.log("Unexpected exception", ex);
             ex.printStackTrace();
         }
     }
-
-
-//  private void injectSettings(ArrayList<ArtifactRepository> repositories) throws CoreException {
-//    Settings settings = getSettings();
-//
-//    repositorySystem.injectMirror(repositories, getMirrors());
-//    repositorySystem.injectProxy(repositories, settings.getProxies());
-//    repositorySystem.injectAuthentication(repositories, settings.getServers());
-//  }
-
-
-//
-//  private List<ArtifactRepository> removeDuplicateRepositories(ArrayList<ArtifactRepository> repositories) {
-//    ArrayList<ArtifactRepository> result = new ArrayList<ArtifactRepository>();
-//
-//    HashSet<String> keys = new HashSet<String>();
-//    for (ArtifactRepository repository : repositories) {
-//      StringBuilder key = new StringBuilder();
-//      if (repository.getId() != null) {
-//        key.append(repository.getId());
-//      }
-//      key.append(':').append(repository.getUrl()).append(':');
-//      if (repository.getAuthentication() != null && repository.getAuthentication().getUsername() != null) {
-//        key.append(repository.getAuthentication().getUsername());
-//      }
-//      if (keys.add(key.toString())) {
-//        result.add(repository);
-//      }
-//    }
-//    return result;
-//  }
-//
-//
-//
-//  private void addArtifactRepositories(ArrayList<ArtifactRepository> artifactRepositories, List<Repository> repositories) throws CoreException {
-//    for(Repository repository : repositories) {
-//      try {
-//        ArtifactRepository artifactRepository = repositorySystem.buildArtifactRepository(repository);
-//        artifactRepositories.add(artifactRepository);
-//      } catch(InvalidRepositoryException ex) {
-//        throw new CoreException(new Status(IStatus.ERROR, IMavenConstants.PLUGIN_ID, -1, "Could not read settings.xml",
-//            ex));
-//      }
-//    }
-//  }
-
 
     public void configureDependencies(Model model, BuildState buildState) throws Exception {
 
@@ -242,22 +175,22 @@ public class DependencyResolver {
         ListMultimap<Integer,Artifact> globalDependencies = resolveDependencies(model.getDependencies());
         for (Build build : model.getBuilds()) {
             System.err.println("[DEBUG] Resolving dependencies for: "+build.getName());
-            TaskState task = buildState.getTask(build.getName());
+            Process task = buildState.getTask(build.getName());
             configureDependencies(build, task, globalDependencies);
         }
 
     }
 
-    private void configureDependencies(Build build, TaskState task, ListMultimap<Integer,Artifact> globalDependencies)  throws Exception {
+    private void configureDependencies(Build build, Process task, ListMultimap<Integer,Artifact> globalDependencies)  throws Exception {
         ListMultimap<Integer,Artifact> buildDependencies = resolveDependencies(build.getDependencies());
         buildDependencies.putAll(globalDependencies);
         List<Artifact> dependencyList = getDependencyList(buildDependencies);
         updateBuildState(task, dependencyList);
     }
 
-    private void updateBuildState(TaskState task, List<Artifact> dependencyList) throws Exception {
+    private void updateBuildState(org.lensfield.state.Process task, List<Artifact> dependencyList) throws Exception {
         for (Artifact artifact : dependencyList) {
-            DependencyState dependency = new DependencyState(artifact.getId(), artifact.getFile());
+            Dependency dependency = new Dependency(artifact.getId(), artifact.getFile());
             task.addDependency(dependency);
         }
         URL[] urls = getUrls(dependencyList);
@@ -271,7 +204,6 @@ public class DependencyResolver {
         for (Integer depth : depthList) {
             dependencyList.addAll(dependencyMap.get(depth));
         }
-//        System.err.println(dependencyList);
         return new ArrayList<Artifact>(dependencyList);
     }
 
@@ -303,7 +235,7 @@ public class DependencyResolver {
     }
 
 
-    public ClassLoader createClassLoader(List<Dependency> dependencies) throws Exception {
+    public ClassLoader createClassLoader(List<org.lensfield.model.Dependency> dependencies) throws Exception {
         ListMultimap<Integer,Artifact> buildDependencies = resolveDependencies(dependencies);
         List<Artifact> dependencyList = getDependencyList(buildDependencies);
 

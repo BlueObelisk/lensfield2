@@ -3,11 +3,7 @@
  */
 package org.lensfield.log;
 
-import org.lensfield.build.ParameterDescription;
-import org.lensfield.state.BuildState;
-import org.lensfield.state.DependencyState;
-import org.lensfield.state.FileState;
-import org.lensfield.state.TaskState;
+import org.lensfield.state.*;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -60,7 +56,7 @@ public class BuildLogger {
 
 
     public void recordTasks(BuildState buildState) {
-        for (TaskState task : buildState.getTasks()) {
+        for (org.lensfield.state.Process task : buildState.getTasks()) {
             if (task.getInputs().isEmpty()) {
                 // source
                 continue;
@@ -75,7 +71,7 @@ public class BuildLogger {
             out.print(DATE_FORMAT.format(new Date(task.getLastModified())));
             if (!task.getParameters().isEmpty()) {
                 out.print(" (params ");
-                for (ParameterDescription param : task.getParameters()) {
+                for (Parameter param : task.getParameters()) {
                     if (param.getValue() != null) {
                         writeList(param.getName(), param.getValue());
                     }
@@ -84,7 +80,7 @@ public class BuildLogger {
             }
             if (!task.getDependencyList().isEmpty()) {
                 out.print(" (depends ");
-                for (DependencyState depend : task.getDependencyList()) {
+                for (Dependency depend : task.getDependencyList()) {
                     String timestamp = DATE_FORMAT.format(new Date(depend.getLastModified()));
                     writeList(depend.getId(), timestamp);
                 }
@@ -94,15 +90,15 @@ public class BuildLogger {
         }
     }
 
-    public void process(String name, List<FileState> files) {
-        out.print("(source ");
-        out.print(name);
-        out.print("(");
-        for (FileState output : files) {
-            writeList(output.getPath(), DATE_FORMAT.format(output.getLastModified()));
-        }
-        out.println("))");
-    }
+//    public void process(String name, List<FileState> files) {
+//        out.print("(source ");
+//        out.print(name);
+//        out.print("(");
+//        for (FileState output : files) {
+//            writeList(output.getPath(), DATE_FORMAT.format(output.getLastModified()));
+//        }
+//        out.println("))");
+//    }
 
 
 
@@ -166,80 +162,80 @@ public class BuildLogger {
         return false;
     }
 
-    public <IF extends FileState, OF extends FileState> void process(String name, Map<String, Collection<IF>> input, Map<String, List<OF>> output) {
-        out.print("(op ");
-        out.print(name);
-        out.print("(");
-        writeInputFiles(input);
-        out.print(")(");
-        writeOutputFiles(output);
-        out.println("))");
-    }
-
-    private <FS extends FileState> void writeInputFiles(Map<String, Collection<FS>> map) {
-        for (Iterator<Map.Entry<String,Collection<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
-            Map.Entry<String, Collection<FS>> e = it.next();
-            out.print(e.getKey());
-            out.print(' ');
-            Collection<FS> files = e.getValue();
-            if (files.size() == 1) {
-                FileState f = files.iterator().next();
-                writeToken(f.getPath());
-            } else {
-                out.print('(');
-                for (Iterator<FS> itx = files.iterator(); itx.hasNext();) {
-                    FileState f = itx.next();
-                    writeToken(f.getPath());
-                    if (itx.hasNext()) {
-                        out.print(' ');
-                    }
-                }
-                out.print(')');
-            }
-            if (it.hasNext()) {
-                out.print(' ');
-            }
-        }
-    }
-
-    private <FS extends FileState> void writeOutputFiles(Map<String, List<FS>> map) {
-        for (Iterator<Map.Entry<String,List<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
-            Map.Entry<String, List<FS>> e = it.next();
-            out.print(e.getKey());
-            out.print(' ');
-            List<FS> files = e.getValue();
-            if (files.size() == 1) {
-                FileState f = files.get(0);
-                String[] x = new String[2+2*f.getParams().size()];
-                x[0] = f.getPath();
-                x[1] = DATE_FORMAT.format(f.getLastModified());
-                int i = 2;
-                for (Map.Entry<String,String> p : f.getParams().entrySet()) {
-                    x[i++] = p.getKey();
-                    x[i++] = p.getValue();
-                }
-                writeList(x);
-//                writeList(f.getPath(), dateFormat.format(f.getLastModified()));
-            } else {
-                out.print('(');
-                for (FS f : files) {
-                    String[] x = new String[2+2*f.getParams().size()];
-                    x[0] = f.getPath();
-                    x[1] = DATE_FORMAT.format(f.getLastModified());
-                    int i = 2;
-                    for (Map.Entry<String,String> p : f.getParams().entrySet()) {
-                        x[i++] = p.getKey();
-                        x[i++] = p.getValue();
-                    }
-                    writeList(x);
-                }
-                out.print(')');
-            }
-            if (it.hasNext()) {
-                out.print(' ');
-            }
-        }
-    }
+//    public <IF extends FileState, OF extends FileState> void process(String name, Map<String, Collection<IF>> input, Map<String, List<OF>> output) {
+//        out.print("(op ");
+//        out.print(name);
+//        out.print("(");
+//        writeInputFiles(input);
+//        out.print(")(");
+//        writeOutputFiles(output);
+//        out.println("))");
+//    }
+//
+//    private <FS extends FileState> void writeInputFiles(Map<String, Collection<FS>> map) {
+//        for (Iterator<Map.Entry<String,Collection<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
+//            Map.Entry<String, Collection<FS>> e = it.next();
+//            out.print(e.getKey());
+//            out.print(' ');
+//            Collection<FS> files = e.getValue();
+//            if (files.size() == 1) {
+//                FileState f = files.iterator().next();
+//                writeToken(f.getPath());
+//            } else {
+//                out.print('(');
+//                for (Iterator<FS> itx = files.iterator(); itx.hasNext();) {
+//                    FileState f = itx.next();
+//                    writeToken(f.getPath());
+//                    if (itx.hasNext()) {
+//                        out.print(' ');
+//                    }
+//                }
+//                out.print(')');
+//            }
+//            if (it.hasNext()) {
+//                out.print(' ');
+//            }
+//        }
+//    }
+//
+//    private <FS extends FileState> void writeOutputFiles(Map<String, List<FS>> map) {
+//        for (Iterator<Map.Entry<String,List<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
+//            Map.Entry<String, List<FS>> e = it.next();
+//            out.print(e.getKey());
+//            out.print(' ');
+//            List<FS> files = e.getValue();
+//            if (files.size() == 1) {
+//                FileState f = files.get(0);
+//                String[] x = new String[2+2*f.getParams().size()];
+//                x[0] = f.getPath();
+//                x[1] = DATE_FORMAT.format(f.getLastModified());
+//                int i = 2;
+//                for (Map.Entry<String,String> p : f.getParams().entrySet()) {
+//                    x[i++] = p.getKey();
+//                    x[i++] = p.getValue();
+//                }
+//                writeList(x);
+////                writeList(f.getPath(), dateFormat.format(f.getLastModified()));
+//            } else {
+//                out.print('(');
+//                for (FS f : files) {
+//                    String[] x = new String[2+2*f.getParams().size()];
+//                    x[0] = f.getPath();
+//                    x[1] = DATE_FORMAT.format(f.getLastModified());
+//                    int i = 2;
+//                    for (Map.Entry<String,String> p : f.getParams().entrySet()) {
+//                        x[i++] = p.getKey();
+//                        x[i++] = p.getValue();
+//                    }
+//                    writeList(x);
+//                }
+//                out.print(')');
+//            }
+//            if (it.hasNext()) {
+//                out.print(' ');
+//            }
+//        }
+//    }
 
 
     private void writeList(String... list) {

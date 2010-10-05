@@ -31,7 +31,7 @@ public class InputMultiFile extends MultiStreamIn implements Input {
             return null;
         }
         InputFile f = inputs.get(i++);
-        log.debug("reading "+f.getPath());
+//        log.debug("reading "+f.getPath());
         return f;
     }
 

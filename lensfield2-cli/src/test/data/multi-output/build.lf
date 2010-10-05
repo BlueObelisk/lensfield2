@@ -1,0 +1,21 @@
+
+;
+; Include these maven artifacts in the build classpath
+;
+(depends
+    org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
+
+(source                             ; Define a file source
+    files           data.txt)
+
+
+(build
+    split     org.lensfield.testing.ops.file.Alternator
+    :input      files
+    :output     odd     odd.txt
+    :output     even    even.txt)
+
+(build
+    sum-odd     org.lensfield.testing.ops.number.Summer
+    :input      split/odd
+    :output     sum-odd.txt)

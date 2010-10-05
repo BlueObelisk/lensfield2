@@ -3,10 +3,8 @@
  */
 package org.lensfield.glob;
 
-import org.lensfield.state.FileState;
-
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -18,21 +16,21 @@ public class GlobMatch {
     private final String[] values;
     private int hash;
 
-    public GlobMatch(String[] groups, FileState file) {
-        this.groups = groups;
-        this.values = new String[groups.length];
-        for (int i = 0; i < groups.length; i++) {
-            values[i] = file.getParam(groups[i]);
-        }
-    }
+//    public GlobMatch(String[] groups, FileState file) {
+//        this.groups = groups;
+//        this.values = new String[groups.length];
+//        for (int i = 0; i < groups.length; i++) {
+//            values[i] = file.getParam(groups[i]);
+//        }
+//    }
 
-    public GlobMatch(String[] groups, String[] values) {
+    GlobMatch(String[] groups, String[] values) {
         this.groups = groups;
         this.values = values;
     }
 
     public Map<String,String> getMap() {
-        Map<String,String> map = new HashMap<String, String>();
+        Map<String,String> map = new LinkedHashMap<String, String>();
         for (int i = 0; i < groups.length; i++) {
             map.put(groups[i], values[i]);
         }
