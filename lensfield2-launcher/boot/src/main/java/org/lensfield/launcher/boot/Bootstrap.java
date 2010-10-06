@@ -47,8 +47,15 @@ public class Bootstrap {
             Thread.currentThread().setContextClassLoader(loader);
 
             // Launch app loader
-            Class<?> clazz = loader.loadClass("org.lensfield.launcher.load.Loader");
-            Method method = clazz.getMethod("main", String[].class);
+            Method method;
+            try {
+                Class<?> clazz = loader.loadClass("org.lensfield.launcher.load.Loader");
+                method = clazz.getMethod("main", String[].class);
+            } catch (Exception e) {
+                System.err.println(" ** ERROR launching lensfield");
+                e.printStackTrace();
+                throw e;
+            }
             method.invoke(null, new Object[]{args});
             System.exit(0);
         } catch (Exception e) {

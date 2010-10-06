@@ -62,6 +62,11 @@
             <artifactId>loader</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.lensfield</groupId>
+            <artifactId>lensfield2-cli</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
     </dependencies>
 

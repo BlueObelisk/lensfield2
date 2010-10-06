@@ -38,15 +38,18 @@ public class Loader {
         if (update) {
             resolver.addRepository("ucc-repo", "https://maven.ch.cam.ac.uk/m2repo");
         }
+        String lensfieldHome = System.getProperty("lensfield.home");
+        File repoDir = new File(lensfieldHome, "repo");
+        resolver.addRepository("lf-local", repoDir.toURI().toString());
 
         List<URL> apiUrls = new ArrayList<URL>();
-        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.2-SNAPSHOT", update)) {
+        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.2-SNAPSHOT", true)) {
             apiUrls.add(a.getFile().toURI().toURL());
         }
         apiLoader = new URLClassLoader(apiUrls.toArray(new URL[apiUrls.size()]));
 
         List<URL> appUrls = new ArrayList<URL>();
-        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.2-SNAPSHOT", update)) {
+        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.2-SNAPSHOT", true)) {
             appUrls.add(a.getFile().toURI().toURL());
         }
         appLoader = new URLClassLoader(appUrls.toArray(new URL[appUrls.size()]), apiLoader);

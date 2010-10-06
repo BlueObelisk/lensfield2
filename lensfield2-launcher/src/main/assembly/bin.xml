@@ -33,6 +33,7 @@
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>boot</outputDirectory>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
                 <include>org.lensfield.launcher:boot</include>
             </includes>
@@ -40,10 +41,23 @@
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>lib</outputDirectory>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
             <excludes>
                 <exclude>org.lensfield.launcher:boot</exclude>
+                <exclude>org.lensfield.launcher:lensfield2-cli</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>
+
+    <repositories>
+        <repository>
+            <outputDirectory>repo</outputDirectory>
+            <includeMetadata>true</includeMetadata>
+            <excludes>
+              <exclude>org.lensfield.launcher:boot</exclude>
+              <exclude>org.lensfield.launcher:loader</exclude>
+            </excludes>
+        </repository>
+    </repositories>
 
 </assembly>
