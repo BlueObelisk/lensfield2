@@ -115,6 +115,11 @@ public class DependencyResolver {
             // ----
 
             if (!result.isSuccess()) {
+                if (result.hasExceptions()) {
+                    for (Exception e : result.getExceptions()) {
+                        e.printStackTrace();
+                    }
+                }
                 throw new LensfieldException("Unable to resolve dependency: "+result.getMissingArtifacts());
             }
 

@@ -48,7 +48,7 @@ public class Lensfield {
     private File root = new File(".");
     private File workspace, tmpdir;
 
-    private boolean offline = true;
+    private boolean offline = false;
 
     private ArrayList<org.lensfield.model.Process> buildOrder;
 
