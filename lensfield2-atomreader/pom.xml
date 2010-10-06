@@ -21,7 +21,7 @@
         </dependency>
 
         <dependency>
-            <groupId>uk.ac.cam.ch.atomxom</groupId>
+            <groupId>net.sf.atomxom</groupId>
             <artifactId>atomxom-feeds</artifactId>
             <version>0.1</version>
         </dependency>

@@ -3,6 +3,9 @@
  */
 package org.lensfield.source.atom;
 
+import net.sf.atomxom.feeds.DefaultFeedHandler;
+import net.sf.atomxom.feeds.FeedCache;
+import net.sf.atomxom.model.AtomEntry;
 import nu.xom.Document;
 import nu.xom.Serializer;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -12,9 +15,6 @@ import org.lensfield.concurrent.Resource;
 import org.lensfield.glob.Glob;
 import org.lensfield.glob.MissingParameterException;
 import org.lensfield.model.Parameter;
-import uk.ac.cam.ch.atomxom.feeds.DefaultFeedHandler;
-import uk.ac.cam.ch.atomxom.feeds.FeedCache;
-import uk.ac.cam.ch.atomxom.model.AtomEntry;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
