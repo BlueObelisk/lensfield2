@@ -42,10 +42,10 @@
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>lib</outputDirectory>
             <useTransitiveFiltering>true</useTransitiveFiltering>
-            <excludes>
-                <exclude>org.lensfield.launcher:boot</exclude>
-                <exclude>org.lensfield.launcher:lensfield2-cli</exclude>
-            </excludes>
+            <includes>
+                <include>org.lensfield.launcher:loader</include>
+                <include>com.google.collections:google-collections</include>
+            </includes>
         </dependencySet>
     </dependencySets>
 

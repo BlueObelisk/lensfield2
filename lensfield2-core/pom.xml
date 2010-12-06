@@ -11,12 +11,17 @@
 
     <artifactId>lensfield2-core</artifactId>
     <name>Lensfield Core</name>
-    
+
     <dependencies>
 
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>lensfield2-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>lensfield2-mavenresolver</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -27,15 +32,6 @@
         <dependency>
             <groupId>com.google.collections</groupId>
             <artifactId>google-collections</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-embedder</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.wagon</groupId>
-            <artifactId>wagon-http</artifactId>
         </dependency>
 
         <dependency>

@@ -3,10 +3,9 @@
  */
 package org.lensfield.launcher.load;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.repository.RepositorySystem;
-import org.apache.maven.settings.Settings;
+import org.lensfield.maven.DependencyResolver;
+import org.sonatype.aether.artifact.Artifact;
+import org.sonatype.aether.resolution.ArtifactResolutionException;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -26,30 +25,26 @@ public class Loader {
     private void load(boolean update) throws Exception {
 
         DependencyResolver resolver = new DependencyResolver();
-        Settings settings = resolver.getSettings();
-        File localRepo;
-        if (settings.getLocalRepository() != null) {
-            localRepo = new File(settings.getLocalRepository());
-        } else {
-            localRepo = RepositorySystem.defaultUserLocalRepository;
-        }
-        resolver.setLocalRepository(localRepo);
 
         if (update) {
             resolver.addRepository("ucc-repo", "https://maven.ch.cam.ac.uk/m2repo");
+        } else {
+            resolver.setOffline(true);
         }
+
+        // Add local lensfield repo
         String lensfieldHome = System.getProperty("lensfield.home");
         File repoDir = new File(lensfieldHome, "repo");
         resolver.addRepository("lf-local", repoDir.toURI().toString());
 
         List<URL> apiUrls = new ArrayList<URL>();
-        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.2-SNAPSHOT", true)) {
+        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-api", "0.2-SNAPSHOT")) {
             apiUrls.add(a.getFile().toURI().toURL());
         }
         apiLoader = new URLClassLoader(apiUrls.toArray(new URL[apiUrls.size()]));
 
         List<URL> appUrls = new ArrayList<URL>();
-        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.2-SNAPSHOT", true)) {
+        for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.2-SNAPSHOT")) {
             appUrls.add(a.getFile().toURI().toURL());
         }
         appLoader = new URLClassLoader(appUrls.toArray(new URL[appUrls.size()]), apiLoader);

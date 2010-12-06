@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <modules>
+        <module>lensfield2-mavenresolver</module>
+    </modules>
 
     <parent>
         <groupId>wwmm</groupId>
@@ -22,7 +25,7 @@
             <organization>Unilever Centre for Molecular Science Informatics, University of Cambridge</organization>
         </developer>
     </developers>
-    
+
     <contributors>
         <contributor>
             <name>Nick Day</name>
@@ -40,6 +43,11 @@
 
     <properties>
         <lensfield.scm.developerConnection>scm:hg:https://bitbucket.org/sea36/lensfield2</lensfield.scm.developerConnection>
+
+        <aetherVersion>1.7</aetherVersion>
+        <mavenVersion>3.0.1</mavenVersion>
+        <wagonVersion>1.0-beta-7</wagonVersion>
+
     </properties>
 
     <scm>
@@ -86,6 +94,12 @@
                 <artifactId>lensfield2-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>lensfield2-mavenresolver</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
 
             <dependency>
                 <groupId>commons-io</groupId>
@@ -98,21 +112,108 @@
                 <version>1.0</version>
             </dependency>
 
+
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-api</artifactId>
+                <version>${aetherVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-spi</artifactId>
+                <version>${aetherVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-util</artifactId>
+                <version>${aetherVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-impl</artifactId>
+                <version>${aetherVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.sonatype.aether</groupId>
+                <artifactId>aether-connector-wagon</artifactId>
+                <version>${aetherVersion}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-aether-provider</artifactId>
+                <version>${mavenVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-settings-builder</artifactId>
+                <version>${mavenVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>${mavenVersion}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-embedder</artifactId>
-                <version>3.0-beta-1</version>
+                <version>${mavenVersion}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-provider-api</artifactId>
+                <version>${wagonVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-http</artifactId>
-                <version>1.0-beta-5</version>
+                <artifactId>wagon-file</artifactId>
+                <version>${wagonVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-http-lightweight</artifactId>
+                <version>${wagonVersion}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>nekohtml</groupId>
+                        <artifactId>nekohtml</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>nekohtml</groupId>
+                        <artifactId>xercesMinimal</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-container-default</artifactId>
+                <version>1.5.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-utils</artifactId>
+                <version>2.0.5</version>
             </dependency>
 
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.8.1</version>
+                <version>4.8.2</version>
             </dependency>
 
         </dependencies>

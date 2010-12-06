@@ -1,18 +1,18 @@
 
 ** Introduction **
 
-Lensfield2 is tool for managing file transformation workflows, sort-of a
+Lensfield2 is a tool for managing file transformation workflows, analagous to
 'make' for data.
 
 Lensfield2 requires a build file, defining the various sets of input files
 and the conversions to be applied to them. Like 'make', for instance,
 Lensfield2 is able to detect when files have changed, and update the
 products of conversions depending on them.  However, unlike 'make' where
-this is just done through comparison of files' last-modified times,
+this is simply achieved through comparison of files' last-modified times,
 Lensfield2 records the complete build-state, so is able to detect if
-intermediate any change in configuration, such as when the parameterisation
-of builds has changed, and when versions of tools involved in the various
-steps of the workflow are updated or if intermediate files are altered.
+there has been any change in configuration, such as when the parameterisation
+of build steps has changed and when versions of tools involved in the various
+steps of the workflow are updated, or when any intermediate files are altered.
 
 Lensfield2 is designed to run workflow steps written in Java and build using
 Apache Maven. Lensfield2 is able to tap into Maven's dependency management
@@ -28,16 +28,16 @@ and add the 'bin' directory to your PATH environment variable.
 ** Build steps **
 
 Creating a Lensfield2 build step is very straightforward. In order to be used
-as a step in a Lensfield2 build a class simply has to implement a run method.
+as a step in a Lensfield2 build a class simply has to implement a 'run' method.
 Various fields can be marked to take inputs, outputs or parameters using
 annotations.
 
-Build steps can be either 1:1, 1:n or n:1 file conversions through. Inputs are
+Build steps can be either 1:1, 1:n, or n:1 file conversions. Inputs can
 either be Lensfield2 StreamIn or StreamOut objects, or MultiStreamIn or
 MultiStreamOut objects. StreamIn and StreamOut extend java.io.InputStream and
 java.io.OutputStream, respectively, and provide access to read from or write
 to a single file, forming the '1' side of build steps. The MultiStream objects
-give access to a number of Streams, and are used to create 'n' sided build
+give access to a number of Streams, and are used to create 'n/m' sided build
 steps.
 
 
@@ -98,8 +98,8 @@ public class Foo {
 
 ------
 
-n:n conversions are not (currently) supported, however it is worth noting that
-'1:x' here does not strictly mean a single input. but rather a fixed number of
+n:n conversions are not (currently) supported. However it is worth noting that
+'1:n' here does not strictly mean a single input but rather a fixed number of
 inputs/outputs, while 'n' means an indeterminate number of streams.
 
 * e.g. A 3:2 build step
@@ -125,32 +125,31 @@ public class Foo {
 
 }
 
-Lensfield2 will populate each of these streams automatically.
-
+Lensfield2 will initialise each of these streams automatically.
 
 In order to implement any of these build steps only the small lensfield2-api
 library needs to be included in your build path, however for the case of
 unparameterised 1:1 builds there is an even simpler approach to forming
-a lensfield build, all you have to do is implement a method with the
-signature:
+a Lensfield2 build. All that is required is the implementation of a method
+with the signature:
 
   public X run(InputStream in, OutputStream out) throws Y;
 
-This method can return void, or anything else, and can throw any exceptions.
-
-You can even instruct Lensfield2 to look for a method named other than 'run',
-making it possible to construct a build step from any method taking a single
+This method may return void, or anything else, and can throw any classes of
+exception.  The method does not even need to be named 'run', making it 
+straightforward to construct a build step from any method taking a single
 InputStream and a single OutputStream as arguments, even if the codebase
-is unaware of Lensfield2's existance.
+is unaware of Lensfield2's existence. (See the examples of using Lensfield2
+with the Apache commons-io IOUtils class, below).
 
 
 ** Build file definitions **
 
-Lensfield2 builds consist if a series of 'source' and 'build' steps. Source
+Lensfield2 builds consist of a series of 'source' and 'build' steps. Source
 steps introduce filesets into the build system, while build steps process
 existing filesets, generating new filesets as a result.
 
-Source and build steps require a unique identifier, that is used to name the
+Source and build steps require a unique identifier, which is used to name the
 filesets they generate.
 
 Source declarations take the form:
@@ -171,7 +170,7 @@ Build declarations take the form:
 (build <id> <class-name> <arg>*)
 
 Where:
-  <id>         is the name to be given to the resulting fileset
+  <id>         is the name of the resulting fileset
 
   <class-name> is the name of the class that carries out the process. If you
                wish Lensfield2 to invoke a method named other than 'run', then
@@ -186,20 +185,19 @@ Where:
       :depends groupId:artifactId:version
 
 If a build step has more than one input, or more than one output, then the input/
-output's names must be specified, but if there is only a single input or output
+output's names must be specified. If there is only a single input or output
 then the name may be omitted.
 
 Parameter names must always be specified.
 
 
-
-In addition to dependencies for specific build steps, global dependencies applying
+In addition to dependencies for individual build steps, global dependencies applying
 to all build steps can be specified:
 
 (depends <groupId:artifactId:version>*)
 
-In the case of a conflict, dependencies assigned to a build step take prioprity
-over global dependencies (they are placed earlier in the classpath).
+In the case of any conflicts, dependencies assigned to a build step take priority
+over global dependencies (i.e. they are placed earlier in the classpath).
 
 
 Examples
@@ -237,7 +235,8 @@ Examples
     :output     sum-sq.txt)
 --------------------------------------------------------------------------------
 ; Build file taking all files **/*.n, and copying each to **/*.nn
-; Illustrates use of Lensfield2 'unaware' routines
+; Illustrates use of Lensfield2 'unaware' routines from the Apache
+; commons-io library
 
 (source
     files       **/*.n)

@@ -204,10 +204,10 @@ public class LensfieldProcessorITest {
     private static void checkAges(File file, Map<File, Long> ages) {
         for (File f : file.listFiles()) {
             if (!ages.containsKey(f)) {
-                fail("File missing: "+f);
+                fail("File present: "+f);
             }
             if (f.lastModified() != ages.get(f).longValue()) {
-                fail("File modified: "+f);
+                fail("File not modified: "+f);
             }
         }
     }
@@ -330,8 +330,8 @@ public class LensfieldProcessorITest {
 
         Thread.sleep(1000);
         new Lensfield(model, workspace).build();
-        assertEquals(a, new File(workspace, "output/a.txt").lastModified());
-        assertEquals(b, new File(workspace, "output/b.txt").lastModified());
+        assertEquals("file not modified", a, new File(workspace, "output/a.txt").lastModified());
+        assertEquals("file not modified", b, new File(workspace, "output/b.txt").lastModified());
     }
 
     @Test
@@ -354,8 +354,8 @@ public class LensfieldProcessorITest {
 
         Thread.sleep(1000);
         new Lensfield(model, workspace).build();
-        assertFalse(a == new File(workspace, "output/a.txt").lastModified());
-        assertEquals(b, new File(workspace, "output/b.txt").lastModified());
+        assertFalse("file modified", a == new File(workspace, "output/a.txt").lastModified());
+        assertEquals("file not modified", b, new File(workspace, "output/b.txt").lastModified());
     }
 
 

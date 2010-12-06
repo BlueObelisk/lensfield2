@@ -42,6 +42,10 @@ public class Bootstrap {
 
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
+            for (URL u : urls) {
+                System.err.println(u);
+            }
+
             // Init class loader
             URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
             Thread.currentThread().setContextClassLoader(loader);
@@ -59,6 +63,7 @@ public class Bootstrap {
             method.invoke(null, new Object[]{args});
             System.exit(0);
         } catch (Exception e) {
+            e.printStackTrace();
             System.exit(1);
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
