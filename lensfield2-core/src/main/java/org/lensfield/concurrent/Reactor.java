@@ -21,7 +21,7 @@ public class Reactor {
 
     private List<Worker> workers = Collections.synchronizedList(new ArrayList<Worker>());
 
-    private int nworker = 2;    // Runtime.getRuntime().availableProcessors();
+    private int nworker = 1;    // Runtime.getRuntime().availableProcessors();
 
     public Reactor(Lensfield lensfield) {
         this.lensfield = lensfield;
@@ -37,6 +37,7 @@ public class Reactor {
             } catch (InterruptedException e) {
                 for (Worker worker : workers) {
                     worker.interrupt();
+                    break;
                 }
             }
         }
@@ -50,7 +51,6 @@ public class Reactor {
             worker.start();
         }
     }
-
 
     public Operation poll() throws InterruptedException {
 
