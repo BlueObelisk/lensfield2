@@ -14,6 +14,8 @@ import java.io.*;
  */
 public class LensfieldCli {
 
+    private static final boolean DEBUG = Boolean.getBoolean("lensfield.debug");
+
     private static String loadVersion() throws IOException {
         InputStream in = LensfieldCli.class.getResourceAsStream("/META-INF/lensfield.version");
         if (in == null) {

@@ -16,16 +16,20 @@ import java.util.List;
  */
 public class Bootstrap {
 
+    private static final boolean DEBUG = Boolean.getBoolean("lensfield.debug");
+
     public static void main(String[] args) throws Exception {
 
-        boolean debug = Boolean.getBoolean("lensfield.debug");
+        if (DEBUG) {
+            System.err.println("*** Starting Bootstrap ***");
+        }
 
         String lensfieldHome = System.getProperty("lensfield.home");
         if (lensfieldHome == null) {
             System.err.println(" ** ERROR: 'lensfield.home' not set");
             System.exit(1);
         }
-        if (debug) {
+        if (DEBUG) {
             System.err.println("lensfield.home : "+lensfieldHome);
         }
 
@@ -34,7 +38,7 @@ public class Bootstrap {
             System.err.println(" ** ERROR: directory '"+libdir.getPath()+"' not found");
             System.exit(1);
         }
-        if (debug) {
+        if (DEBUG) {
             System.err.println("lib dir: "+lensfieldHome);
         }
 
@@ -43,7 +47,7 @@ public class Bootstrap {
             try {
                 URL url = f.toURI().toURL();
                 urls.add(url);
-                if (debug) {
+                if (DEBUG) {
                     System.err.println("url : "+url);
                 }
             } catch (MalformedURLException e) {
@@ -68,11 +72,11 @@ public class Bootstrap {
                 e.printStackTrace();
                 throw e;
             }
-            if (debug) {
-                System.err.println("launching lensfield...");
+            if (DEBUG) {
+                System.err.println("launching lensfield loader...");
             }
             method.invoke(null, new Object[]{args});
-            if (debug) {
+            if (DEBUG) {
                 System.err.println("lensfield finished...");
             }
             System.exit(0);

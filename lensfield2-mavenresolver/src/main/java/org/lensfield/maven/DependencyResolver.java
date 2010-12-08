@@ -79,6 +79,7 @@ public class DependencyResolver {
     private final RepositorySystem repositorySystem;
     private final List<RemoteRepository> remoteRepos = new ArrayList<RemoteRepository>();
     private final Settings settings;
+    private boolean useMavenCentral = true;
 
 
     public DependencyResolver() throws Exception {
@@ -95,7 +96,6 @@ public class DependencyResolver {
         this.settings = getSettings2();
         this.repositorySystem = newRepositorySystem();
 
-        addRepository("central", "http://repo1.maven.org/maven2/");
     }
 
 
@@ -296,7 +296,7 @@ public class DependencyResolver {
             dependencies.add(new Dependency(artifact, "runtime"));
         }
 
-        CollectRequest collectRequest = new CollectRequest((Dependency)null, dependencies, remoteRepos);
+        CollectRequest collectRequest = new CollectRequest((Dependency)null, dependencies, getRepositories());
         DependencyNode node = repositorySystem.collectDependencies(session, collectRequest).getRoot();
         repositorySystem.resolveDependencies(session, node, null);
 
@@ -307,6 +307,25 @@ public class DependencyResolver {
             files.add(n.getDependency().getArtifact());
         }
         return files;
+    }
+
+    private List<RemoteRepository> getRepositories() {
+        List<RemoteRepository> repositories = new ArrayList<RemoteRepository>(remoteRepos);
+        if (isUseMavenCentral()) {
+            repositories.add(new RemoteRepository(
+                    org.apache.maven.repository.RepositorySystem.DEFAULT_REMOTE_REPO_ID, "default",
+                    org.apache.maven.repository.RepositorySystem.DEFAULT_REMOTE_REPO_URL));
+        }
+        return repositories;
+    }
+
+
+    public boolean isUseMavenCentral() {
+        return useMavenCentral;
+    }
+
+    public void setUseMavenCentral(boolean useMavenCentral) {
+        this.useMavenCentral = useMavenCentral;
     }
 
 }

@@ -118,7 +118,7 @@ public class ConsoleTransferListener extends AbstractTransferListener {
     {
         transferCompleted( event );
 
-        event.getException().printStackTrace( out );
+//        event.getException().printStackTrace( out );
     }
 
     private void transferCompleted( TransferEvent event )

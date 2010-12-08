@@ -37,7 +37,6 @@ public class DependencyResolver {
 
     public DependencyResolver(List<String> repositories) throws Exception {
         this.resolver = new org.lensfield.maven.DependencyResolver();
-        resolver.addRepository("central", "http://repo1.maven.org/maven2/");
         for (String url : repositories) {
             resolver.addRepository(UUID.randomUUID().toString(), url);
         }
