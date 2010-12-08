@@ -1,9 +1,8 @@
 package org.lensfield.concurrent;
 
-import org.lensfield.state.Input;
+import org.lensfield.state.InputPipe;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -12,13 +11,13 @@ import java.util.List;
 public class ResourceSet {
 
     private List<Resource> list = new ArrayList<Resource>();
-    private Input input;
+    private InputPipe input;
 
-    public ResourceSet(Input input) {
+    public ResourceSet(InputPipe input) {
         this.input = input;
     }
 
-    public void add(Resource r) {
+    public void addResource(Resource r) {
         if (list.isEmpty() || input.isMultifile()) {
             list.add(r);
         } else {
@@ -26,11 +25,12 @@ public class ResourceSet {
         }
     }
 
-    public List<Resource> list() {
+    public List<Resource> getResourceList() {
         return list;
     }
 
-    public boolean isReady() {
+    public boolean isReadyAsInput() {
         return input.isClosed() || (!input.isMultifile() && list.size() == 1);
     }
+    
 }

@@ -43,7 +43,6 @@ public class GlobMatcher {
             File d = new File(root, path.toString());
             for (File f : d.listFiles()) {
                 path.append(f.getName());
-                System.err.println(path);
                 if (f.isFile()) {
                     if (glob.matches(path.toString())) {
                         match(f, path.toString());

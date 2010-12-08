@@ -3,7 +3,7 @@
  */
 package org.lensfield.state;
 
-import org.lensfield.concurrent.ProcessRunner;
+import org.lensfield.concurrent.OperationRunner;
 import org.lensfield.concurrent.Reactor;
 import org.lensfield.glob.Glob;
 import org.lensfield.glob.GlobAnalyser;
@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class Process {
 
+    private static final Object TOKEN = new Object();
+
     private final String id;
     private final Reactor reactor;
 
@@ -35,8 +37,8 @@ public class Process {
     private long lastModified = System.currentTimeMillis();
 
     private transient Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-    private transient Map<String, Input> inputs = new HashMap<String, Input>();
-    private transient Map<String, Output> outputs = new HashMap<String, Output>();
+    private transient Map<String, InputPipe> inputs = new HashMap<String, InputPipe>();
+    private transient Map<String, OutputPipe> outputs = new HashMap<String, OutputPipe>();
     
     private transient boolean noArgs;
     private transient boolean updated = true;
@@ -51,7 +53,9 @@ public class Process {
     private URL[] dependencyUrls;
 
     private Queue<Operation> opQueue = new ConcurrentLinkedQueue<Operation>();
-    private ConcurrentMap<Operation,Operation> opSet = new ConcurrentHashMap<Operation, Operation>();
+
+    private ConcurrentMap<OperationKey,Operation> opMap = new ConcurrentHashMap<OperationKey, Operation>();
+    private ConcurrentMap<Operation,Object> opSet = new ConcurrentHashMap<Operation,Object>();
 
     private List<String> globNames;
 
@@ -109,28 +113,28 @@ public class Process {
     }
 
 
-    public void addInput(Input input) {
+    public void addInput(InputPipe input) {
         inputs.put(input.getName(), input);
     }
 
-    public List<Input> getInputs() {
-        return new ArrayList<Input>(inputs.values());
+    public List<InputPipe> getInputs() {
+        return new ArrayList<InputPipe>(inputs.values());
     }
 
-    public Input getInput(String name) {
+    public InputPipe getInput(String name) {
         return inputs.get(name);
     }
 
 
-    public void addOutput(Output output) {
+    public void addOutput(OutputPipe output) {
         outputs.put(output.getName(), output);
     }
 
-    public List<Output> getOutputs() {
-        return new ArrayList<Output>(outputs.values());
+    public List<OutputPipe> getOutputs() {
+        return new ArrayList<OutputPipe>(outputs.values());
     }
 
-    public Output getOutput(String name) {
+    public OutputPipe getOutput(String name) {
         return outputs.get(name);
     }
 
@@ -160,14 +164,14 @@ public class Process {
 
 
 
-    public Input getDefaultInput() {
+    public InputPipe getDefaultInput() {
         if (inputs.size() == 1) {
             return inputs.values().iterator().next();
         }
         return null;
     }
 
-    public Output getDefaultOutput() {
+    public OutputPipe getDefaultOutput() {
         if (outputs.size() == 1) {
             return outputs.values().iterator().next();
         }
@@ -176,12 +180,12 @@ public class Process {
 
 
     public boolean isKtoL() {
-        for (Input input : inputs.values()) {
+        for (InputPipe input : inputs.values()) {
             if (input.isMultifile()) {
                 return false;
             }
         }
-        for (Output output : outputs.values()) {
+        for (OutputPipe output : outputs.values()) {
             if (output.isMultifile()) {
                 return false;
             }
@@ -190,12 +194,12 @@ public class Process {
     }
 
     public boolean isKtoN() {
-        for (Input input : inputs.values()) {
+        for (InputPipe input : inputs.values()) {
             if (input.isMultifile()) {
                 return false;
             }
         }
-        for (Output output : outputs.values()) {
+        for (OutputPipe output : outputs.values()) {
             if (!output.isMultifile()) {
                 return false;
             }
@@ -206,7 +210,6 @@ public class Process {
 
     public void queue(Operation op) {
         op.setQueued();
-        System.err.println("QUEUE OP "+id+" "+op.getParameters());
         opQueue.add(op);
         if (!active) {
             activate();
@@ -227,7 +230,7 @@ public class Process {
 //    public Map<String,Operation> getInputOperationMap() {
 //        Map<String,Operation> map = new HashMap<String, Operation>();
 //        for (Operation op : operations) {
-//            for (List<FileState> files : op.getInputFiles().values()) {
+//            for (List<FileState> files : op.getInputResourcesMap().values()) {
 //                for (FileState file : files) {
 //                    map.put(file.getPath(),op);
 //                }
@@ -253,7 +256,7 @@ public class Process {
     }
 
 
-    public void setDependencies(URL[] urls, ClassLoader parentClassloader) {
+    public void setDependencyUrls(URL[] urls, ClassLoader parentClassloader) {
         this.dependencyUrls = urls;
         this.parentClassloader = parentClassloader;
     }
@@ -265,8 +268,6 @@ public class Process {
     }
 
 
-    private ConcurrentMap<OperationKey,Operation> opMap = new ConcurrentHashMap<OperationKey, Operation>();
-
     public Operation getOperation(OperationKey opKey) {
         Operation op = opMap.get(opKey);
         if (op == null) {
@@ -275,14 +276,14 @@ public class Process {
             if (prev != null) {
                 return prev;
             }
-            opSet.put(op,op);
+            opSet.put(op,TOKEN);
         }
         return op;
     }
 
     public boolean isFinished() {
         if (opSet.isEmpty()) {
-            for (Input input : inputs.values()) {
+            for (InputPipe input : inputs.values()) {
                 if (!input.isClosed()) {
                     return false;
                 }
@@ -301,8 +302,8 @@ public class Process {
     }
 
     public void initGlobNames() {
-        List<Input> inputs = new ArrayList<Input>(this.inputs.values());
-        List<Output> outputs = new ArrayList<Output>(this.outputs.values());
+        List<InputPipe> inputs = new ArrayList<InputPipe>(this.inputs.values());
+        List<OutputPipe> outputs = new ArrayList<OutputPipe>(this.outputs.values());
         Glob[] globs = new Glob[inputs.size()+outputs.size()];
         for (int i = 0; i < inputs.size(); i++) {
             globs[i] = inputs.get(i).getSource().getGlob();
@@ -322,13 +323,13 @@ public class Process {
     }
 
     public synchronized void close() {
-        for (Output output : outputs.values()) {
+        for (OutputPipe output : outputs.values()) {
             output.close();
         }
     }
 
-    public ProcessRunner getRunner() throws Exception {
-        return reactor.getProcessRunner(this);
+    public OperationRunner getRunner() throws Exception {
+        return reactor.getOperationRunner(this);
     }
 
     public void check() {
@@ -339,7 +340,7 @@ public class Process {
         }
     }
 
-    public void done(Operation operation) {
+    public void handleOperationFinished(Operation operation) {
         opSet.remove(operation);
     }
 

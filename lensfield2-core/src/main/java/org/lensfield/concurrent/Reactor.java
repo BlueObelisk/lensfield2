@@ -1,5 +1,6 @@
 package org.lensfield.concurrent;
 
+import org.apache.log4j.Logger;
 import org.lensfield.Lensfield;
 import org.lensfield.state.Operation;
 import org.lensfield.state.Process;
@@ -15,7 +16,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class Reactor {
 
+    private static final Logger LOG = Logger.getLogger(Reactor.class);
+
     private Lensfield lensfield;
+    private ResourceManager resourceManager = new ResourceManager();
 
     private Queue<Process> processQueue = new ConcurrentLinkedQueue<Process>();
 
@@ -57,7 +61,7 @@ public class Reactor {
         while (!isFinished()) {
             for (Process process : processQueue) {
                 if (process.isFinished()) {
-                    System.err.println("FINISHED: "+process.getId());
+                    LOG.info("Process finished: "+process.getId());
                     process.close();
                     processQueue.remove(process);
                 } else {
@@ -81,16 +85,19 @@ public class Reactor {
     }
 
     public void queue(Process process) {
-        System.err.println("QUEUE PROCESS "+process.getId());
+        LOG.info("Process queued: "+process.getId());
         processQueue.add(process);
     }
 
-    public ProcessRunner getProcessRunner(Process process) throws Exception {
-        ProcessRunner runner = new ProcessRunner(process);
+    public OperationRunner getOperationRunner(Process process) throws Exception {
+        OperationRunner runner = new OperationRunner(process, lensfield.getBuildLogger());
         runner.setRoot(lensfield.getRootDir());
         runner.setTmpdir(lensfield.getTmpDir());
         return runner;
     }
 
-    
+
+    public ResourceManager getResourceManager() {
+        return resourceManager;
+    }
 }

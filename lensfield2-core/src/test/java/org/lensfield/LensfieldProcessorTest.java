@@ -4,7 +4,7 @@
 package org.lensfield;
 
 import org.junit.Test;
-import org.lensfield.model.Build;
+import org.lensfield.model.BuildStep;
 import org.lensfield.model.Model;
 import org.lensfield.model.Process;
 import org.lensfield.model.Source;
@@ -23,8 +23,8 @@ public class LensfieldProcessorTest {
 
         Model model = new Model();
         model.addSource(new Source("step1", "**/*.1"));
-        model.addBuild(new Build("step2", "com.example.Foo", "step1", "**/*.2"));
-        model.addBuild(new Build("step3", "com.example.Foo", "step2", "**/*.3"));
+        model.addBuildStep(new BuildStep("step2", "com.example.Foo", "step1", "**/*.2"));
+        model.addBuildStep(new BuildStep("step3", "com.example.Foo", "step2", "**/*.3"));
 
         Lensfield lf = new Lensfield(model, null);
 
@@ -38,9 +38,9 @@ public class LensfieldProcessorTest {
     @Test
     public void testResolveBuildOrderShuffledLinear() throws LensfieldException {
         Model model = new Model();
-        model.addBuild(new Build("step3", "com.example.Foo", "step2", "**/*.3"));
+        model.addBuildStep(new BuildStep("step3", "com.example.Foo", "step2", "**/*.3"));
         model.addSource(new Source("step1", "**/*.1"));
-        model.addBuild(new Build("step2", "com.example.Foo", "step1", "**/*.2"));
+        model.addBuildStep(new BuildStep("step2", "com.example.Foo", "step1", "**/*.2"));
         
         Lensfield lf = new Lensfield(model, null);
 
@@ -56,12 +56,12 @@ public class LensfieldProcessorTest {
     public void testResolveBuildOrderBranched() throws LensfieldException {
         Model model = new Model();
         model.addSource(new Source("step1", "** /*.1"));
-        model.addBuild(new Build("step2", "foo", "step1", "");
-        model.addBuild(new Build("step3", "foo", "step2", "");
-        model.addBuild(new Build("step4", "foo", "step1", "");
-        model.addBuild(new Build("step5", "foo", new String[]{"step1", "step7"}, new String[]);
-        model.addBuild(new Build("step6", "foo", "step4", "");
-        model.addBuild(new Build("step7", "foo", "step3", "");
+        model.addBuildStep(new BuildStep("step2", "foo", "step1", "");
+        model.addBuildStep(new BuildStep("step3", "foo", "step2", "");
+        model.addBuildStep(new BuildStep("step4", "foo", "step1", "");
+        model.addBuildStep(new BuildStep("step5", "foo", new String[]{"step1", "step7"}, new String[]);
+        model.addBuildStep(new BuildStep("step6", "foo", "step4", "");
+        model.addBuildStep(new BuildStep("step7", "foo", "step3", "");
 
 
         List<String> order = model.resolveBuildOrder();
@@ -78,9 +78,9 @@ public class LensfieldProcessorTest {
     @Test(expected = LensfieldException.class)
     public void testResolveBuildOrderCyclic() throws LensfieldException {
         Lensfield proc = new Lensfield();
-        proc.addBuild(new Build("step1", "foo", new String[0], "");
-        proc.addBuild(new Build("step2", "foo", "step1","step3"}, "");
-        proc.addBuild(new Build("step3", "foo", "step2"}, "");
+        proc.addBuildStep(new BuildStep("step1", "foo", new String[0], "");
+        proc.addBuildStep(new BuildStep("step2", "foo", "step1","step3"}, "");
+        proc.addBuildStep(new BuildStep("step3", "foo", "step2"}, "");
         proc.resolveBuildOrder();
     }
 
@@ -88,9 +88,9 @@ public class LensfieldProcessorTest {
     @Test
     public void testCheckBuildsOkay() throws LensfieldException {
         Lensfield proc = new Lensfield();
-        proc.addBuild(new Build("step1", "foo", new String[0], "");
-        proc.addBuild(new Build("step2", "foo", "step1"}, "");
-        proc.addBuild(new Build("step3", "foo", "step2"}, "");
+        proc.addBuildStep(new BuildStep("step1", "foo", new String[0], "");
+        proc.addBuildStep(new BuildStep("step2", "foo", "step1"}, "");
+        proc.addBuildStep(new BuildStep("step3", "foo", "step2"}, "");
         proc.checkBuilds();
     }
 
@@ -100,8 +100,8 @@ public class LensfieldProcessorTest {
     public void testCheckBuildsMissingDependency() throws LensfieldException {
         Model model = new Model();
         model.addSource(new Source("step1", "**/*.1"));
-        model.addBuild(new Build("step2", "foo", "stepX", ""));
-        model.addBuild(new Build("step3", "foo", "step2", ""));
+        model.addBuildStep(new BuildStep("step2", "foo", "stepX", ""));
+        model.addBuildStep(new BuildStep("step3", "foo", "step2", ""));
 
         Lensfield lf = new Lensfield(model, null);
         lf.checkBuildStepsExist();

@@ -5,7 +5,7 @@ package org.lensfield;
 
 import org.apache.log4j.Logger;
 import org.lensfield.api.LensfieldInput;
-import org.lensfield.model.Build;
+import org.lensfield.model.BuildStep;
 import org.lensfield.model.Model;
 import org.lensfield.state.BuildState;
 import org.lensfield.state.Dependency;
@@ -48,9 +48,9 @@ public class DependencyResolver {
     }
 
     public void configureDependencies(Model model, BuildState buildState) throws Exception {
-        System.err.println("[DEBUG] Resolving global dependencies");
-        for (Build build : model.getBuilds()) {
-            System.err.println("[DEBUG] Resolving dependencies for: "+build.getName());
+        LOG.info("Resolving global dependencies");
+        for (BuildStep build : model.getBuildSteps()) {
+            LOG.info("Resolving dependencies for: "+build.getName());
             Process task = buildState.getTask(build.getName());
             configureDependencies(task, build.getDependencies(), model.getDependencies());
         }
@@ -68,7 +68,7 @@ public class DependencyResolver {
             task.addDependency(dependency);
         }
         URL[] urls = getUrls(dependencyList);
-        task.setDependencies(urls, parentClassloader);
+        task.setDependencyUrls(urls, parentClassloader);
     }
 
     private URL[] getUrls(List<Artifact> dependencyList) throws MalformedURLException {

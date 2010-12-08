@@ -3,6 +3,8 @@
  */
 package org.lensfield.log;
 
+import org.lensfield.concurrent.Resource;
+import org.lensfield.concurrent.ResourceSet;
 import org.lensfield.state.*;
 
 import java.io.*;
@@ -249,6 +251,39 @@ public class BuildLogger {
         out.print(']');
     }
 
+    public synchronized void logOperation(Operation operation, Map<OutputPipe, List<Resource>> outputResourcesMap) {
+
+        out.print("(op ");
+        out.print(operation.getProcess().getId());
+        out.print(" (i");
+        for (Map.Entry<InputPipe, ResourceSet> e : operation.getInputResourcesMap().entrySet()) {
+            InputPipe input = e.getKey();
+
+            out.print(' ');
+            out.print(input.getName());
+
+            List<Resource> resources = e.getValue().getResourceList();
+            String[] paths = new String[resources.size()];
+            for (int i = 0; i < paths.length; i++) {
+                paths[i] = resources.get(i).getPath();
+            }
+            writeList(paths);
+        }
+        out.print(") (o");
+        for (OutputPipe output : operation.getOutputSet()) {
+            out.print(' ');
+            out.print(output.getName());
+
+            List<Resource> resources = outputResourcesMap.get(output);
+            String[] paths = new String[resources.size()];
+            for (int i = 0; i < paths.length; i++) {
+                paths[i] = resources.get(i).getPath();
+            }
+            writeList(paths);
+        }
+        out.println("))");
+    }
+    
 }
 
 

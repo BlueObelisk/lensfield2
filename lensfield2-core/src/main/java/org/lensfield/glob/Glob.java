@@ -223,7 +223,6 @@ public class Glob {
     }
 
     public String format(Map<String,String> params) throws MissingParameterException {
-        System.err.println(glob+"\t"+format+"\t"+params);
         StringBuilder s = new StringBuilder();
         for (int i = 0; i < format.length(); i++) {
             char c = format.charAt(i);
@@ -246,7 +245,12 @@ public class Glob {
                             throw new MissingParameterException("Parameter '"+name+"' is undefined");
                         }
                     }
-                    s.append(value);
+                    if ("**".equals(name) && "".equals(value)) {
+                        // skip '/'
+                        i++;
+                    } else {
+                        s.append(value);
+                    }
                 }
             } else {
                 // Collapse '//+'

@@ -15,7 +15,7 @@ import java.util.Map;
 /**
 * @author sea36
 */
-public class Input {
+public class InputPipe {
 
     private final Process process;
     private final String name;
@@ -23,17 +23,17 @@ public class Input {
     private String fieldName;
     private String fieldClass;
 
-    private Output source;
+    private OutputPipe source;
 
     private final boolean multifile;
 
-    public Input(Process process) {
+    public InputPipe(Process process) {
         this.process = process;
         this.name = "in";
         this.multifile = false;
     }
 
-    public Input(Process process, Field f, String name) {
+    public InputPipe(Process process, Field f, String name) {
         this.process = process;
         this.name = name;
         this.fieldName = f.getName();
@@ -88,20 +88,19 @@ public class Input {
 //            op.setOutOfDate(true);
 //        }
 
-        op.addResource(this, resource);
+        op.addInputResource(this, resource);
         if (op.isReady()) {
-            // TODO add to queue
-            System.err.println("READY: "+process.getId()+"/"+name);
+            // TODO addResource to queue
             process.queue(op);
         }
     }
 
 
-    public Output getSource() {
+    public OutputPipe getSource() {
         return source;
     }
 
-    public void setSource(Output source) {
+    public void setSource(OutputPipe source) {
         this.source = source;
     }
 

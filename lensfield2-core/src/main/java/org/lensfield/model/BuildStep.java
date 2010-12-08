@@ -11,19 +11,19 @@ import java.util.Map;
 /**
  * @author sea36
  */
-public class Build extends Process {
+public class BuildStep extends Process {
 
     private final Map<String,Input> inputs = new LinkedHashMap<String,Input>();
     private final Map<String,Output> outputs = new LinkedHashMap<String,Output>();
 
-    public Build(String name, String classname) {
+    public BuildStep(String name, String classname) {
         super(name, classname);
     }
 
-    public Build(String name, String classname, String input, String output) {
+    public BuildStep(String name, String classname, String inputName, String outputPattern) {
         super(name, classname);
-        this.inputs.put(null, new Input(input));
-        this.outputs.put(null, new Output(output));
+        this.inputs.put(null, new Input(inputName));
+        this.outputs.put(null, new Output(outputPattern));
     }
 
     

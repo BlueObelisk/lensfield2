@@ -122,7 +122,7 @@ public class BuildFileReader {
         String name = readLiteral();
         String classname = readLiteral();
 
-        Build build = new Build(name, classname);
+        BuildStep build = new BuildStep(name, classname);
 
         readToken();
         while (token.type != TokenType.GROUP_CLOSE) {
@@ -145,10 +145,10 @@ public class BuildFileReader {
                 throw new IOException("Unknown keyword: "+token.value);
             }
         }
-        model.addBuild(build);
+        model.addBuildStep(build);
     }
 
-    private void parseInput(Build build) throws IOException {
+    private void parseInput(BuildStep build) throws IOException {
         String step = readLiteral();
         readToken();
         if (token.type != TokenType.LITERAL || token.value.startsWith(":")) {
@@ -162,7 +162,7 @@ public class BuildFileReader {
         }
     }
     
-    private void parseOutput(Build build) throws IOException {
+    private void parseOutput(BuildStep build) throws IOException {
         String glob = readLiteral();
         readToken();
         if (token.type != TokenType.LITERAL || token.value.startsWith(":")) {

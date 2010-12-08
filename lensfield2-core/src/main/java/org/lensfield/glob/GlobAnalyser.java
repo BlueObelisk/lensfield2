@@ -116,19 +116,19 @@ public class GlobAnalyser {
 //
 //
 //    private static List<InputFileSet> createFileSets(Map<GlobMatch, ListMultimap<String, FileState>> globMatches) {
-//        List<InputFileSet> list = new ArrayList<InputFileSet>(globMatches.size());
+//        List<InputFileSet> getResourceList = new ArrayList<InputFileSet>(globMatches.size());
 //        for (Map.Entry<GlobMatch,ListMultimap<String,FileState>> e : globMatches.entrySet()) {
 //            GlobMatch gm = e.getKey();
 //            ListMultimap<String,FileState> inputFiles = e.getValue();
 //            Map<String,String> params = gm.getMap();
-//            list.add(new InputFileSet(params, inputFiles.asMap()));
+//            getResourceList.addResource(new InputFileSet(params, inputFiles.asMap()));
 //        }
-//        return list;
+//        return getResourceList;
 //    }
 //
 //
 //    private static List<InputFileSet> createFileSets(String[] inputNames, Map<GlobMatch, FileState[]> inputFiles) {
-//        List<InputFileSet> list = new ArrayList<InputFileSet>(inputFiles.size());
+//        List<InputFileSet> getResourceList = new ArrayList<InputFileSet>(inputFiles.size());
 //        for (Map.Entry<GlobMatch, FileState[]> e : inputFiles.entrySet()) {
 //            GlobMatch gm = e.getKey();
 //            FileState[] files = e.getValue();
@@ -143,9 +143,9 @@ public class GlobAnalyser {
 //                    inputMap.put(inputNames[i], Collections.singletonList(files[i]));
 //                }
 //            }
-//            list.add(new InputFileSet(params, inputMap));
+//            getResourceList.addResource(new InputFileSet(params, inputMap));
 //        }
-//        return list;
+//        return getResourceList;
 //    }
 //
 //    private static Set<String> getCommonGroupNames(Map<String, FileList> inputs) {

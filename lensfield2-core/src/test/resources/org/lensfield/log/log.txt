@@ -1,4 +1,4 @@
-(build-started 2010-06-14T16:28:26+0100)
+(build-timeStarted 2010-06-14T16:28:26+0100)
 (task doubles org.lensfield.testing.ops.number.Doubler/run 2010-06-14T16:10:35+0100 (depends [org.lensfield.testing:lensfield2-testops1:jar:0.1-SNAPSHOT 2010-06-10T16:51:36+0100][org.lensfield:lensfield2-api:jar:0.1-SNAPSHOT 2010-06-10T16:51:34+0100][commons-io:commons-io:jar:1.4 2010-06-09T18:06:12+0100]))
 (task sum-x2 org.lensfield.testing.ops.number.Summer/run 2010-06-14T16:10:35+0100 (depends [org.lensfield.testing:lensfield2-testops1:jar:0.1-SNAPSHOT 2010-06-10T16:51:36+0100][org.lensfield:lensfield2-api:jar:0.1-SNAPSHOT 2010-06-10T16:51:34+0100][commons-io:commons-io:jar:1.4 2010-06-09T18:06:12+0100]))
 (task squares org.lensfield.testing.ops.number.Squarer/run 2010-06-14T16:10:35+0100 (depends [org.lensfield.testing:lensfield2-testops1:jar:0.1-SNAPSHOT 2010-06-10T16:51:36+0100][org.lensfield:lensfield2-api:jar:0.1-SNAPSHOT 2010-06-10T16:51:34+0100][commons-io:commons-io:jar:1.4 2010-06-09T18:06:12+0100]))

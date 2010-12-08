@@ -8,14 +8,10 @@ import org.lensfield.LensfieldException;
 import org.lensfield.api.io.StreamIn;
 import org.lensfield.api.io.StreamOut;
 import org.lensfield.glob.MissingParameterException;
-import org.lensfield.io.InputFile;
-import org.lensfield.io.InputMultiFile;
-import org.lensfield.io.OutputFile;
-import org.lensfield.io.OutputMultiFile;
-import org.lensfield.state.Input;
-import org.lensfield.state.Operation;
-import org.lensfield.state.Output;
-import org.lensfield.state.Parameter;
+import org.lensfield.io.*;
+import org.lensfield.log.BuildLogger;
+import org.lensfield.state.*;
+import org.lensfield.state.InputPipe;
 import org.lensfield.state.Process;
 
 import java.io.Closeable;
@@ -36,27 +32,28 @@ import java.util.UUID;
 /**
  * @author sea36
  */
-public class ProcessRunner {
+public class OperationRunner {
 
     private File root, tmpdir;
 
     private Process task;
     private Class<?> clazz;
     private Method runMethod;
-    private Map<Input,Field> inputs;
-    private Map<Output,Field> outputs;
+    private Map<InputPipe,Field> inputs;
+    private Map<OutputPipe,Field> outputs;
     private Map<Parameter, Field> parameters;
 
-//    private BuildLogger buildLog;
+    private BuildLogger buildLogger;
     private ClassLoader classloader;
 
-    public ProcessRunner(Process task) throws Exception {
+    public OperationRunner(Process task, BuildLogger buildLogger) throws Exception {
         this.task = task;
+        this.buildLogger = buildLogger;
         init();
     }
 
     private void init() throws Exception {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        ClassLoader oldClassloader = Thread.currentThread().getContextClassLoader();
         try {
             this.classloader = task.createClassLoader();
             Thread.currentThread().setContextClassLoader(this.classloader);
@@ -71,9 +68,8 @@ public class ProcessRunner {
 
             checkClassInstantiable();
             ensureFieldsAccessible();
-
         } finally {
-            Thread.currentThread().setContextClassLoader(cl);
+            Thread.currentThread().setContextClassLoader(oldClassloader);
         }
     }
 
@@ -87,9 +83,9 @@ public class ProcessRunner {
         return parameters;
     }
 
-    private Map<Output, Field> getOutputMap() throws NoSuchFieldException, ClassNotFoundException {
-        Map<Output, Field> outputs = new LinkedHashMap<Output,Field>();
-        for (Output output : task.getOutputs()) {
+    private Map<OutputPipe, Field> getOutputMap() throws NoSuchFieldException, ClassNotFoundException {
+        Map<OutputPipe, Field> outputs = new LinkedHashMap<OutputPipe,Field>();
+        for (OutputPipe output : task.getOutputs()) {
             if (task.isNoArgs()) {
                 Class<?> fieldClass = classloader.loadClass(output.getFieldClass());
                 Field field = fieldClass.getDeclaredField(output.getFieldName());
@@ -101,9 +97,9 @@ public class ProcessRunner {
         return outputs;
     }
 
-    private Map<Input, Field> getInputMap() throws NoSuchFieldException, ClassNotFoundException {
-        Map<Input,Field> inputs = new LinkedHashMap<org.lensfield.state.Input,Field>();
-        for (Input input : task.getInputs()) {
+    private Map<InputPipe, Field> getInputMap() throws NoSuchFieldException, ClassNotFoundException {
+        Map<InputPipe,Field> inputs = new LinkedHashMap<InputPipe,Field>();
+        for (InputPipe input : task.getInputs()) {
             if (task.isNoArgs()) {
                 Class<?> fieldClass = classloader.loadClass(input.getFieldClass());
                 Field field = fieldClass.getDeclaredField(input.getFieldName());
@@ -126,11 +122,11 @@ public class ProcessRunner {
     private void ensureFieldsAccessible() {
         // TODO handle security exception
         if (task.isNoArgs()) {
-            for (Map.Entry<Input,Field> input : inputs.entrySet()) {
+            for (Map.Entry<InputPipe,Field> input : inputs.entrySet()) {
                 Field field = input.getValue();
                 field.setAccessible(true);
             }
-            for (Map.Entry<Output,Field> output : outputs.entrySet()) {
+            for (Map.Entry<OutputPipe,Field> output : outputs.entrySet()) {
                 Field field = output.getValue();
                 field.setAccessible(true);
             }
@@ -153,74 +149,70 @@ public class ProcessRunner {
     }
 
 
-    public void runProcess(Operation task) throws Exception {
-        runProcess(task.getInputFiles(), task.getOutputFiles(), task.getParameters());
-    }
+    public void runProcess(Operation operation) throws Exception {
 
+        Map<InputPipe,ResourceSet> inputs = operation.getInputResourcesMap();
+        Set<OutputPipe> outputs = operation.getOutputSet();
+        Map<String,String> parameters = operation.getParameters();
 
-    private void runProcess(Map<Input,ResourceSet> inputs, Set<Output> outputs, Map<String,String> parameters) throws Exception {
-
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        ClassLoader oldClassloader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(classloader);
 
-            Object obj = clazz.newInstance();
-            configureParameters(obj);
-
-            List<org.lensfield.io.Input> ins = Collections.emptyList();
-            Map<Output, org.lensfield.io.Output> outputMap = Collections.emptyMap();
-            try {
-                if (task.isNoArgs()) {
-                    ins = configureInputs(inputs, obj);
-                    outputMap = configureOutputs(parameters, outputs, obj);
-                    runMethod.invoke(obj);
-                } else {
-                    if (inputs.size() != 1 || outputs.size() != 1) {
-                        throw new IllegalStateException();
-                    }
-                    Resource fin = inputs.values().iterator().next().list().get(0);
-                    InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParameters());
-                    OutputFile out = configureOutputFile(parameters, outputs.iterator().next());
-
-                    ins = Collections.<org.lensfield.io.Input>singletonList(in);
-                    outputMap = Collections.<Output,org.lensfield.io.Output>singletonMap(outputs.iterator().next(), out);
-
-                    runArgsTask(obj, in, out);
-                }
-            } finally {
-                // Ensure all streams are closed
-                closeStreams(ins);
-                closeStreams(outputMap.values());
-            }
+            Map<OutputPipe, Output> outputMap = invokeOperation(inputs, outputs, parameters);
 
             // Move temp files
-            renameTempFiles(task.getId(), inputs, outputMap);
+            Map<OutputPipe,List<Resource>> outputResourcesMap = renameTempFiles(inputs, outputMap);
 
-            for (Map.Entry<Output,org.lensfield.io.Output> e : outputMap.entrySet()) {
-                List<Resource> list = new ArrayList<Resource>();
-                List<OutputFile> outs;
-                if (e.getValue() instanceof OutputFile) {
-                    outs = Collections.singletonList((OutputFile)e.getValue());
-                }
-                else if (e.getValue() instanceof OutputMultiFile) {
-                    outs = ((OutputMultiFile)e.getValue()).getOutputs();
-                }
-                else {
-                    throw new RuntimeException();
-                }
-                for (OutputFile out : outs) {
-                    Resource f = new Resource(out.getPath(), out.getFile(), out.getParams());
-                    e.getKey().addResource(f);
-                    list.add(f);
-                }
-            }
+            buildLogger.logOperation(operation, outputResourcesMap);
 
-//            buildLog.process(task.getId(), inputs.getMap(), outputFiles);
-
+            pipeOutputResources(outputResourcesMap);
         } finally {
-            Thread.currentThread().setContextClassLoader(cl);
+            Thread.currentThread().setContextClassLoader(oldClassloader);
         }
 
+    }
+
+    private void pipeOutputResources(Map<OutputPipe, List<Resource>> outputResourcesMap) {
+        for (Map.Entry<OutputPipe,List<Resource>> e : outputResourcesMap.entrySet()) {
+            OutputPipe pipe = e.getKey();
+            List<Resource> resourceList = e.getValue();
+            for (Resource resource : resourceList) {
+                pipe.sendResource(resource);
+            }
+        }
+    }
+
+    private Map<OutputPipe, Output> invokeOperation(Map<InputPipe, ResourceSet> inputs, Set<OutputPipe> outputs, Map<String, String> parameters) throws Exception {
+        Object obj = clazz.newInstance();
+        configureParameters(obj);
+        
+        List<Input> inputList = Collections.emptyList();
+        Map<OutputPipe, Output> outputMap = Collections.emptyMap();
+        try {
+            if (task.isNoArgs()) {
+                inputList = configureInputs(inputs, obj);
+                outputMap = configureOutputs(parameters, outputs, obj);
+                runMethod.invoke(obj);
+            } else {
+                if (inputs.size() != 1 || outputs.size() != 1) {
+                    throw new IllegalStateException();
+                }
+                Resource fin = inputs.values().iterator().next().getResourceList().get(0);
+                InputFile in = new InputFile(fin.getPath(), new File(root, fin.getPath()), fin.getParameters());
+                OutputFile out = configureOutputFile(parameters, outputs.iterator().next());
+
+                inputList = Collections.<Input>singletonList(in);
+                outputMap = Collections.<OutputPipe, Output>singletonMap(outputs.iterator().next(), out);
+
+                runArgsTask(obj, in, out);
+            }
+        } finally {
+            // Ensure all streams are closed
+            closeStreams(inputList);
+            closeStreams(outputMap.values());
+        }
+        return outputMap;
     }
 
     private void closeStreams(Collection<? extends Closeable> cs) {
@@ -233,11 +225,11 @@ public class ProcessRunner {
         }
     }
 
-    private Map<Output, org.lensfield.io.Output> configureOutputs(Map<String,String> params, Set<Output> outputs, Object obj) throws IllegalAccessException, IOException, LensfieldException {
+    private Map<OutputPipe, org.lensfield.io.Output> configureOutputs(Map<String,String> params, Set<OutputPipe> outputs, Object obj) throws IllegalAccessException, IOException, LensfieldException {
 
-        Map<Output, org.lensfield.io.Output> outputMap = new HashMap<Output, org.lensfield.io.Output>();
-        for (Map.Entry<Output, Field> e : this.outputs.entrySet()) {
-            Output output = e.getKey();
+        Map<OutputPipe, org.lensfield.io.Output> outputMap = new HashMap<OutputPipe, org.lensfield.io.Output>();
+        for (Map.Entry<OutputPipe, Field> e : this.outputs.entrySet()) {
+            OutputPipe output = e.getKey();
             Field field = e.getValue();
             if (outputs.contains(output)) {
                 if (output.isMultifile()) {
@@ -257,12 +249,12 @@ public class ProcessRunner {
     }
 
 
-    private List<org.lensfield.io.Input> configureInputs(Map<Input, ResourceSet> inputs, Object obj) throws IOException, IllegalAccessException, LensfieldException {
+    private List<org.lensfield.io.Input> configureInputs(Map<InputPipe, ResourceSet> inputs, Object obj) throws IOException, IllegalAccessException, LensfieldException {
         List<org.lensfield.io.Input> ins = new ArrayList<org.lensfield.io.Input>();
-        for (Map.Entry<Input, Field> e : this.inputs.entrySet()) {
-            Input input = e.getKey();
+        for (Map.Entry<InputPipe, Field> e : this.inputs.entrySet()) {
+            InputPipe input = e.getKey();
             Field field = e.getValue();
-            List<Resource> list = inputs.get(input).list();
+            List<Resource> list = inputs.get(input).getResourceList();
             if (input.isMultifile()) {
                 List<InputFile> inputFiles = new ArrayList<InputFile>(list.size());
                 int i = 1;
@@ -295,7 +287,7 @@ public class ProcessRunner {
         return in;
     }
 
-    private OutputFile configureOutputFile(Map<String,String> parameters, Output output) throws IOException {
+    private OutputFile configureOutputFile(Map<String,String> parameters, OutputPipe output) throws IOException {
         File tmpFile = new File(tmpdir, UUID.randomUUID().toString());
         Map<String,String> params = new HashMap<String,String>(parameters);
         return new OutputFile(tmpFile, params, output.getGlob());
@@ -320,65 +312,86 @@ public class ProcessRunner {
 
 
 
-    private void renameTempFiles(String name, Map<Input, ResourceSet> inputs, Map<Output, org.lensfield.io.Output> outputFiles) throws LensfieldException, IOException {
-        for (Map.Entry<Output, org.lensfield.io.Output> e : outputFiles.entrySet()) {
+    private Map<OutputPipe, List<Resource>> renameTempFiles(Map<InputPipe, ResourceSet> inputs, Map<OutputPipe, Output> outputFiles) throws LensfieldException, IOException {
+
+        ResourceManager resourceManager = task.getReactor().getResourceManager();
+
+        Map<OutputPipe,List<Resource>> outputResourcesMap = new HashMap<OutputPipe,List<Resource>>();
+
+        for (Map.Entry<OutputPipe, org.lensfield.io.Output> e : outputFiles.entrySet()) {
+            OutputPipe outputPipe = e.getKey();
             org.lensfield.io.Output out = e.getValue();
-            List<OutputFile> outputs;
+
+            List<OutputFile> outputFileList;
             if (out instanceof OutputFile) {
-                outputs = Collections.singletonList((OutputFile)out);
+                outputFileList = Collections.singletonList((OutputFile)out);
             }
             else if (out instanceof OutputMultiFile) {
-                outputs = ((OutputMultiFile)out).getOutputs();
+                outputFileList = ((OutputMultiFile)out).getOutputs();
             }
             else {
-                throw new RuntimeException();
+                throw new RuntimeException("Unexpected output: "+out.getClass());
             }
-            for (OutputFile output : outputs) {
-                File tempFile = output.getFile();
+
+            List<Resource> resourceList = new ArrayList<Resource>(outputFileList.size());
+
+            for (OutputFile outputFile : outputFileList) {
+                File tempFile = outputFile.getFile();
                 // TODO handle missing glob parameters
-                String path = null;
+                String resourcePath = null;
                 try {
-                    path = output.getGlob().format(output.getParams());
+                    resourcePath = outputFile.getGlob().format(outputFile.getParams());
                 } catch (MissingParameterException ex) {
                     System.err.println("Missing parameter: "+ex.getName());
-                    for (Map.Entry<Input,ResourceSet> entry : inputs.entrySet()) {
-                        System.err.println("--- Input: "+entry.getKey().getName());
-                        for (Resource f : entry.getValue().list()) {
+                    for (Map.Entry<InputPipe,ResourceSet> entry : inputs.entrySet()) {
+                        System.err.println("--- InputPipe: "+entry.getKey().getName());
+                        for (Resource f : entry.getValue().getResourceList()) {
                             System.err.println(f.getPath());
                         }
                     }
-                    System.err.println("--- Output ---");
-                    System.err.println("Glob: "+output.getGlob().getGlob());
-                    System.err.println("Parameters: "+output.getParams());
+                    System.err.println("--- OutputPipe ---");
+                    System.err.println("Glob: "+ outputFile.getGlob().getGlob());
+                    System.err.println("Parameters: "+ outputFile.getParams());
                     throw new LensfieldException("Failed to create output file", ex);
                 }
                 // TODO check for duplicate output paths
-                File file = new File(root, path);
-                Resource fr = new Resource(path, file, output.getParams());
-                File parent = file.getParentFile();
+                File resourceFile = new File(root, resourcePath);
+                Resource resource = new Resource(resourcePath, resourceFile, outputFile.getParams());
+                resourceManager.addResource(resource);
+                resourceList.add(resource);
+
+                File parent = resourceFile.getParentFile();
                 if (!parent.isDirectory()) {
                     if (!parent.mkdirs()) {
                         throw new LensfieldException("Unable to create output directory "+parent);
                     }
                 }
-                if (file.isFile()) {
-                    if (!file.delete()) {
-                        throw new LensfieldException("Unable to delete file "+file);
-                    }
-                }
-                if (file.isFile() && isUnchanged(tempFile, file)) {
-//                    LOG.debug(name, "unchanged "+path);
-                } else {
-//                    LOG.debug(name, "writing "+path);
-                    if (!tempFile.renameTo(file)) {
-                        throw new LensfieldException("Unable to rename file "+tempFile+" to "+file);
-                    }
-                }
-                output.setPath(path);
-                output.setFile(file);
 
+                boolean write = true;
+                if (resourceFile.isFile()) {
+                    if (isUnchanged(tempFile, resourceFile)) {
+//                        LOG.debug(name, "unchanged "+resourcePath);
+                        write = false;
+                    } else {
+                        if (!resourceFile.delete()) {
+                            throw new LensfieldException("Unable to delete file "+ resourceFile);
+                        }
+                    }
+                }
+                if (write) {
+//                    LOG.debug(name, "writing "+resourcePath);
+                    if (!tempFile.renameTo(resourceFile)) {
+                        throw new LensfieldException("Unable to rename file "+tempFile+" to "+ resourceFile);
+                    }
+                }
+                outputFile.setPath(resourcePath);
+                outputFile.setFile(resourceFile);
             }
+
+            outputResourcesMap.put(outputPipe, resourceList);
         }
+
+        return outputResourcesMap;
     }
 
     private boolean isUnchanged(File f1, File f2) throws IOException {

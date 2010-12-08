@@ -9,7 +9,7 @@ import org.lensfield.concurrent.Resource;
 import org.lensfield.glob.Glob;
 import org.lensfield.glob.GlobMatch;
 import org.lensfield.model.Parameter;
-import org.lensfield.state.Output;
+import org.lensfield.state.OutputPipe;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class FileSource {
 
     private int maxFiles = -1;
 
-    private Output output;
+    private OutputPipe output;
 
     public synchronized void run() throws IOException {
         if (glob == null || root == null || output == null) {
@@ -59,7 +59,7 @@ public class FileSource {
                 GlobMatch match = globTemplate.match(path);
                 if (match != null) {
                     Resource resource = new Resource(path, f, match.getMap());
-                    output.addResource(resource);
+                    output.sendResource(resource);
                     if (++nfiles == maxFiles) {
                         break;
                     }
@@ -89,7 +89,7 @@ public class FileSource {
         this.glob = glob;
     }
 
-    public void setOutput(Output output) {
+    public void setOutput(OutputPipe output) {
         this.output = output;
     }
 

@@ -9,7 +9,6 @@ import org.lensfield.concurrent.ResourceSet;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,41 +17,41 @@ import java.util.Set;
  */
 public class Operation {
 
-    private Map<Input,ResourceSet> inputFiles;
-    private Set<Output> outputFiles;
+    private final Map<InputPipe,ResourceSet> inputResourcesMap;
+    private final Set<OutputPipe> outputSet;
 
-    private Process process;
-    private ParameterSet parameterSet;
+    private final Process process;
+    private final ParameterSet parameterSet;
     private volatile boolean queued;
 
     public Operation(OperationKey opKey) {
         this.process = opKey.getProcess();
         this.parameterSet = opKey.getParameterSet();
-        this.inputFiles = new HashMap<Input,ResourceSet>();
-        this.outputFiles = new HashSet<Output>();
-        for (Input input : process.getInputs()) {
-            inputFiles.put(input,new ResourceSet(input));
+        this.inputResourcesMap = new HashMap<InputPipe,ResourceSet>();
+        this.outputSet = new HashSet<OutputPipe>();
+        for (InputPipe input : process.getInputs()) {
+            inputResourcesMap.put(input,new ResourceSet(input));
         }
-        for (Output output : process.getOutputs()) {
-            outputFiles.add(output);
+        for (OutputPipe output : process.getOutputs()) {
+            outputSet.add(output);
         }
     }
 
-    public Map<Input,ResourceSet> getInputFiles() {
-        return inputFiles;
+    public Map<InputPipe,ResourceSet> getInputResourcesMap() {
+        return inputResourcesMap;
     }
 
-    public Set<Output> getOutputFiles() {
-        return outputFiles;
+    public Set<OutputPipe> getOutputSet() {
+        return outputSet;
     }
 
-    public void addResource(Input input, Resource resource) {
-        inputFiles.get(input).add(resource);
+    public void addInputResource(InputPipe input, Resource resource) {
+        inputResourcesMap.get(input).addResource(resource);
     }
 
     public boolean isReady() {
-        for (ResourceSet rs : inputFiles.values()) {
-            if (!rs.isReady()) {
+        for (ResourceSet rs : inputResourcesMap.values()) {
+            if (!rs.isReadyAsInput()) {
                 return false;
             }
         }
@@ -76,7 +75,7 @@ public class Operation {
     }
 
     public void finished() {
-        process.done(this);
+        process.handleOperationFinished(this);
     }
 
 }

@@ -18,7 +18,7 @@ public class Model {
 
     private Map<String,Process> processes = new LinkedHashMap<String, Process>();
     private List<Source> sources = new ArrayList<Source>();
-    private List<Build> builds = new ArrayList<Build>();
+    private List<BuildStep> builds = new ArrayList<BuildStep>();
 
 
     public void addRepository(String repository) {
@@ -49,12 +49,12 @@ public class Model {
     }
 
 
-    public void addBuild(Build build) {
+    public void addBuildStep(BuildStep build) {
         addProcess(build);
         builds.add(build);
     }
 
-    public List<Build> getBuilds() {
+    public List<BuildStep> getBuildSteps() {
         return builds;
     }
 

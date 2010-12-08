@@ -25,22 +25,9 @@ public class Worker extends Thread {
                 return;
             }
             if (task != null) {
-
-                System.err.println("RUNNING "+task.getProcess().getId()+" / "+task.getParameters());
-
                 try {
-
-                    ProcessRunner runner = task.getProcess().getRunner();
+                    OperationRunner runner = task.getProcess().getRunner();
                     runner.runProcess(task);
-
-
-//                    task.
-                    // execute task
-
-                    // record task complete
-
-                    // catch/handle exception
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {

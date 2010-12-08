@@ -14,10 +14,14 @@ import java.util.Map;
 public class BuildState {
 
     private Map<String, Process> taskMap = new HashMap<String, Process>();
-    private long started = System.currentTimeMillis();
+    private long timeStarted;
 
-    public long getStarted() {
-        return started;
+    public BuildState() {
+        this.timeStarted = System.currentTimeMillis();
+    }
+
+    public long getTimeStarted() {
+        return timeStarted;
     }
 
     public void addTask(Process task) {
@@ -32,8 +36,8 @@ public class BuildState {
         return new ArrayList<Process>(taskMap.values());
     }
 
-    public void setStarted(long started) {
-        this.started = started;
+    public void setTimeStarted(long timeStarted) {
+        this.timeStarted = timeStarted;
     }
 
 }

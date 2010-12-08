@@ -6,9 +6,9 @@ package org.lensfield;
 import org.lensfield.api.LensfieldInput;
 import org.lensfield.api.LensfieldOutput;
 import org.lensfield.api.LensfieldParameter;
-import org.lensfield.model.Build;
-import org.lensfield.state.Input;
-import org.lensfield.state.Output;
+import org.lensfield.model.BuildStep;
+import org.lensfield.state.InputPipe;
+import org.lensfield.state.OutputPipe;
 import org.lensfield.state.Parameter;
 import org.lensfield.state.Process;
 
@@ -34,7 +34,7 @@ public class ClassAnalyser {
         this.clazz = clazz;
     }
 
-    public static void analyseClass(Build build, Process task) throws Exception {
+    public static void analyseClass(BuildStep build, Process task) throws Exception {
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         ClassLoader classLoader = task.createClassLoader();
@@ -49,7 +49,7 @@ public class ClassAnalyser {
 
     }
 
-    public void analyseClass(Build build) throws Exception {
+    public void analyseClass(BuildStep build) throws Exception {
         checkNoArgConstructor();
         findRunMethod();
         analyseFields();
@@ -95,8 +95,8 @@ public class ClassAnalyser {
 
     private void registerArgsRunMethod(Method method) {
         task.setMethod(method, false);
-        task.addInput(new Input(task));
-        task.addOutput(new Output(task));
+        task.addInput(new InputPipe(task));
+        task.addOutput(new OutputPipe(task));
     }
 
     private boolean isArgsRunMethod(Method method) {
@@ -156,7 +156,7 @@ public class ClassAnalyser {
         }
         LensfieldInput annot = f.getAnnotation(LensfieldInput.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addInput(new Input(task, f, n));
+        task.addInput(new InputPipe(task, f, n));
     }
 
     private static void addOutput(Process task, Field f) throws LensfieldException {
@@ -165,7 +165,7 @@ public class ClassAnalyser {
         }
         LensfieldOutput annot = f.getAnnotation(LensfieldOutput.class);
         String n = "".equals(annot.name()) ? f.getName() : annot.name();
-        task.addOutput(new Output(task, f, n));
+        task.addOutput(new OutputPipe(task, f, n));
     }
 
     private static void addParameter(Process task, Field f) {
@@ -176,7 +176,7 @@ public class ClassAnalyser {
 
 
 
-    private void setParameterValues(Build build) throws LensfieldException {
+    private void setParameterValues(BuildStep build) throws LensfieldException {
         if (task.getParameters().size() == 1) {
             if (build.getParameters().size() == 1) {
                 org.lensfield.model.Parameter p = build.getParameters().get(0);

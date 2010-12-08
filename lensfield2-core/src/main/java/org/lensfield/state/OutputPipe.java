@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author sea36
  */
-public class Output {
+public class OutputPipe {
 
     private final Process task;
     private final String name;
@@ -28,20 +28,20 @@ public class Output {
     private boolean multifile;
     private Glob glob;
 
-    private List<Input> pipes = new ArrayList<Input>();
+    private List<InputPipe> pipes = new ArrayList<InputPipe>();
 
-    public Output(Process task, String name) {
+    public OutputPipe(Process task, String name) {
         this.task = task;
         this.name = name;
     }
 
-    public Output(Process task) {
+    public OutputPipe(Process task) {
         this.task = task;
         this.name = "out";
         this.multifile = false;
     }
 
-    public Output(Process task, Field f, String name) {
+    public OutputPipe(Process task, Field f, String name) {
         this.task = task;
         this.fieldName = f.getName();
         this.fieldClass = f.getDeclaringClass().getName();
@@ -89,16 +89,13 @@ public class Output {
         this.glob = glob;
     }
 
-    public void addPipe(Input input) {
+    public void addPipe(InputPipe input) {
         input.setSource(this);
         pipes.add(input);
     }
 
-    public void addResource(Resource resource) {
-        String id = task.getId()+"/"+name;
-        System.err.println(id+" == "+resource.getPath());
-        for (Input input : pipes) {
-            System.err.println(id+" >> "+input.getProcess().getId()+"/"+input.getName());
+    public void sendResource(Resource resource) {
+        for (InputPipe input : pipes) {
             input.add(resource);
         }
     }
@@ -109,7 +106,7 @@ public class Output {
 
     public void close() {
         this.closed = true;
-        for (Input pipe : pipes) {
+        for (InputPipe pipe : pipes) {
             pipe.close();
         }
     }

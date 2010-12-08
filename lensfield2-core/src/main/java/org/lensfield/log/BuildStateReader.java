@@ -109,11 +109,11 @@ public class BuildStateReader {
                     List<String> inpFileNames = readFileNameList();
                     inpfiles = new ArrayList<Resource>(inpFileNames.size());
                     for (String path : inpFileNames) {
-//                        inpfiles.add(build.getOutputFiles().get(path));
+//                        inpfiles.addResource(build.getOutputSet().get(path));
                     }
                 } else {
                     String path = readToken();
-//                    inpfiles = Collections.singletonList(build.getOutputFiles().get(path));
+//                    inpfiles = Collections.singletonList(build.getOutputSet().get(path));
                 }
                 skipWhitespace();
                 if (first) {
@@ -179,7 +179,7 @@ public class BuildStateReader {
 
 //        Operation op = new Operation(inputFiles, outputFiles);
 //        task.addOperation(op);
-//        for (List<Resource> files : op.getOutputFiles().values()) {
+//        for (List<Resource> files : op.getOutputSet().values()) {
 //            build.addFiles(files);
 //        }
     }
@@ -352,7 +352,7 @@ public class BuildStateReader {
     private void readBuildStarted() throws IOException, ParseException {
         String timestamp = readToken();
         Date date = BuildLogger.DATE_FORMAT.parse(timestamp);
-        build.setStarted(date.getTime());
+        build.setTimeStarted(date.getTime());
     }
 
 
