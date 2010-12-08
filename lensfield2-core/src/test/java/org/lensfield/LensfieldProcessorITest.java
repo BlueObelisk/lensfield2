@@ -36,7 +36,7 @@ public class LensfieldProcessorITest {
         }
     }
 
-    @After
+//    @After
     public void cleanup() throws IOException {
         System.err.println("[*TEST*] Cleaning workspace");
         FileUtils.deleteDirectory(workspace);
@@ -179,13 +179,14 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.1-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("copy1", "org.lensfield.testing.ops.file.Copier", "files", "output/1-*"));
         model.addBuildStep(new BuildStep("copy2", "org.lensfield.testing.ops.file.Copier", "copy1", "output/2-*"));
         model.addBuildStep(new BuildStep("copy3", "org.lensfield.testing.ops.file.Copier", "copy2", "output/3-*"));
 
         Lensfield lf = new Lensfield(model, workspace);
+        lf.setOffline(true);
         lf.build();
 
         assertTrue(new File(workspace, "output/1-a.txt").isFile());

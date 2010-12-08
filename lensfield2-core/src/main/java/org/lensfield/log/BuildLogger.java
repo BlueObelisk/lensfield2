@@ -6,6 +6,7 @@ package org.lensfield.log;
 import org.lensfield.concurrent.Resource;
 import org.lensfield.concurrent.ResourceSet;
 import org.lensfield.state.*;
+import org.lensfield.state.Process;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -36,7 +37,7 @@ public class BuildLogger {
 
 
     public void startBuild() {
-        out.print("(build-started ");
+        out.print("(build-log version-1.0 ");
         out.print(now());
         out.println(')');
     }
@@ -164,81 +165,6 @@ public class BuildLogger {
         return false;
     }
 
-//    public <IF extends FileState, OF extends FileState> void process(String name, Map<String, Collection<IF>> input, Map<String, List<OF>> output) {
-//        out.print("(op ");
-//        out.print(name);
-//        out.print("(");
-//        writeInputFiles(input);
-//        out.print(")(");
-//        writeOutputFiles(output);
-//        out.println("))");
-//    }
-//
-//    private <FS extends FileState> void writeInputFiles(Map<String, Collection<FS>> map) {
-//        for (Iterator<Map.Entry<String,Collection<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
-//            Map.Entry<String, Collection<FS>> e = it.next();
-//            out.print(e.getKey());
-//            out.print(' ');
-//            Collection<FS> files = e.getValue();
-//            if (files.size() == 1) {
-//                FileState f = files.iterator().next();
-//                writeToken(f.getPath());
-//            } else {
-//                out.print('(');
-//                for (Iterator<FS> itx = files.iterator(); itx.hasNext();) {
-//                    FileState f = itx.next();
-//                    writeToken(f.getPath());
-//                    if (itx.hasNext()) {
-//                        out.print(' ');
-//                    }
-//                }
-//                out.print(')');
-//            }
-//            if (it.hasNext()) {
-//                out.print(' ');
-//            }
-//        }
-//    }
-//
-//    private <FS extends FileState> void writeOutputFiles(Map<String, List<FS>> map) {
-//        for (Iterator<Map.Entry<String,List<FS>>> it = map.entrySet().iterator(); it.hasNext();) {
-//            Map.Entry<String, List<FS>> e = it.next();
-//            out.print(e.getKey());
-//            out.print(' ');
-//            List<FS> files = e.getValue();
-//            if (files.size() == 1) {
-//                FileState f = files.get(0);
-//                String[] x = new String[2+2*f.getParams().size()];
-//                x[0] = f.getPath();
-//                x[1] = DATE_FORMAT.format(f.getLastModified());
-//                int i = 2;
-//                for (Map.Entry<String,String> p : f.getParams().entrySet()) {
-//                    x[i++] = p.getKey();
-//                    x[i++] = p.getValue();
-//                }
-//                writeList(x);
-////                writeList(f.getPath(), dateFormat.format(f.getLastModified()));
-//            } else {
-//                out.print('(');
-//                for (FS f : files) {
-//                    String[] x = new String[2+2*f.getParams().size()];
-//                    x[0] = f.getPath();
-//                    x[1] = DATE_FORMAT.format(f.getLastModified());
-//                    int i = 2;
-//                    for (Map.Entry<String,String> p : f.getParams().entrySet()) {
-//                        x[i++] = p.getKey();
-//                        x[i++] = p.getValue();
-//                    }
-//                    writeList(x);
-//                }
-//                out.print(')');
-//            }
-//            if (it.hasNext()) {
-//                out.print(' ');
-//            }
-//        }
-//    }
-
 
     private void writeList(String... list) {
         out.print('[');
@@ -251,39 +177,51 @@ public class BuildLogger {
         out.print(']');
     }
 
+    public void logSource(Process task, List<Resource> resources) {
+        out.print("(source ");
+        out.print(task.getId());
+        out.print(' ');
+        writeResources(resources);
+        out.println(')');
+    }
+
     public synchronized void logOperation(Operation operation, Map<OutputPipe, List<Resource>> outputResourcesMap) {
 
         out.print("(op ");
         out.print(operation.getProcess().getId());
-        out.print(" (i");
         for (Map.Entry<InputPipe, ResourceSet> e : operation.getInputResourcesMap().entrySet()) {
             InputPipe input = e.getKey();
 
-            out.print(' ');
+            out.print(" (i ");
             out.print(input.getName());
 
             List<Resource> resources = e.getValue().getResourceList();
-            String[] paths = new String[resources.size()];
-            for (int i = 0; i < paths.length; i++) {
-                paths[i] = resources.get(i).getPath();
+            for (Resource r : resources) {
+                out.print(' ');
+                writeToken(r.getPath());
             }
-            writeList(paths);
+
+            out.print(')');
         }
-        out.print(") (o");
         for (OutputPipe output : operation.getOutputSet()) {
-            out.print(' ');
+            out.print(" (o ");
             out.print(output.getName());
+            out.print(' ');
 
             List<Resource> resources = outputResourcesMap.get(output);
-            String[] paths = new String[resources.size()];
-            for (int i = 0; i < paths.length; i++) {
-                paths[i] = resources.get(i).getPath();
-            }
-            writeList(paths);
+            writeResources(resources);
+            out.print(')');
         }
-        out.println("))");
+        out.println(')');
     }
-    
+
+    private void writeResources(List<Resource> resources) {
+        for (Resource r : resources) {
+            writeList(r.getPath(), DATE_FORMAT.format(new Date(r.getLastModified())));
+        }
+    }
+
+
 }
 
 

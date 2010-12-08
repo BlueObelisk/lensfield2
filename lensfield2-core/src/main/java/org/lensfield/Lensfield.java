@@ -5,30 +5,20 @@ package org.lensfield;
 
 import org.lensfield.api.Logger;
 import org.lensfield.concurrent.Reactor;
+import org.lensfield.concurrent.Resource;
 import org.lensfield.glob.Glob;
-import org.lensfield.log.BuildLogger;
-import org.lensfield.log.BuildStateReader;
+import org.lensfield.log.*;
 import org.lensfield.model.BuildStep;
 import org.lensfield.model.Model;
 import org.lensfield.model.Source;
 import org.lensfield.source.FileSource;
 import org.lensfield.state.*;
-import org.lensfield.state.OutputPipe;
 import org.lensfield.state.Process;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author sea36
@@ -38,7 +28,7 @@ public class Lensfield {
     private final Logger LOG = new LoggerImpl();
 
     private BuildState buildState;
-    private BuildState prevBuildState;
+    private BuildLog prevBuildState;
     private BuildLogger buildLogger;
 
     private Model model;
@@ -49,7 +39,7 @@ public class Lensfield {
 
     private ArrayList<org.lensfield.model.Process> buildOrder;
 
-    private Reactor reactor = new Reactor(this);;
+    private Reactor reactor = new Reactor(this);
 
 
     public Lensfield(Model model, File root) {
@@ -84,10 +74,6 @@ public class Lensfield {
                     i = process.getInput(input.getName());
                 }
                 Process source = buildState.getTask(input.getStep());
-//                System.err.print("PIPE "+source.getId()+"/"+source.getDefaultOutput().getName());
-//                System.err.print(" >> ");
-//                System.err.print(process.getId()+"/"+i.getName());
-//                System.err.println();
                 source.getDefaultOutput().addPipe(i);
             }
             process.initGlobNames();
@@ -101,28 +87,38 @@ public class Lensfield {
         if (prevBuildState == null) {
             throw new LensfieldException("No previous build state");
         }
-        for (Process task : prevBuildState.getTasks()) {
+        for (TaskLog task : prevBuildState.getTaskList()) {
             if (task.isSource()) {
                 continue;
             }
-//            for (Operation op : task.getOperations()) {
-//                for (List<FileState> outs : op.getOutputSet().values()) {
-//                    for (FileState out : outs) {
-//                        String path = out.getPath();
-//                        File f = new File(root, path);
-//                        if (f.isFile()) {
-//                            System.err.println("deleting "+path);
-//                            if (!f.delete()) {
-//                                System.err.println("Error deleting: "+path);
-//                            }
-//                        }
-//                        // TODO delete directories
-//                    }
-//                }
-//            }
+            for (OperationLog op : task.getOperations()) {
+                for (List<Resource> resources : op.getOutputSets()) {
+                    for (Resource resource : resources) {
+                        String path = resource.getPath();
+                        File f = new File(root, path);
+                        if (f.isFile()) {
+                            System.err.println("deleting "+path);
+                            if (!f.delete()) {
+                                System.err.println("Error deleting: "+path);
+                            }
+                            cleanEmptyDir(f.getParentFile());
+                        }
+                    }
+                }
+            }
         }
     }
-    
+
+    private void cleanEmptyDir(File dir) {
+        if (dir != null && dir.list().length == 0) {
+            if (!dir.delete()) {
+                System.err.println("Error deleting: "+dir);
+            } else {
+                cleanEmptyDir(dir.getParentFile());
+            }
+        }
+    }
+
     public synchronized void build() throws Exception {
 
         init();
@@ -222,7 +218,7 @@ public class Lensfield {
     }
 
 
-    private void loadPreviousBuildState() throws IOException, ParseException {
+    private void loadPreviousBuildState() throws IOException, ParseException, LensfieldException {
         File logFile = new File(workspace, "log.txt");
         if (logFile.isFile()) {
             LOG.info("Loading last build log");
@@ -244,7 +240,7 @@ public class Lensfield {
         }
         LOG.info("Comparing tasks to previous state");
         for (Process current : buildState.getTasks()) {
-            Process old = prevBuildState.getTask(current.getId());
+            TaskLog old = prevBuildState.getTask(current.getId());
             if (old != null) {
                 if (isTaskUnchanged(current, old)) {
                     LOG.debug("Task "+current.getId()+": up-to-date");
@@ -257,7 +253,7 @@ public class Lensfield {
         }
     }
 
-    private boolean isTaskUnchanged(Process current, Process old) {
+    private boolean isTaskUnchanged(Process current, TaskLog old) {
         boolean unchanged = true;
         if (areDependenciesChanged(current,old)) {
             LOG.debug("Task "+current.getId()+ ": dependencies updated");
@@ -270,7 +266,7 @@ public class Lensfield {
         return unchanged;
     }
 
-    private boolean areParametersChanged(Process current, Process old) {
+    private boolean areParametersChanged(Process current, TaskLog old) {
         for (Parameter param : current.getParameters()) {
             Parameter oldParam = old.getParameter(param.getName());
             if (oldParam == null || !param.getValue().equals(oldParam.getValue())) {
@@ -280,7 +276,7 @@ public class Lensfield {
         return false;
     }
 
-    private boolean areDependenciesChanged(Process current, Process old) {
+    private boolean areDependenciesChanged(Process current, TaskLog old) {
         List<Dependency> currentDependencies = current.getDependencyList();
         List<Dependency> oldDependencies = old.getDependencyList();
         if (currentDependencies.size() != oldDependencies.size()) {
@@ -368,12 +364,6 @@ public class Lensfield {
         if (step instanceof Source) {
             processSource((Source)step);
         }
-//        else if (step instanceof BuildStep) {
-//            processBuildStep((BuildStep)step);
-//        }
-//        else {
-//            throw new LensfieldException("Unknown process: "+step.getName()+" ["+step.getClass().getName()+"]");
-//        }
 
     }
 
@@ -391,7 +381,8 @@ public class Lensfield {
         finder.configure(source.getParameters());
 
         try {
-            finder.run();
+            List<Resource> resources = finder.run();
+            buildLogger.logSource(task, resources);
         } finally {
             task.getDefaultOutput().close();
         }

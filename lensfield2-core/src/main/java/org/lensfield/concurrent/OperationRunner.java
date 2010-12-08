@@ -370,7 +370,6 @@ public class OperationRunner {
                 boolean write = true;
                 if (resourceFile.isFile()) {
                     if (isUnchanged(tempFile, resourceFile)) {
-//                        LOG.debug(name, "unchanged "+resourcePath);
                         write = false;
                     } else {
                         if (!resourceFile.delete()) {
@@ -384,6 +383,8 @@ public class OperationRunner {
                         throw new LensfieldException("Unable to rename file "+tempFile+" to "+ resourceFile);
                     }
                 }
+
+                resource.setLastModified(resourceFile.lastModified());
                 outputFile.setPath(resourcePath);
                 outputFile.setFile(resourceFile);
             }

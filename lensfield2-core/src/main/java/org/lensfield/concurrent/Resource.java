@@ -10,7 +10,7 @@ import java.util.Map;
 public class Resource {
 
     private String path;
-    private long lastModified;
+    private long lastModified = -1;
     private Map<String,String> parameters;
 
     private File file;
@@ -21,9 +21,11 @@ public class Resource {
 
     public Resource(String path, File f, Map<String, String> map) {
         this.path = path;
-        this.lastModified = f.lastModified();
         this.parameters = map;
         this.file = f;
+        if (f.isFile()) {
+            lastModified = f.lastModified();
+        }
     }
 
     public Resource(String path, long lastModified, Map<String, String> map) {
@@ -40,6 +42,10 @@ public class Resource {
         return lastModified;
     }
 
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
+
     public Map<String, String> getParameters() {
         return Collections.unmodifiableMap(parameters);
     }
@@ -47,4 +53,5 @@ public class Resource {
     public File getFile() {
         return file;
     }
+
 }

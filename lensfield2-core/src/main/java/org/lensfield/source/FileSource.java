@@ -8,11 +8,13 @@ import org.lensfield.LensfieldException;
 import org.lensfield.concurrent.Resource;
 import org.lensfield.glob.Glob;
 import org.lensfield.glob.GlobMatch;
+import org.lensfield.log.BuildLogger;
 import org.lensfield.model.Parameter;
 import org.lensfield.state.OutputPipe;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,15 +31,20 @@ public class FileSource {
     private int maxFiles = -1;
 
     private OutputPipe output;
+    private List<Resource> resourceList;
 
-    public synchronized void run() throws IOException {
+    public synchronized List<Resource> run() throws IOException {
         if (glob == null || root == null || output == null) {
             throw new IllegalStateException("file source not configured");
         }
         this.globTemplate = new Glob(glob);
         this.rootDir = new File(root);
         StringBuilder s = new StringBuilder();
+        resourceList = new ArrayList<Resource>();
         recurse(rootDir, s, 0, 0);
+        List<Resource> resources = resourceList;
+        resourceList = null;
+        return resources;
     }
 
     private int recurse(File dir, StringBuilder s, int depth, int nfiles) {
@@ -59,6 +66,7 @@ public class FileSource {
                 GlobMatch match = globTemplate.match(path);
                 if (match != null) {
                     Resource resource = new Resource(path, f, match.getMap());
+                    resourceList.add(resource);
                     output.sendResource(resource);
                     if (++nfiles == maxFiles) {
                         break;
