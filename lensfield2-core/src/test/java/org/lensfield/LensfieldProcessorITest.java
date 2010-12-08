@@ -36,7 +36,7 @@ public class LensfieldProcessorITest {
         }
     }
 
-//    @After
+    @After
     public void cleanup() throws IOException {
         System.err.println("[*TEST*] Cleaning workspace");
         FileUtils.deleteDirectory(workspace);
