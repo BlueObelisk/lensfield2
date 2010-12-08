@@ -4,6 +4,7 @@
 package org.lensfield.concurrent;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.io.StreamIn;
 import org.lensfield.api.io.StreamOut;
@@ -33,6 +34,8 @@ import java.util.UUID;
  * @author sea36
  */
 public class OperationRunner {
+
+    private static final Logger LOG = Logger.getLogger(OperationRunner.class);
 
     private File root, tmpdir;
 
@@ -379,6 +382,7 @@ public class OperationRunner {
                 }
                 if (write) {
 //                    LOG.debug(name, "writing "+resourcePath);
+                    LOG.debug("Writing file: "+resourcePath);
                     if (!tempFile.renameTo(resourceFile)) {
                         throw new LensfieldException("Unable to rename file "+tempFile+" to "+ resourceFile);
                     }

@@ -76,5 +76,8 @@ public class TaskLog {
     public List<Dependency> getDependencyList() {
         return dependencies;
     }
-    
+
+    public void addOperation(OperationLog op) {
+        this.operations.add(op);
+    }
 }

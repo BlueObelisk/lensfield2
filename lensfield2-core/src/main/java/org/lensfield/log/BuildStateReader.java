@@ -110,6 +110,7 @@ public class BuildStateReader {
                         }
                         resources.add(resource);
                     }
+                    op.addInput(name, resources);
                 } else {
                     List<Resource> resources = readOutput();
                     op.addOutput(name, resources);
@@ -123,6 +124,8 @@ public class BuildStateReader {
         }
         ch = in.read();
         skipWhitespace();
+
+        task.addOperation(op);
 
     }
 

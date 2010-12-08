@@ -26,5 +26,8 @@ public class OperationLog {
     public List<List<Resource>> getOutputSets() {
         return new ArrayList<List<Resource>>(outputResourcesMap.values());
     }
-    
+
+    public void addInput(String name, List<Resource> resources) {
+        inputMap.put(name, resources);
+    }
 }
