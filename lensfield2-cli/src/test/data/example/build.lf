@@ -3,7 +3,7 @@
 ; Include these maven artifacts in the build classpath
 ;
 (depends
-    org.lensfield.testing:lensfield2-testops:0.1-SNAPSHOT)
+    org.lensfield.testing:lensfield2-testops:0.2-SNAPSHOT)
 
 (source                             ; Define a file source
     files           **/*.n)

@@ -3,10 +3,8 @@
  */
 package org.lensfield.maven;
 
-import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.properties.internal.EnvironmentUtils;
 import org.apache.maven.repository.internal.DefaultServiceLocator;
-import org.apache.maven.repository.internal.MavenRepositorySystemSession;
 import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Proxy;
 import org.apache.maven.settings.Server;
@@ -52,10 +50,7 @@ import org.sonatype.aether.util.repository.DefaultMirrorSelector;
 import org.sonatype.aether.util.repository.DefaultProxySelector;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
-import java.util.regex.Pattern;
 
 
 /**
@@ -178,7 +173,7 @@ public class DependencyResolver {
 //        configProps.putAll( request.getSystemProperties() );
 //        configProps.putAll( request.getUserProperties() );
 
-        session.setOffline(false);
+        session.setOffline(offline);
         session.setChecksumPolicy(RepositoryPolicy.CHECKSUM_POLICY_WARN);
         session.setUpdatePolicy(RepositoryPolicy.UPDATE_POLICY_NEVER);
 
@@ -282,34 +277,8 @@ public class DependencyResolver {
     }
 
 
-//    private LocalRepository getLocalRepository() {
-//        File basedir;
-//        if (settings.getLocalRepository() == null) {
-//            basedir = org.apache.maven.repository.RepositorySystem.defaultUserLocalRepository;
-//        } else {
-//            basedir = new File(settings.getLocalRepository());
-//        }
-//        return new LocalRepository(basedir);
-//    }
-
-
     public void setOffline(boolean offline) {
         this.offline = offline;
-    }
-
-
-
-
-
-    private URL[] getUrls(List<Artifact> dependencyList) throws MalformedURLException {
-        int n = dependencyList.size();
-        URL[] urls = new URL[n];
-        for (int i = 0; i < n; i++) {
-            File f = dependencyList.get(i).getFile();
-            URL url = f.toURI().toURL();
-            urls[i] = url;
-        }
-        return urls;
     }
 
 
@@ -339,15 +308,5 @@ public class DependencyResolver {
         }
         return files;
     }
-
-
-    public static void main(String[] args) throws Exception {
-
-        DependencyResolver r = new DependencyResolver();
-        r.resolveDependencies("cml", "cmlxom", "2.5.1-SNAPSHOT");
-
-    }
-
-
 
 }
