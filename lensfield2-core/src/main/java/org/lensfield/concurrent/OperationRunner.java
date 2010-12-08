@@ -381,8 +381,7 @@ public class OperationRunner {
                     }
                 }
                 if (write) {
-//                    LOG.debug(name, "writing "+resourcePath);
-                    LOG.debug("Writing file: "+resourcePath);
+                    System.err.println("Writing file: "+resourcePath);
                     if (!tempFile.renameTo(resourceFile)) {
                         throw new LensfieldException("Unable to rename file "+tempFile+" to "+ resourceFile);
                     }

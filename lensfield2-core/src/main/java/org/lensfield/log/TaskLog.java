@@ -62,7 +62,7 @@ public class TaskLog {
 
     public boolean isSource() {
         return operations.isEmpty() ||
-                operations.get(0).hasInputs();
+                !operations.get(0).hasInputs();
     }
 
     public List<OperationLog> getOperations() {

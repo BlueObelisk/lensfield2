@@ -18,10 +18,15 @@ public class Bootstrap {
 
     public static void main(String[] args) throws Exception {
 
+        boolean debug = Boolean.getBoolean("lensfield.debug");
+
         String lensfieldHome = System.getProperty("lensfield.home");
         if (lensfieldHome == null) {
             System.err.println(" ** ERROR: 'lensfield.home' not set");
             System.exit(1);
+        }
+        if (debug) {
+            System.err.println("lensfield.home : "+lensfieldHome);
         }
 
         File libdir = new File(lensfieldHome, "lib");
@@ -29,11 +34,18 @@ public class Bootstrap {
             System.err.println(" ** ERROR: directory '"+libdir.getPath()+"' not found");
             System.exit(1);
         }
+        if (debug) {
+            System.err.println("lib dir: "+lensfieldHome);
+        }
 
         List<URL> urls = new ArrayList<URL>();
         for (File f : libdir.listFiles()) {
             try {
-                urls.add(f.toURI().toURL());
+                URL url = f.toURI().toURL();
+                urls.add(url);
+                if (debug) {
+                    System.err.println("url : "+url);
+                }
             } catch (MalformedURLException e) {
                 // Impossible!
                 throw new Error("Malformed URL from java.io.File", e);
@@ -42,10 +54,6 @@ public class Bootstrap {
 
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try {
-            for (URL u : urls) {
-                System.err.println(u);
-            }
-
             // Init class loader
             URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[urls.size()]));
             Thread.currentThread().setContextClassLoader(loader);
@@ -60,7 +68,13 @@ public class Bootstrap {
                 e.printStackTrace();
                 throw e;
             }
+            if (debug) {
+                System.err.println("launching lensfield...");
+            }
             method.invoke(null, new Object[]{args});
+            if (debug) {
+                System.err.println("lensfield finished...");
+            }
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();

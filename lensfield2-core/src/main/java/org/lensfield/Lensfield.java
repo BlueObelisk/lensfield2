@@ -88,12 +88,15 @@ public class Lensfield {
             throw new LensfieldException("No previous build state");
         }
         for (TaskLog task : prevBuildState.getTaskList()) {
+            LOG.info("cleaning task: "+task.getName());
             if (task.isSource()) {
+                LOG.info("skipping source task: "+task.getName());
                 continue;
             }
             for (OperationLog op : task.getOperations()) {
                 for (List<Resource> resources : op.getOutputSets()) {
                     for (Resource resource : resources) {
+                        System.err.println("resource: "+resource.getPath());
                         String path = resource.getPath();
                         File f = new File(root, path);
                         if (f.isFile()) {
