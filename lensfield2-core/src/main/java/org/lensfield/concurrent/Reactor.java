@@ -98,4 +98,8 @@ public class Reactor {
     public ResourceManager getResourceManager() {
         return resourceManager;
     }
+
+    public Lensfield getLensfield() {
+        return lensfield;
+    }
 }

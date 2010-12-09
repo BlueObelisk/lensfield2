@@ -3,10 +3,12 @@
  */
 package org.lensfield.glob;
 
+import org.lensfield.LensfieldException;
+
 /**
  * @author sea36
  */
-public class MissingParameterException extends Exception {
+public class MissingParameterException extends LensfieldException {
 
     private String name;
 

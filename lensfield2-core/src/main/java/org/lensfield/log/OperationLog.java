@@ -33,11 +33,19 @@ public class OperationLog {
         return !inputMap.isEmpty();
     }
 
+    public Map<String, List<Resource>> getInputMap() {
+        return inputMap;
+    }
+
     public List<List<Resource>> getOutputSets() {
         return new ArrayList<List<Resource>>(outputResourcesMap.values());
     }
 
     public void addInput(String name, List<Resource> resources) {
         inputMap.put(name, resources);
+    }
+
+    public List<Resource> getOutputResources(String name) {
+        return outputResourcesMap.get(name);
     }
 }

@@ -4,9 +4,12 @@
 package org.lensfield;
 
 import org.apache.log4j.Logger;
+import org.lensfield.concurrent.DuplicateResourceException;
 import org.lensfield.concurrent.Reactor;
 import org.lensfield.concurrent.Resource;
+import org.lensfield.concurrent.ResourceSet;
 import org.lensfield.glob.Glob;
+import org.lensfield.glob.MissingParameterException;
 import org.lensfield.log.*;
 import org.lensfield.model.BuildStep;
 import org.lensfield.model.Model;
@@ -377,6 +380,16 @@ public class Lensfield {
 
         try {
             List<Resource> resources = finder.run();
+            for (Resource resource : resources) {
+                if (prevBuildState != null) {
+                    Resource oldResource = prevBuildState.getResource(resource.getPath());
+                    if (oldResource != null) {
+                        if (Math.abs(oldResource.getLastModified()-resource.getLastModified()) <= 1000) {
+                            resource.setUpdated(false);
+                        }
+                    }
+                }
+            }
             buildLogger.logSource(task, resources);
         } finally {
             task.getDefaultOutput().close();
@@ -433,6 +446,149 @@ public class Lensfield {
 
     public BuildLogger getBuildLogger() {
         return buildLogger;
+    }
+
+
+    public boolean isUpToDate(Operation operation) throws LensfieldException {
+        if (prevBuildState == null) {
+            return false;
+        }
+        if (isTaskUpdated(operation)) {
+            return false;
+        }
+        // TODO input based mapping
+        if (!isOutputDefined(operation)) {
+            return false;
+        }
+        OperationLog log = findOpLog(operation);
+        if (log == null) {
+            return false;
+        }
+        if (isInputUpToDate(operation, log)) {
+            if (isOuputUpToDate(log)) {
+                updateOutputs(operation, log);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isOuputUpToDate(OperationLog log) {
+        for (List<Resource> resources : log.getOutputSets()) {
+            for (Resource resource : resources) {
+                File f = new File(root, resource.getPath());
+                // TODO check file date / age relative to inputs
+                if (!f.isFile()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void updateOutputs(Operation operation, OperationLog log) throws DuplicateResourceException {
+        Map<OutputPipe,List<Resource>> outputResourcesMap = new HashMap<OutputPipe,List<Resource>>();
+        for (OutputPipe out : operation.getOutputSet()) {
+            List<Resource> resourceList = new ArrayList<Resource>();
+            for (Resource resource : log.getOutputResources(out.getName())) {
+                String path = resource.getPath();
+                File file = new File(root, path);
+                reactor.getResourceManager().addResource(resource);
+                Resource newResource = new Resource(path, file, resource.getParameters());
+                newResource.setUpdated(false);
+                resourceList.add(newResource);
+            }
+            outputResourcesMap.put(out, resourceList);
+        }
+        buildLogger.logOperation(operation, outputResourcesMap);
+        pipeOutputResources(outputResourcesMap);
+    }
+
+    private void pipeOutputResources(Map<OutputPipe, List<Resource>> outputResourcesMap) {
+        for (Map.Entry<OutputPipe,List<Resource>> e : outputResourcesMap.entrySet()) {
+            OutputPipe pipe = e.getKey();
+            List<Resource> resourceList = e.getValue();
+            for (Resource resource : resourceList) {
+                pipe.sendResource(resource);
+            }
+        }
+    }
+
+    private boolean isInputUpToDate(Operation operation, OperationLog log) {
+        if (inputsChanged(operation, log)) {
+            return false;
+        }
+        if (inputsUpdated(operation)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean inputsChanged(Operation operation, OperationLog log) {
+        if (operation.getInputResourcesMap().size() != log.getInputMap().size()) {
+            return true;
+        }
+        for (Map.Entry<InputPipe, ResourceSet> e : operation.getInputResourcesMap().entrySet()) {
+            List<Resource> currentResources = e.getValue().getResourceList();
+            List<Resource> oldResources = log.getInputMap().get(e.getKey().getName());
+            if (currentResources.size() != oldResources.size()) {
+                return true;
+            }
+            for (int i = 0; i < currentResources.size(); i++) {
+                Resource current = currentResources.get(i);
+                Resource old = oldResources.get(i);
+                if (!current.getPath().equals(old.getPath())) {
+                    return true;
+                }
+                // Over 1 second difference...
+                if (Math.abs(current.getLastModified()-old.getLastModified()) > 1000) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean inputsUpdated(Operation operation) {
+        for (ResourceSet resources : operation.getInputResourcesMap().values()) {
+            for (Resource resource : resources.getResourceList()) {
+                if (resource.isUpdated()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isTaskUpdated(Operation operation) {
+        Process process = operation.getProcess();
+        return process.isUpdated();
+    }
+
+    private boolean isOutputDefined(Operation op) {
+        for (OutputPipe out : op.getOutputSet()) {
+            if (out.isMultifile()) {
+                return false;
+            }
+        }
+        for (OutputPipe out : op.getOutputSet()) {
+            Glob glob = out.getGlob();
+            if (!op.getParameters().keySet().containsAll(glob.getGroupNames())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private OperationLog findOpLog(Operation op) throws MissingParameterException {
+        if (op.getOutputSet().isEmpty()) {
+            return null;
+        }
+        OutputPipe out = op.getOutputSet().iterator().next();
+        Map<String,String> params = op.getParameters();
+        String path = out.getGlob().format(params);
+        Resource resource = prevBuildState.getResource(path);
+        return resource == null ? null : resource.getProducer();
     }
 
 }

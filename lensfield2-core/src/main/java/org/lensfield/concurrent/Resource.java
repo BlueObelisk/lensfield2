@@ -23,6 +23,7 @@ public class Resource {
     private File file;
 
     private OperationLog producer;
+    private boolean updated = true;
 
     public Resource(String path, File f, Map<String, String> map) {
         this.path = path;
@@ -78,4 +79,11 @@ public class Resource {
         this.producer = producer;
     }
 
+    public void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
+
+    public boolean isUpdated() {
+        return updated;
+    }
 }

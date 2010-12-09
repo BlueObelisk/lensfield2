@@ -109,12 +109,14 @@ public class BuildStateReader {
                         if (resource == null) {
                             throw new LensfieldException("Missing resource record: "+path);
                         }
-                        resource.setProducer(op);
                         resources.add(resource);
                     }
                     op.addInput(name, resources);
                 } else {
                     List<Resource> resources = readOutput();
+                    for (Resource resource : resources) {
+                        resource.setProducer(op);
+                    }
                     op.addOutput(name, resources);
                     build.registerResources(resources);
                 }

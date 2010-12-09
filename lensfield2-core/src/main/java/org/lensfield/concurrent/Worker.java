@@ -26,14 +26,17 @@ public class Worker extends Thread {
             }
             if (task != null) {
                 try {
-                    OperationRunner runner = task.getProcess().getRunner();
-                    runner.runProcess(task);
+                    if (reactor.getLensfield().isUpToDate(task)) {
+                        System.err.println("up-to-date: "+task.getProcess().getId()+" / "+task.getParameters());
+                    } else {
+                        OperationRunner runner = task.getProcess().getRunner();
+                        runner.runProcess(task);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
                     task.finished();
                 }
-
             }
 
         }
