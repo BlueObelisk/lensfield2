@@ -1,6 +1,12 @@
 package org.lensfield.concurrent;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -52,6 +58,16 @@ public class Resource {
 
     public File getFile() {
         return file;
+    }
+
+
+    public String calculateMd5() throws IOException {
+        BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+        try {
+            return DigestUtils.md5Hex(in);
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
     }
 
 }

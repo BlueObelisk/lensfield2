@@ -127,7 +127,6 @@ public class BuildStateReader {
         skipWhitespace();
 
         task.addOperation(op);
-
     }
 
 
@@ -168,7 +167,7 @@ public class BuildStateReader {
         return files;
     }
 
-    private void readSource() throws IOException {
+    private void readSource() throws IOException, LensfieldException {
         String name = readToken();
         TaskLog task = new TaskLog(name);
         skipWhitespace();

@@ -1,9 +1,12 @@
 package org.lensfield.log;
 
 import org.joda.time.DateTime;
+import org.lensfield.concurrent.DuplicateResourceException;
 import org.lensfield.concurrent.Resource;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Sam Adams
@@ -12,7 +15,7 @@ public class BuildLog {
 
     private DateTime timeStarted;
     private Map<String,TaskLog> taskMap = new LinkedHashMap<String, TaskLog>();
-    private Map<String, Resource> resourceMap = new HashMap<String, Resource>();
+    private ConcurrentMap<String, Resource> resourceMap = new ConcurrentHashMap<String, Resource>();
 
 
     public DateTime getTimeStarted() {
@@ -36,9 +39,11 @@ public class BuildLog {
         return new ArrayList<TaskLog>(taskMap.values());
     }
 
-    public void registerResources(List<Resource> resources) {
+    public void registerResources(List<Resource> resources) throws DuplicateResourceException {
         for (Resource resource : resources) {
-            resourceMap.put(resource.getPath(), resource);
+            if (resourceMap.putIfAbsent(resource.getPath(), resource) != null) {
+                throw new DuplicateResourceException(resource.getPath());
+            }
         }
     }
 
