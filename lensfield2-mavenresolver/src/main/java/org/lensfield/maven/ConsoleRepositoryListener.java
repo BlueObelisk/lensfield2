@@ -5,9 +5,7 @@ import org.sonatype.aether.util.listener.AbstractRepositoryListener;
 
 import java.io.PrintStream;
 
-public class ConsoleRepositoryListener
-        extends AbstractRepositoryListener
-{
+public class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
     private PrintStream out;
 
@@ -85,4 +83,3 @@ public class ConsoleRepositoryListener
     }
 
 }
-
