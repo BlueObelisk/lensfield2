@@ -21,7 +21,7 @@ public class Bootstrap {
     public static void main(String[] args) throws Exception {
 
         if (DEBUG) {
-            System.err.println("*** Starting Bootstrap ***");
+            System.err.println("~~BOOT~~ *** Starting Bootstrap ***");
         }
 
         String lensfieldHome = System.getProperty("lensfield.home");
@@ -30,7 +30,7 @@ public class Bootstrap {
             System.exit(1);
         }
         if (DEBUG) {
-            System.err.println("lensfield.home : "+lensfieldHome);
+            System.err.println("~~BOOT~~ lensfield.home : "+lensfieldHome);
         }
 
         File libdir = new File(lensfieldHome, "lib");
@@ -39,7 +39,7 @@ public class Bootstrap {
             System.exit(1);
         }
         if (DEBUG) {
-            System.err.println("lib dir: "+lensfieldHome);
+            System.err.println("~~BOOT~~ lib dir: "+lensfieldHome);
         }
 
         List<URL> urls = new ArrayList<URL>();
@@ -48,7 +48,7 @@ public class Bootstrap {
                 URL url = f.toURI().toURL();
                 urls.add(url);
                 if (DEBUG) {
-                    System.err.println("url : "+url);
+                    System.err.println("~~BOOT~~ url : "+url);
                 }
             } catch (MalformedURLException e) {
                 // Impossible!
@@ -73,11 +73,11 @@ public class Bootstrap {
                 throw e;
             }
             if (DEBUG) {
-                System.err.println("launching lensfield loader...");
+                System.err.println("~~BOOT~~ launching lensfield loader...");
             }
             method.invoke(null, new Object[]{args});
             if (DEBUG) {
-                System.err.println("lensfield finished...");
+                System.err.println("~~BOOT~~ lensfield finished...");
             }
             System.exit(0);
         } catch (Exception e) {

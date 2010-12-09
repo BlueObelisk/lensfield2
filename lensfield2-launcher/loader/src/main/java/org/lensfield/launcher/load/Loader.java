@@ -21,8 +21,8 @@ public class Loader {
 
     private static final boolean DEBUG = Boolean.getBoolean("lensfield.debug");
 
-    private URLClassLoader apiLoader;
-    private URLClassLoader appLoader;
+    private URLClassLoader apiClassLoader;
+    private URLClassLoader appClassLoader;
 
     private void load(boolean update) throws Exception {
 
@@ -31,7 +31,7 @@ public class Loader {
 
         if (update) {
             if (DEBUG) {
-                System.err.println("adding remote repository");
+                System.err.println("~LOADER~ adding remote repository");
             }
             resolver.addRepository("ucc-repo", "https://maven.ch.cam.ac.uk/m2repo");
         }
@@ -42,7 +42,7 @@ public class Loader {
         URL repoUrl = repoDir.toURI().toURL();
         resolver.addRepository("lf-local", repoUrl.toString());
         if (DEBUG) {
-            System.err.println("local-repo: "+repoUrl);
+            System.err.println("~LOADER~ local-repo: "+repoUrl);
         }
 
         List<URL> apiUrls = new ArrayList<URL>();
@@ -50,31 +50,31 @@ public class Loader {
             URL url = a.getFile().toURI().toURL();
             apiUrls.add(url);
             if (DEBUG) {
-                System.err.println("api url: "+url);
+                System.err.println("~LOADER~ api url: "+url);
             }
         }
-        apiLoader = new URLClassLoader(apiUrls.toArray(new URL[apiUrls.size()]));
+        apiClassLoader = new URLClassLoader(apiUrls.toArray(new URL[apiUrls.size()]));
 
         List<URL> appUrls = new ArrayList<URL>();
         for (Artifact a : resolver.resolveDependencies("org.lensfield", "lensfield2-cli", "0.2-SNAPSHOT")) {
             URL url = a.getFile().toURI().toURL();
             appUrls.add(url);
             if (DEBUG) {
-                System.err.println("app url: "+url);
+                System.err.println("~LOADER~ app url: "+url);
             }
         }
-        appLoader = new URLClassLoader(appUrls.toArray(new URL[appUrls.size()]), apiLoader);
+        appClassLoader = new URLClassLoader(appUrls.toArray(new URL[appUrls.size()]), apiClassLoader);
     }
 
-    private void run(String[] args) throws Exception {
+    private void runLensfield(String[] args) throws Exception {
 
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             // Set context class loader
-            Thread.currentThread().setContextClassLoader(appLoader);
+            Thread.currentThread().setContextClassLoader(appClassLoader);
 
             // Launch app loader
-            Class<?> clazz = appLoader.loadClass("org.lensfield.cli.LensfieldCli");
+            Class<?> clazz = appClassLoader.loadClass("org.lensfield.cli.LensfieldCli");
             Method method = clazz.getMethod("main", String[].class);
             method.invoke(null, new Object[]{args});
         } finally {
@@ -87,7 +87,7 @@ public class Loader {
     public static void main(String[] args) throws Exception {
 
         if (DEBUG) {
-            System.err.println("*** Starting Loader ***");
+            System.err.println("~LOADER~ *** Starting Loader ***");
         }
 
         boolean update;
@@ -99,7 +99,7 @@ public class Loader {
         }
 
         if (DEBUG) {
-            System.err.println("update: "+update);
+            System.err.println("~LOADER~ update: "+update);
         }
 
         Loader loader = new Loader();
@@ -114,9 +114,9 @@ public class Loader {
         }
         try {
             if (DEBUG) {
-                System.err.println("Launching lensfield CLI...");
+                System.err.println("~LOADER~ Launching lensfield CLI...");
             }
-            loader.run(args);
+            loader.runLensfield(args);
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println();
@@ -125,6 +125,5 @@ public class Loader {
         }
 
     }
-
 
 }
