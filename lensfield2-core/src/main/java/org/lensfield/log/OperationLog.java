@@ -12,8 +12,18 @@ import java.util.Map;
  */
 public class OperationLog {
 
+    private TaskLog task;
+
     private Map<String,List<Resource>> inputMap = new LinkedHashMap<String, List<Resource>>();
     private Map<String,List<Resource>> outputResourcesMap = new LinkedHashMap<String, List<Resource>>();
+
+    public OperationLog(TaskLog task) {
+        this.task = task;
+    }
+
+    public TaskLog getTask() {
+        return task;
+    }
 
     public void addOutput(String name, List<Resource> resources) {
         outputResourcesMap.put(name, resources);

@@ -37,7 +37,7 @@ public class Lensfield {
 
     private boolean offline = false;
 
-    private ArrayList<org.lensfield.model.Process> buildOrder;
+    private List<org.lensfield.model.Process> buildOrder;
 
     private final Reactor reactor = new Reactor(this);
 
@@ -125,12 +125,20 @@ public class Lensfield {
         comparePreviousBuildState();
         try {
             initBuildLog();
-            processBuildSteps(buildOrder);
+            processSources();
             reactor.run();
             buildLogger.finishBuild();
         } finally {
             if (buildLogger != null) {
                 buildLogger.close();
+            }
+        }
+    }
+
+    private void processSources() throws Exception {
+        for (org.lensfield.model.Process process : buildOrder) {
+            if (process instanceof Source) {
+                processSource((Source)process);
             }
         }
     }
@@ -141,9 +149,9 @@ public class Lensfield {
 
     private void checkParameters() throws ConfigurationException {
         for (Process task : buildState.getTasks()) {
-            for (Parameter param : task.getParameters()) {
-                if (param.isRequired() && param.getValue() == null) {
-                    throw new ConfigurationException("Missing parameter '"+param.getName()+"' on task '"+task.getId()+"'");
+            for (Parameter parameter : task.getParameters()) {
+                if (parameter.isRequired() && parameter.getValue() == null) {
+                    throw new ConfigurationException("Missing parameter '"+parameter.getName()+"' on task '"+task.getId()+"'");
                 }
             }
         }
@@ -167,7 +175,7 @@ public class Lensfield {
     }
     
 
-    protected ArrayList<org.lensfield.model.Process> resolveBuildOrder() throws LensfieldException {
+    protected List<org.lensfield.model.Process> resolveBuildOrder() throws LensfieldException {
         LOG.info("Resolving build order");
         LinkedHashSet<org.lensfield.model.Process> order = new LinkedHashSet<org.lensfield.model.Process>(model.getSources());
         if (order.isEmpty()) {
@@ -241,6 +249,8 @@ public class Lensfield {
                     LOG.debug("Task "+current.getId()+": up-to-date");
                     current.setUpdated(false);
                     current.setLastModified(old.getLastModified());
+                } else {
+                    LOG.debug("Task "+current.getId()+": updated");
                 }
             } else {
                 LOG.debug("Task "+current.getId()+": new");
@@ -351,19 +361,6 @@ public class Lensfield {
         buildLogger = new BuildLogger(new FileOutputStream(logFile));
         buildLogger.startBuild();
         buildLogger.recordTasks(buildState);
-    }
-
-
-    private void processBuildSteps(List<org.lensfield.model.Process> buildOrder) throws Exception {
-        for (org.lensfield.model.Process step: buildOrder) {
-            build(step);
-        }
-    }
-
-    private synchronized void build(org.lensfield.model.Process step) throws Exception {
-        if (step instanceof Source) {
-            processSource((Source)step);
-        }
     }
 
     private void processSource(Source source) throws Exception {

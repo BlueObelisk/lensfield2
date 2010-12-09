@@ -2,6 +2,7 @@ package org.lensfield.concurrent;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
+import org.lensfield.log.OperationLog;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -21,9 +22,7 @@ public class Resource {
 
     private File file;
 
-    private boolean existing;
-    private boolean outOfDate;
-    
+    private OperationLog producer;
 
     public Resource(String path, File f, Map<String, String> map) {
         this.path = path;
@@ -68,6 +67,15 @@ public class Resource {
         } finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+
+    public OperationLog getProducer() {
+        return producer;
+    }
+
+    public void setProducer(OperationLog producer) {
+        this.producer = producer;
     }
 
 }

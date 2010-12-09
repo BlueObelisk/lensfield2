@@ -84,7 +84,7 @@ public class BuildStateReader {
         String taskName = readToken();
         TaskLog task = build.getTask(taskName);
 
-        OperationLog op = new OperationLog();
+        OperationLog op = new OperationLog(task);
 
         // Read inputs
         skipWhitespace();
@@ -109,6 +109,7 @@ public class BuildStateReader {
                         if (resource == null) {
                             throw new LensfieldException("Missing resource record: "+path);
                         }
+                        resource.setProducer(op);
                         resources.add(resource);
                     }
                     op.addInput(name, resources);
@@ -170,12 +171,18 @@ public class BuildStateReader {
     private void readSource() throws IOException, LensfieldException {
         String name = readToken();
         TaskLog task = new TaskLog(name);
+        OperationLog op = new OperationLog(task);
         skipWhitespace();
         List<Resource> resources = readFileList();
+        for (Resource r : resources) {
+            r.setProducer(op);
+        }
         if (ch != ')') {
             throw new IOException("Error! ["+((char)ch)+']');
         }
         build.addTask(task);
+        task.addOperation(op);
+        op.addOutput(name, resources);
         build.registerResources(resources);
     }
 

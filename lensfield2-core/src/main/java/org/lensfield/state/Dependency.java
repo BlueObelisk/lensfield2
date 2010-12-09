@@ -51,4 +51,21 @@ public class Dependency {
         this.file = file;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+        if (o instanceof Dependency) {
+            Dependency other = (Dependency) o;
+            return getId().equals(other.getId());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
 }
