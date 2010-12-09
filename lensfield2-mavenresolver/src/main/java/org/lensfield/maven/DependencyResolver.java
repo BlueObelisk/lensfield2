@@ -270,6 +270,9 @@ public class DependencyResolver {
     }
 
     private String getLocalRepository() {
+        if (System.getProperties().containsKey("m2.repo")) {
+            return System.getProperty("m2.repo");
+        }
         if (settings.getLocalRepository() != null) {
             return settings.getLocalRepository();
         }
