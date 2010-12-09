@@ -10,6 +10,10 @@ public class ResourceManager {
 
     private ConcurrentMap<String,Resource> resourceMap = new ConcurrentHashMap<String, Resource>();
 
+    public Resource getResource(String path) {
+        return resourceMap.get(path);
+    }
+
     public void addResource(Resource resource) throws DuplicateResourceException {
         String path = resource.getPath();
         if (resourceMap.putIfAbsent(path, resource) != null) {
