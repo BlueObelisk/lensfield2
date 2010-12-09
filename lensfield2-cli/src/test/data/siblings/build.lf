@@ -4,6 +4,9 @@
 (depends
     org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
 
+(repository
+    https://maven.ch.cam.ac.uk/m2repo)
+
 (source                             ; Define a file source
     inputs      **/x-*.txt)
 
