@@ -34,7 +34,7 @@ public class ClassAnalyser {
         this.clazz = clazz;
     }
 
-    public static void analyseClass(BuildStep build, Process task) throws Exception {
+    public static void analyseClass(BuildStep build, Process task) throws LensfieldException {
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         ClassLoader classLoader = task.createClassLoader();
@@ -43,6 +43,8 @@ public class ClassAnalyser {
             Class<?> clazz = classLoader.loadClass(task.getClassName());
             ClassAnalyser ca = new ClassAnalyser(task, clazz);
             ca.analyseClass(build);
+        } catch (Exception e) {
+            throw new LensfieldException("Error analysing class: "+task.getClassName(), e);
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
         }

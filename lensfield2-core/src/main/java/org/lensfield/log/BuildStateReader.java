@@ -6,10 +6,8 @@ package org.lensfield.log;
 import org.apache.log4j.Logger;
 import org.lensfield.LensfieldException;
 import org.lensfield.concurrent.Resource;
-import org.lensfield.state.BuildState;
 import org.lensfield.state.Dependency;
 import org.lensfield.state.Parameter;
-import org.lensfield.state.Process;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -32,7 +30,7 @@ public class BuildStateReader {
     private int ch;
 
 
-    public synchronized BuildLog parseBuildState(Reader in) throws IOException, ParseException, LensfieldException {
+    public synchronized BuildLog parseBuildState(Reader in) throws IOException, LensfieldException {
         this.in = in;
         this.ch = in.read();
 
@@ -79,7 +77,7 @@ public class BuildStateReader {
         return build;
     }
 
-    private void readOp() throws IOException, ParseException, LensfieldException {
+    private void readOp() throws IOException, LensfieldException {
         String taskName = readToken();
         TaskLog task = build.getTask(taskName);
 
@@ -136,7 +134,7 @@ public class BuildStateReader {
         return resources;
     }
 
-    private List<Resource> readOutput() throws IOException, ParseException {
+    private List<Resource> readOutput() throws IOException {
         skipWhitespace();
         List<Resource> resources = readFileList();
         return resources;
@@ -157,7 +155,7 @@ public class BuildStateReader {
         return files;
     }
 
-    private List<Resource> readFileList() throws IOException, ParseException {
+    private List<Resource> readFileList() throws IOException {
         List<Resource> files = new ArrayList<Resource>();
         while (ch == '[') {
             ch = in.read();
@@ -167,7 +165,7 @@ public class BuildStateReader {
         return files;
     }
 
-    private void readSource() throws IOException, ParseException {
+    private void readSource() throws IOException {
         String name = readToken();
         TaskLog task = new TaskLog(name);
         skipWhitespace();
@@ -179,11 +177,12 @@ public class BuildStateReader {
         build.registerResources(resources);
     }
 
-    private Resource readResource() throws IOException, ParseException {
+    private Resource readResource() throws IOException {
         skipWhitespace();
         String path = readToken();
         skipWhitespace();
-        long lastModified = BuildLogger.DATE_FORMAT.parse(readToken()).getTime();
+        String timestamp = readToken();
+        long lastModified = parseDate(timestamp).getTime();
         skipWhitespace();
         Map<String,String> params = new HashMap<String, String>();
         while (ch != ']') {
@@ -197,7 +196,7 @@ public class BuildStateReader {
         return new Resource(path, lastModified, params);
     }
 
-    private void readTask() throws IOException, ParseException {
+    private void readTask() throws IOException {
         // Read task definition
         String name = readToken();
         skipWhitespace();
@@ -209,7 +208,7 @@ public class BuildStateReader {
 
         TaskLog task = new TaskLog(name);
         task.setClassName(clazz);
-        task.setLastModified(BuildLogger.DATE_FORMAT.parse(timestamp).getTime());
+        task.setLastModified(parseDate(timestamp).getTime());
 
         // Read dependencies
         while (ch == '(') {
@@ -262,7 +261,7 @@ public class BuildStateReader {
         task.addParameter(new Parameter(name, value));
     }
 
-    private void readDependencies(TaskLog task) throws IOException, ParseException {
+    private void readDependencies(TaskLog task) throws IOException {
         skipWhitespace();
         while (ch != ')') {
             if (ch == EOF) {
@@ -277,28 +276,36 @@ public class BuildStateReader {
         }
     }
 
-    private void readDependency(TaskLog task) throws IOException, ParseException {
+    private void readDependency(TaskLog task) throws IOException {
         skipWhitespace();
         String id = readToken();
         skipWhitespace();
-        String ts =  readToken();
+        String timestamp =  readToken();
         skipWhitespace();
         if (ch != ']') {
             throw new IOException("Expected: ']'; found: '"+((char)ch)+"'");
         }
         ch = in.read();
-        task.addDependency(new Dependency(id, BuildLogger.DATE_FORMAT.parse(ts).getTime()));
+        task.addDependency(new Dependency(id, parseDate(timestamp).getTime()));
     }
 
-    private void readBuildStarted() throws IOException, ParseException {
+    private void readBuildStarted() throws IOException {
         String version = readToken();
         if (!"version-1.0".equals(version)) {
             throw new IOException("Bad version: "+version);
         }
         skipWhitespace();
         String timestamp = readToken();
-        Date date = BuildLogger.DATE_FORMAT.parse(timestamp);
+        Date date = parseDate(timestamp);
         build.setTimeStarted(date.getTime());
+    }
+
+    private Date parseDate(String timestamp) throws IOException {
+        try {
+            return BuildLogger.DATE_FORMAT.parse(timestamp);
+        } catch (ParseException e) {
+            throw new IOException("Bad date format: "+timestamp, e);
+        }
     }
 
 
