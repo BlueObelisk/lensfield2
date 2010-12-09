@@ -4,6 +4,7 @@
 package org.lensfield.log;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.lensfield.LensfieldException;
 import org.lensfield.concurrent.Resource;
 import org.lensfield.state.Dependency;
@@ -12,8 +13,10 @@ import org.lensfield.state.Parameter;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
-import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author sea36
@@ -182,7 +185,7 @@ public class BuildStateReader {
         String path = readToken();
         skipWhitespace();
         String timestamp = readToken();
-        long lastModified = parseDate(timestamp).getTime();
+        long lastModified = parseDate(timestamp).getMillis();
         skipWhitespace();
         Map<String,String> params = new HashMap<String, String>();
         while (ch != ']') {
@@ -208,7 +211,7 @@ public class BuildStateReader {
 
         TaskLog task = new TaskLog(name);
         task.setClassName(clazz);
-        task.setLastModified(parseDate(timestamp).getTime());
+        task.setLastModified(parseDate(timestamp).getMillis());
 
         // Read dependencies
         while (ch == '(') {
@@ -286,7 +289,7 @@ public class BuildStateReader {
             throw new IOException("Expected: ']'; found: '"+((char)ch)+"'");
         }
         ch = in.read();
-        task.addDependency(new Dependency(id, parseDate(timestamp).getTime()));
+        task.addDependency(new Dependency(id, parseDate(timestamp).getMillis()));
     }
 
     private void readBuildStarted() throws IOException {
@@ -296,16 +299,12 @@ public class BuildStateReader {
         }
         skipWhitespace();
         String timestamp = readToken();
-        Date date = parseDate(timestamp);
-        build.setTimeStarted(date.getTime());
+        DateTime dateTime = parseDate(timestamp);
+        build.setTimeStarted(dateTime);
     }
 
-    private Date parseDate(String timestamp) throws IOException {
-        try {
-            return BuildLogger.DATE_FORMAT.parse(timestamp);
-        } catch (ParseException e) {
-            throw new IOException("Bad date format: "+timestamp, e);
-        }
+    private DateTime parseDate(String timestamp) {
+        return DateTimeUtils.parseDateTime(timestamp);
     }
 
 

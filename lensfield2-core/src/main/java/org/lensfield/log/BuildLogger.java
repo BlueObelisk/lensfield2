@@ -3,21 +3,20 @@
  */
 package org.lensfield.log;
 
+import org.joda.time.DateTime;
 import org.lensfield.concurrent.Resource;
 import org.lensfield.concurrent.ResourceSet;
 import org.lensfield.state.*;
 import org.lensfield.state.Process;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author sea36
  */
 public class BuildLogger {
-
-    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
     private PrintWriter out;
 
@@ -32,7 +31,8 @@ public class BuildLogger {
     }
 
     private String now() {
-        return DATE_FORMAT.format(new Date());
+        DateTime now = new DateTime();
+        return DateTimeUtils.formatDateTime(now);
     }
 
 
@@ -71,7 +71,7 @@ public class BuildLogger {
             out.print('/');
             out.print(task.getMethodName());
             out.print(' ');
-            out.print(DATE_FORMAT.format(new Date(task.getLastModified())));
+            out.print(DateTimeUtils.formatDateTime(new DateTime(task.getLastModified())));
             if (!task.getParameters().isEmpty()) {
                 out.print(" (params ");
                 for (Parameter param : task.getParameters()) {
@@ -84,7 +84,7 @@ public class BuildLogger {
             if (!task.getDependencyList().isEmpty()) {
                 out.print(" (depends ");
                 for (Dependency depend : task.getDependencyList()) {
-                    String timestamp = DATE_FORMAT.format(new Date(depend.getLastModified()));
+                    String timestamp = DateTimeUtils.formatDateTime(new DateTime(depend.getLastModified()));
                     writeList(depend.getId(), timestamp);
                 }
                 out.print(')');
@@ -217,10 +217,9 @@ public class BuildLogger {
 
     private void writeResources(List<Resource> resources) {
         for (Resource r : resources) {
-            writeList(r.getPath(), DATE_FORMAT.format(new Date(r.getLastModified())));
+            writeList(r.getPath(), DateTimeUtils.formatDateTime(new DateTime(r.getLastModified())));
         }
     }
-
 
 }
 

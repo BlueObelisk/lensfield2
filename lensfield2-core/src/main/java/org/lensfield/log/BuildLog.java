@@ -1,5 +1,6 @@
 package org.lensfield.log;
 
+import org.joda.time.DateTime;
 import org.lensfield.concurrent.Resource;
 
 import java.util.*;
@@ -9,14 +10,20 @@ import java.util.*;
  */
 public class BuildLog {
 
-    private long timeStarted;
+    private DateTime timeStarted;
     private Map<String,TaskLog> taskMap = new LinkedHashMap<String, TaskLog>();
     private Map<String, Resource> resourceMap = new HashMap<String, Resource>();
 
-    public void setTimeStarted(long timeStarted) {
+
+    public DateTime getTimeStarted() {
+        return timeStarted;
+    }
+
+    public void setTimeStarted(DateTime timeStarted) {
         this.timeStarted = timeStarted;
     }
 
+    
     public void addTask(TaskLog task) {
         this.taskMap.put(task.getName(), task);
     }
