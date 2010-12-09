@@ -5,6 +5,7 @@ package org.lensfield.concurrent;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.lensfield.Lensfield;
 import org.lensfield.LensfieldException;
 import org.lensfield.api.io.StreamIn;
 import org.lensfield.api.io.StreamOut;
@@ -37,7 +38,7 @@ public class OperationRunner {
 
     private static final Logger LOG = Logger.getLogger(OperationRunner.class);
 
-    private File root, tmpdir;
+    private final File root, tmpdir;
 
     private Process task;
     private Class<?> clazz;
@@ -49,9 +50,11 @@ public class OperationRunner {
     private BuildLogger buildLogger;
     private ClassLoader classloader;
 
-    public OperationRunner(Process task, BuildLogger buildLogger) throws Exception {
+    public OperationRunner(Process task, Lensfield lensfield) throws Exception {
         this.task = task;
-        this.buildLogger = buildLogger;
+        this.buildLogger = lensfield.getBuildLogger();
+        this.root = lensfield.getRootDir();
+        this.tmpdir = lensfield.getTmpDir();
         init();
     }
 
@@ -373,6 +376,7 @@ public class OperationRunner {
                 boolean write = true;
                 if (resourceFile.isFile()) {
                     if (isUnchanged(tempFile, resourceFile)) {
+                        LOG.info("File unchanged: "+resourcePath);
                         write = false;
                     } else {
                         if (!resourceFile.delete()) {
@@ -381,7 +385,7 @@ public class OperationRunner {
                     }
                 }
                 if (write) {
-                    System.err.println("Writing file: "+resourcePath);
+                    LOG.info("Writing file: "+resourcePath);
                     if (!tempFile.renameTo(resourceFile)) {
                         throw new LensfieldException("Unable to rename file "+tempFile+" to "+ resourceFile);
                     }
@@ -399,22 +403,7 @@ public class OperationRunner {
     }
 
     private boolean isUnchanged(File f1, File f2) throws IOException {
-        if (f1.length() != f2.length()) {
-            return false;
-        }
         return FileUtils.contentEquals(f1, f2);
     }
-
-    public void setRoot(File root) {
-        this.root = root;
-    }
-
-    public void setTmpdir(File tmpdir) {
-        this.tmpdir = tmpdir;
-    }
-
-//    public void setBuildLog(BuildLogger buildLog) {
-//        this.buildLog = buildLog;
-//    }
 
 }

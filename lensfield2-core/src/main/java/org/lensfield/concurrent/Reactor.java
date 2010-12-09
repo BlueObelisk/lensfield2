@@ -90,9 +90,7 @@ public class Reactor {
     }
 
     public OperationRunner getOperationRunner(Process process) throws Exception {
-        OperationRunner runner = new OperationRunner(process, lensfield.getBuildLogger());
-        runner.setRoot(lensfield.getRootDir());
-        runner.setTmpdir(lensfield.getTmpDir());
+        OperationRunner runner = new OperationRunner(process, lensfield);
         return runner;
     }
 

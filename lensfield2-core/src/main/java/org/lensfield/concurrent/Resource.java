@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class Resource {
 
-    private String path;
+    private final String path;
     private long lastModified = -1;
     private Map<String,String> parameters;
 
