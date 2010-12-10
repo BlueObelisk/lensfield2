@@ -31,16 +31,15 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>bin</id>
+                                <id>bin-dist</id>
                                 <goals>
                                     <goal>single</goal>
                                 </goals>
                                 <phase>package</phase>
                                 <configuration>
-                                    <descriptorSourceDirectory>src/main/assembly</descriptorSourceDirectory>
-                                    <descriptorRefs>
-                                        <descriptorRef>bin</descriptorRef>
-                                    </descriptorRefs>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/bin-dist.xml</descriptor>
+                                    </descriptors>
                                     <finalName>lensfield-${project.version}</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                 </configuration>
