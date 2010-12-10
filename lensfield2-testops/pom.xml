@@ -4,14 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>wwmm</groupId>
-        <artifactId>wwmm-parent</artifactId>
-        <version>1</version>
+        <groupId>org.lensfield</groupId>
+        <artifactId>lensfield2</artifactId>
+        <version>0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>org.lensfield.testing</groupId>
     <artifactId>lensfield2-testops</artifactId>
-    <version>0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Lensfield Test Operations</name>
@@ -23,5 +23,5 @@
         <module>testop-logging</module>
     </modules>
 
-
 </project>
+        

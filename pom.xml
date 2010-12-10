@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <modules>
-        <module>lensfield2-mavenresolver</module>
-    </modules>
 
     <parent>
         <groupId>wwmm</groupId>
@@ -44,6 +41,9 @@
     <properties>
         <lensfield.scm.developerConnection>scm:hg:https://bitbucket.org/sea36/lensfield2</lensfield.scm.developerConnection>
 
+        <lensfield.groupId>org.lensfield</lensfield.groupId>
+        <lensfield.version>0.2-SNAPSHOT</lensfield.version>
+
         <aetherVersion>1.7</aetherVersion>
         <mavenVersion>3.0.1</mavenVersion>
         <wagonVersion>1.0-beta-7</wagonVersion>
@@ -75,29 +75,29 @@
         <dependencies>
 
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${lensfield.groupId}</groupId>
                 <artifactId>lensfield2-api</artifactId>
-                <version>${project.version}</version>
+                <version>${lensfield.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${lensfield.groupId}</groupId>
                 <artifactId>lensfield2-core</artifactId>
-                <version>${project.version}</version>
+                <version>${lensfield.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${lensfield.groupId}</groupId>
                 <artifactId>lensfield2-parser</artifactId>
-                <version>${project.version}</version>
+                <version>${lensfield.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${lensfield.groupId}</groupId>
                 <artifactId>lensfield2-cli</artifactId>
-                <version>${project.version}</version>
+                <version>${lensfield.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${lensfield.groupId}</groupId>
                 <artifactId>lensfield2-mavenresolver</artifactId>
-                <version>${project.version}</version>
+                <version>${lensfield.version}</version>
             </dependency>
 
 
@@ -265,7 +265,8 @@
 
                 <module>lensfield2-atomreader</module>
                 <module>lensfield2-downloader</module>
-
+                <module>lensfield2-mavenresolver</module>
+                
             </modules>
         </profile>
     </profiles>

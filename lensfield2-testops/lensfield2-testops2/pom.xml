@@ -4,9 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>lensfield2-testops</artifactId>
         <groupId>org.lensfield.testing</groupId>
+        <artifactId>lensfield2-testops</artifactId>
         <version>0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>lensfield2-testops2</artifactId>
@@ -14,10 +15,10 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.lensfield</groupId>
+            <groupId>${lensfield.groupId}</groupId>
             <artifactId>lensfield2-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>                        

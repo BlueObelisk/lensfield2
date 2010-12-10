@@ -15,14 +15,12 @@
     <dependencies>
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${lensfield.groupId}</groupId>
             <artifactId>lensfield2-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${lensfield.groupId}</groupId>
             <artifactId>lensfield2-mavenresolver</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
         <dependency>

@@ -7,6 +7,7 @@
         <artifactId>lensfield2-testops</artifactId>
         <groupId>org.lensfield.testing</groupId>
         <version>0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>lensfield2-testops1</artifactId>
@@ -16,7 +17,7 @@
         <dependency>
             <groupId>org.lensfield</groupId>
             <artifactId>lensfield2-api</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>${lensfield.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
