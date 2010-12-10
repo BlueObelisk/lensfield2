@@ -16,7 +16,6 @@
         <dependency>
             <groupId>org.lensfield</groupId>
             <artifactId>lensfield2-core</artifactId>
-            <version>0.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 

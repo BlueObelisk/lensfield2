@@ -17,7 +17,6 @@
         <dependency>
             <groupId>org.lensfield</groupId>
             <artifactId>lensfield2-mavenresolver</artifactId>
-            <version>0.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
