@@ -60,7 +60,7 @@ if not "%LF_OPTS%" == "" goto init
 set "LF_OPTS=-Xmx512m"
 
 :init
-"%JAVA_HOME%/bin/java" %LF_OPTS% -classpath "%LF_HOME%\boot\boot-0.2.jar" -Dlensfield.home="%LF_HOME%" org.lensfield.launcher.boot.Bootstrap %*
+"%JAVA_HOME%/bin/java" %LF_OPTS% -classpath "%LF_HOME%\boot\boot-0.3-SNAPSHOT.jar" -Dlensfield.home="%LF_HOME%" org.lensfield.launcher.boot.Bootstrap %*
 
 if ERRORLEVEL 1 goto error
 goto exit
