@@ -199,12 +199,23 @@ to all build steps can be specified:
 In the case of any conflicts, dependencies assigned to a build step take priority
 over global dependencies (i.e. they are placed earlier in the classpath).
 
+Lensfield will automatically search for dependencies it the Maven central
+repository (http://repo1.maven.org/maven2), and you can also specify further
+locations:
+
+(repository https://maven.ch.cam.ac.uk/m2repo)
+
 
 Examples
 
 --------------------------------------------------------------------------------
+; Specify a repository to load dependencies from
+(repository
+    https://maven.ch.cam.ac.uk/m2repo)
+
+; Declare a global dependency (applies to all build steps)
 (depends
-    org.lensfield.testing:lensfield2-testops1:0.1-SNAPSHOT)
+    org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
 
 ; Define source files (each file *.n contains a number)
 (source
@@ -237,6 +248,8 @@ Examples
 ; Build file taking all files **/*.n, and copying each to **/*.nn
 ; Illustrates use of Lensfield2 'unaware' routines from the Apache
 ; commons-io library
+(repository
+    https://maven.ch.cam.ac.uk/m2repo)
 
 (source
     files       **/*.n)
@@ -251,9 +264,11 @@ Examples
 ; Illustates 1:n conversion
 ; Note: {%i} in output glob is a special parameter for MultiStreamOutputs
 ;       containing the number (1,2,3...) of the stream created.  
+(repository
+    https://maven.ch.cam.ac.uk/m2repo)
 
 (depends
-    org.lensfield.testing:lensfield2-testops1:0.1-SNAPSHOT)
+    org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
 
 (source
     files       input/*.txt)
