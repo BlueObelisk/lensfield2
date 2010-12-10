@@ -1,5 +1,0 @@
-(build-timeStarted 2010-09-15T21:07:29+0100)
-(task split org.lensfield.testing.ops.file.Alternator/run 2010-09-15T21:07:29+0100 (depends [org.lensfield.testing:lensfield2-testops1:jar:0.2-SNAPSHOT 2010-09-15T21:05:23+0100][org.lensfield:lensfield2-api:jar:0.2-SNAPSHOT 2010-09-15T13:32:35+0100][log4j:log4j:jar:1.2.13 2010-06-23T12:54:51+0100][commons-io:commons-io:jar:1.4 2010-06-23T12:54:45+0100]))
-(source files([data.txt 2010-09-15T21:05:58+0100]))
-(op split(input data.txt)(even [even.txt 2010-09-15T21:07:30+0100] odd [odd.txt 2010-09-15T21:07:30+0100]))
-(build-finished 2010-09-15T21:07:30+0100)
