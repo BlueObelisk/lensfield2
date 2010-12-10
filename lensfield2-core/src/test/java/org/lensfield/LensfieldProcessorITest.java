@@ -93,7 +93,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "**/*.n"));
         model.addBuildStep(new BuildStep("doubles",     "org.lensfield.testing.ops.number.Doubler",  "files",    "**/*.x2"));
         model.addBuildStep(new BuildStep("squares",     "org.lensfield.testing.ops.number.Squarer",  "files",    "**/*.sq"));
@@ -116,7 +116,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 
@@ -134,7 +134,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("joined", "org.lensfield.testing.ops.file.Joiner", "files", "output/all.txt"));
 
@@ -154,7 +154,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("copy1", "org.lensfield.testing.ops.file.Copier", "files", "output/1-*"));
         model.addBuildStep(new BuildStep("copy2", "org.lensfield.testing.ops.file.Copier", "copy1", "output/2-*"));
@@ -178,7 +178,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("copy1", "org.lensfield.testing.ops.file.Copier", "files", "output/1-*"));
         model.addBuildStep(new BuildStep("copy2", "org.lensfield.testing.ops.file.Copier", "copy1", "output/2-*"));
@@ -227,7 +227,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*.txt"));
         model.addBuildStep(new BuildStep("split", "org.lensfield.testing.ops.file.Splitter", "files", "output/*-{%i}.txt"));
 
@@ -248,7 +248,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*.txt"));
         model.addBuildStep(new BuildStep("split", "org.lensfield.testing.ops.file.Splitter", "files", "output/*-{%i}.txt"));
         model.addBuildStep(new BuildStep("copy", "org.lensfield.testing.ops.file.Copier", "split", "output/*-{%i}-copy.txt"));
@@ -271,10 +271,10 @@ public class LensfieldProcessorITest {
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
         model.addSource(new Source("files", "**/*.n"));
         BuildStep build1 = new BuildStep("sum1", "org.lensfield.testing.ops.number.Summer",   "files",  "sum1.txt");
-        build1.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        build1.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addBuildStep(build1);
         BuildStep build2 = new BuildStep("sum2", "org.lensfield.testing.ops.number.Summer",   "files",  "sum2.txt");
-        build2.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        build2.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addBuildStep(build2);
 
         Lensfield lf = new Lensfield(model, workspace);
@@ -291,14 +291,14 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
 
         model.addSource(new Source("files", "**/*.n"));
         BuildStep inc1 = new BuildStep("inc1", "org.lensfield.testing.ops.Incer",   "files",  "**/*.1");
-        inc1.addDependency("org.lensfield.testing", "lensfield2-testops2", "0.2-SNAPSHOT");
+        inc1.addDependency("org.lensfield.testing", "lensfield2-testops2", "0.2");
         model.addBuildStep(inc1);
         BuildStep inc2 = new BuildStep("inc2", "org.lensfield.testing.ops.Incer",   "files",  "**/*.2");
-        inc2.addDependency("org.lensfield.testing", "lensfield2-testops3", "0.2-SNAPSHOT");
+        inc2.addDependency("org.lensfield.testing", "lensfield2-testops3", "0.2");
         model.addBuildStep(inc2);
 
         model.addBuildStep(new BuildStep("sum1", "org.lensfield.testing.ops.number.Summer",   "inc1",  "sum1.txt"));
@@ -318,7 +318,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 
@@ -340,7 +340,7 @@ public class LensfieldProcessorITest {
 
         Model model = new Model();
         model.addRepository("https://maven.ch.cam.ac.uk/m2repo");
-        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2-SNAPSHOT");
+        model.addDependency("org.lensfield.testing", "lensfield2-testops1", "0.2");
         model.addSource(new Source("files", "input/*"));
         model.addBuildStep(new BuildStep("copies", "org.lensfield.testing.ops.file.Copier", "files", "output/*"));
 

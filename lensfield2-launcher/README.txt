@@ -215,7 +215,7 @@ Examples
 
 ; Declare a global dependency (applies to all build steps)
 (depends
-    org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
+    org.lensfield.testing:lensfield2-testops1:0.2)
 
 ; Define source files (each file *.n contains a number)
 (source
@@ -268,7 +268,7 @@ Examples
     https://maven.ch.cam.ac.uk/m2repo)
 
 (depends
-    org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
+    org.lensfield.testing:lensfield2-testops1:0.2)
 
 (source
     files       input/*.txt)

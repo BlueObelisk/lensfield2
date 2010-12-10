@@ -3,7 +3,7 @@
 ; Include these maven artifacts in the build classpath
 ;
 (depends
-    org.lensfield.testing:lensfield2-testops1:0.2-SNAPSHOT)
+    org.lensfield.testing:lensfield2-testops1:0.2)
 
 (source                             ; Define a file source
     files           data.txt)

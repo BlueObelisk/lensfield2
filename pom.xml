@@ -10,7 +10,7 @@
 
     <groupId>org.lensfield</groupId>
     <artifactId>lensfield2</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
 
     <name>Lensfield2</name>
@@ -42,7 +42,7 @@
         <lensfield.scm.developerConnection>scm:hg:https://bitbucket.org/sea36/lensfield2</lensfield.scm.developerConnection>
 
         <lensfield.groupId>org.lensfield</lensfield.groupId>
-        <lensfield.version>0.2-SNAPSHOT</lensfield.version>
+        <lensfield.version>0.2</lensfield.version>
 
         <aetherVersion>1.7</aetherVersion>
         <mavenVersion>3.0.1</mavenVersion>
