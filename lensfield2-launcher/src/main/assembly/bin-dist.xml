@@ -19,7 +19,21 @@
 
         <fileSet>
             <directory>src/main/bin</directory>
+            <includes>
+                <include>lf.bat</include>
+            </includes>
             <outputDirectory>bin</outputDirectory>
+            <filtered>true</filtered>
+            <lineEnding>dos</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/bin</directory>
+            <includes>
+                <include>lf</include>
+            </includes>
+            <outputDirectory>bin</outputDirectory>
+            <filtered>true</filtered>
+            <lineEnding>unix</lineEnding>
         </fileSet>
 
         <fileSet>
