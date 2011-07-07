@@ -5,7 +5,9 @@ package org.lensfield.cli;
 
 import org.lensfield.BuildFileReader;
 import org.lensfield.Lensfield;
+import org.lensfield.model.BuildStep;
 import org.lensfield.model.Model;
+import org.lensfield.model.Parameter;
 
 import java.io.*;
 
@@ -65,6 +67,9 @@ public class LensfieldCli {
             root = new File(".");
         }
 
+        // Process command line properties
+        processCommandLineProperties(args, model);
+
         Lensfield lensfield = new Lensfield(model, root);
 //        lensfield.setOffline(true);
         try {
@@ -76,6 +81,33 @@ public class LensfieldCli {
             e.printStackTrace();
             System.err.println("");
             System.err.println("BUILD FAILED");
+        }
+    }
+
+    private static void processCommandLineProperties(String[] args, Model model) {
+        for (String arg : args) {
+            if (arg.startsWith("-D")) {
+                int i0 = arg.indexOf('=');
+                if (i0 == -1) {
+                    throw new IllegalArgumentException("Property missing value: "+arg);
+                }
+                String key = arg.substring(2, i0);
+                String value = arg.substring(i0+1);
+                int i1 = key.indexOf('.');
+                if (i1 == -1) {
+                    throw new IllegalArgumentException("Property name missing build step: "+key);
+                }
+                String buildStepName = key.substring(0, i1);
+                String paramName = key.substring(i1+1);
+
+                for (BuildStep buildStep : model.getBuildSteps()) {
+                    if (buildStep.getName().equals(buildStepName)) {
+                        buildStep.addParameter(new Parameter(paramName, value));
+                        break;
+                    }
+                }
+
+            }
         }
     }
 
