@@ -65,6 +65,11 @@
 
     <repositories>
         <repository>
+            <id>atomxom</id>
+            <name>AtomXOM Maven Repository</name>
+            <url>http://atomxom.sourceforge.net/m2repo</url>
+        </repository>
+        <repository>
             <id>ucc-repo</id>
             <url>https://maven.ch.cam.ac.uk/m2repo</url>
         </repository>
