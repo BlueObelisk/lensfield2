@@ -48,6 +48,7 @@
         <mavenVersion>3.0.1</mavenVersion>
         <wagonVersion>1.0-beta-7</wagonVersion>
 
+        <log4j.version>2.13.0</log4j.version>
     </properties>
 
     <scm>
