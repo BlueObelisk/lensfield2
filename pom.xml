@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>wwmm</groupId>
+        <groupId>uk.ac.cam.ch.wwmm</groupId>
         <artifactId>wwmm-parent</artifactId>
-        <version>1</version>
+        <version>6</version>
     </parent>
 
     <groupId>org.lensfield</groupId>
@@ -271,7 +271,7 @@
                 <module>lensfield2-atomreader</module>
                 <module>lensfield2-downloader</module>
                 <module>lensfield2-mavenresolver</module>
-                
+
             </modules>
         </profile>
     </profiles>
