@@ -1,11 +1,11 @@
 # Lensfield2
+[![Build Status](https://travis-ci.org/BlueObelisk/lensfield2.svg?branch=master)](https://travis-ci.org/BlueObelisk/lensfield2) (COMPILE ONLY!)
 
 An experiment to create a repeatable 'make' like pipeline for data processing,
 and it is used by some of the WWMM projects.
 
 However using this framework for new project is **not recommended** as there
 are *MUCH* better systems now, e.g. picocli.
-
 
 ---
 **Note:**
