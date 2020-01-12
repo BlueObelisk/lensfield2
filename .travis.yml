@@ -8,4 +8,4 @@ cache:
   - $HOME/.m2
 
 script:
-- mvn -B clean compile
+- mvn -B -e  clean compile
