@@ -21,7 +21,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.0</version>
+            <version>4.3.6</version>
         </dependency>
         <!-- required by httpclient for java 1.5 -->
         <dependency>
